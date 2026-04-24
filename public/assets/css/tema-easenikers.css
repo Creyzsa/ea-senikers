@@ -1,0 +1,81 @@
+/**
+ * EA SENIKERS — Tema resmi (monokrom elegan + champagne + biru petrol untuk Beli)
+ * Pakai variabel :root ini untuk halaman & komponen baru agar konsisten.
+ */
+:root {
+    /* Nav, sidebar, hero: hitam & charcoal */
+    --biru-header: #0a0a0a;
+    --biru-header-redup: #000000;
+    --biru-hero: #161616;
+    --biru-hero-akhir: #252525;
+    --biru-hero-gelap: #000000;
+
+    /* Aksi admin / grafik (tetap netral gelap) */
+    --biru-tombol: #0a0a0a;
+    --biru-tombol-hover: #262626;
+
+    /* Tombol Beli (kartu produk) — biru petrol, selaras emas & monokrom */
+    --gradasi-beli: linear-gradient(165deg, #5a7a96 0%, #3d5f7c 42%, #2a4a62 100%);
+    --gradasi-beli-hover: linear-gradient(165deg, #6b8ba8 0%, #4d6f8c 45%, #33556e 100%);
+    --gradasi-beli-tekan: linear-gradient(165deg, #33556e 0%, #1e3548 100%);
+    --beli-teks: #f8fafc;
+    --beli-bayangan-3d:
+        0 3px 0 #1a3040,
+        0 10px 22px rgba(26, 48, 64, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    --beli-bayangan-hover:
+        0 4px 0 #243a4d,
+        0 14px 28px rgba(26, 48, 64, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    --beli-bayangan-aktif:
+        0 1px 0 #152a38,
+        0 4px 12px rgba(21, 42, 56, 0.45),
+        inset 0 3px 8px rgba(0, 0, 0, 0.25);
+    --ikon-placeholder-produk: #5a7190;
+
+    /* Aksen champagne: CTA promo, keranjang, garis dekoratif, fokus */
+    --oranye-cta: #a8905f;
+    --oranye-cta-hover: #8f7548;
+    --aksen-emas-lembut: rgba(168, 144, 95, 0.14);
+    --aksen-emas-garis: rgba(168, 144, 95, 0.35);
+
+    --hijau-sukses: #1b4332;
+    --abu-latar: #ffffff;
+    --abu-kartu: #fafafa;
+    --abu-tepi: #e8e8e8;
+    --teks-utama: #0a0a0a;
+    --teks-redup: #6b6b6b;
+    --kotak-fitur-bg: #f7f7f6;
+
+    --radius: 10px;
+    --radius-login: 14px;
+    --bayangan-kartu: 0 4px 20px rgba(0, 0, 0, 0.06);
+    --bayangan-login: 0 4px 28px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    --transisi-cepat: 0.2s ease;
+    --transisi-tombol: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --merek-biru: #0a0a0a;
+    --merek-biru-redup: #000000;
+    --abu-input: #ffffff;
+    --ikon-input: #737373;
+    --fokus-ring: rgba(168, 144, 95, 0.35);
+    --placeholder: #a3a3a3;
+    --placeholder-fokus: #d4d4d4;
+    --error-teks: #b91c1c;
+    --error-bg: #fef2f2;
+    --error-tepi: #fecaca;
+    --sukses-teks: #14532d;
+    --sukses-bg: #f0fdf4;
+    --sukses-tepi: #bbf7d0;
+
+    --hijau-sukses-lembut: rgba(27, 67, 50, 0.1);
+    --ungu-aksen: #525252;
+    --ungu-lembut: rgba(0, 0, 0, 0.06);
+    --kuning-aksen: #8a7a62;
+    --kuning-lembut: rgba(168, 144, 95, 0.12);
+    --merah-keluar: #991b1b;
+    --merah-keluar-bg: rgba(153, 27, 27, 0.06);
+    --merah-keluar-tepi: rgba(153, 27, 27, 0.28);
+    --adm-sidebar-w: 260px;
+    --adm-trans: 0.2s ease;
+}
