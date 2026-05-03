@@ -14,6 +14,7 @@ if ($bp_kj < 0) {
     $bp_kj = 0;
 }
 
+$u_logo = aplikasi_url('assets/images/logo-easenikers.svg');
 $u_beranda = aplikasi_url('pembeli/beranda_pembeli.php');
 $u_produk = aplikasi_url('pembeli/produk.php');
 $u_kategori = aplikasi_url('pembeli/kategori_pembeli.php');
@@ -25,7 +26,7 @@ $u_keluar = aplikasi_url('login/keluar.php');
 ?>
     <header class="bilah-toko">
         <a class="bilah-toko__merek" href="<?php echo htmlspecialchars($u_beranda, ENT_QUOTES, 'UTF-8'); ?>">
-            <p class="bilah-toko__nama">EA SENIKERS</p>
+            <img class="bilah-toko__logo" src="<?php echo htmlspecialchars($u_logo, ENT_QUOTES, 'UTF-8'); ?>" width="200" height="38" alt="EA SENIKERS" decoding="async" fetchpriority="high">
         </a>
         <nav class="nav-toko" aria-label="Menu utama">
             <?php if ($bp_aktif === 'beranda'): ?>

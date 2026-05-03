@@ -17,6 +17,20 @@ function katalog_url_gambar_produk(string $nama_file): string
     return aplikasi_url(KATALOG_FOLDER_GAMBAR . '/' . rawurlencode($nama_file));
 }
 
+/** Gambar pengganti bila belum ada upload (tanpa file statis). */
+function katalog_url_gambar_placeholder(): string
+{
+    $svg = '<?xml version="1.0" encoding="UTF-8"?>'
+        . '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" role="img" aria-label="Tidak ada gambar">'
+        . '<rect width="400" height="400" fill="#f3f4f6"/>'
+        . '<rect x="120" y="150" width="160" height="100" rx="8" fill="none" stroke="#d1d5db" stroke-width="2"/>'
+        . '<circle cx="200" cy="200" r="20" fill="#e5e7eb"/>'
+        . '<path d="M160 210 L180 190 L200 200 L220 180 L240 200 L240 230 L160 230 Z" fill="#d1d5db"/>'
+        . '</svg>';
+
+    return 'data:image/svg+xml;charset=utf-8,' . rawurlencode($svg);
+}
+
 function katalog_format_rupiah(int $harga): string
 {
     return 'Rp ' . number_format($harga, 0, ',', '.');
@@ -78,12 +92,12 @@ function katalog_url_gambar_utama(array $produk): string
 {
     $g = $produk['produk_gambar'] ?? [];
     if (!is_array($g) || $g === []) {
-        return aplikasi_url(KATALOG_FOLDER_GAMBAR . '/placeholder.svg');
+        return katalog_url_gambar_placeholder();
     }
     $g = katalog_urutkan_gambar($g);
     $nama = (string) ($g[0]['nama_file'] ?? '');
     if ($nama === '') {
-        return aplikasi_url(KATALOG_FOLDER_GAMBAR . '/placeholder.svg');
+        return katalog_url_gambar_placeholder();
     }
     return katalog_url_gambar_produk($nama);
 }
@@ -109,7 +123,13 @@ function katalog_urutkan_gambar(array $gambar): array
 function katalog_urutkan_ukuran(array $ukuran): array
 {
     usort($ukuran, static function (array $a, array $b): int {
-        return strnatcasecmp((string) ($a['ukuran'] ?? ''), (string) ($b['ukuran'] ?? ''));
+        $sa = trim((string) ($a['ukuran'] ?? ''));
+        $sb = trim((string) ($b['ukuran'] ?? ''));
+        if ($sa !== '' && $sb !== '' && ctype_digit($sa) && ctype_digit($sb)) {
+            return (int) $sa <=> (int) $sb;
+        }
+
+        return strnatcasecmp($sa, $sb);
     });
     return $ukuran;
 }
