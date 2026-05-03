@@ -80,7 +80,7 @@ function pesanan_url_gambar_item(array $item): string
 {
     $raw = trim((string) ($item['product_image'] ?? ''));
     if ($raw === '') {
-        return aplikasi_url(KATALOG_FOLDER_GAMBAR . '/placeholder.svg');
+        return katalog_url_gambar_placeholder();
     }
     if (preg_match('#^https?://#i', $raw)) {
         return $raw;
@@ -219,4 +219,81 @@ function pesanan_cek_tabel_ada(): bool
     } catch (Throwable $e) {
         return false;
     }
+}
+
+/**
+ * Produk untuk blok "Produk Terlaris": diurutkan berdasarkan jumlah terjual (order_items + orders non-batal, status paid+).
+ * Bila belum ada penjualan yang cocok dengan katalog, sisa slot diisi produk katalog (created_at) seperti tampilan awal.
+ *
+ * @return list<array<string, mixed>> Baris produk format sama dengan katalog_ambil_semua_produk (tanpa jumlah di array).
+ */
+function pesanan_produk_terlaris_gabung_katalog(int $batas = 4): array
+{
+    if ($batas <= 0) {
+        return [];
+    }
+
+    $semua = katalog_ambil_semua_produk();
+    if ($semua === []) {
+        return [];
+    }
+
+    $byNama = [];
+    foreach ($semua as $p) {
+        $n = (string) ($p['nama_produk'] ?? '');
+        if ($n !== '') {
+            $byNama[$n] = $p;
+        }
+    }
+
+    $dipakai = [];
+    $hasil = [];
+
+    if (pesanan_cek_tabel_ada()) {
+        try {
+            $pdo = koneksi_database();
+            $stmt = $pdo->query(
+                'SELECT oi.product_name, SUM(oi.quantity)::int AS jumlah
+                 FROM order_items oi
+                 INNER JOIN orders o ON o.id = oi.order_id
+                 WHERE o.status IN (\'paid\', \'processed\', \'shipped\', \'completed\')
+                 GROUP BY oi.product_name
+                 ORDER BY jumlah DESC, oi.product_name ASC
+                 LIMIT 50'
+            );
+            $rows = $stmt ? $stmt->fetchAll() : [];
+        } catch (Throwable $e) {
+            $rows = [];
+        }
+        foreach ($rows as $r) {
+            if (count($hasil) >= $batas) {
+                break;
+            }
+            $nama = (string) ($r['product_name'] ?? '');
+            if (!isset($byNama[$nama])) {
+                continue;
+            }
+            $p = $byNama[$nama];
+            $id = (string) ($p['id_produk'] ?? '');
+            if ($id === '' || isset($dipakai[$id])) {
+                continue;
+            }
+            $dipakai[$id] = true;
+            $hasil[] = $p;
+        }
+    }
+
+    foreach ($semua as $p) {
+        if (count($hasil) >= $batas) {
+            break;
+        }
+        $id = (string) ($p['id_produk'] ?? '');
+        if ($id === '' || isset($dipakai[$id])) {
+            continue;
+        }
+        $dipakai[$id] = true;
+        $hasil[] = $p;
+    }
+
+    return $hasil;
 }
