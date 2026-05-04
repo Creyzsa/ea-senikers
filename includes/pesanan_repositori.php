@@ -297,3 +297,131 @@ function pesanan_produk_terlaris_gabung_katalog(int $batas = 4): array
 
     return $hasil;
 }
+
+/**
+ * Admin: Ambil semua pesanan dengan info user
+ * @return list<array<string, mixed>>
+ */
+function pesanan_admin_ambil_semua(): array
+{
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare(
+            'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
+                    u.nama_pengguna, u.email
+             FROM orders o
+             LEFT JOIN users u ON o.user_id = u.id
+             ORDER BY o.created_at DESC'
+        );
+        $stmt->execute();
+        return $stmt->fetchAll();
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
+/**
+ * Admin: Cari pesanan berdasarkan query (ID pesanan, nama user, email)
+ * @param string $query
+ * @return list<array<string, mixed>>
+ */
+function pesanan_admin_cari(string $query): array
+{
+    if (trim($query) === '') {
+        return pesanan_admin_ambil_semua();
+    }
+
+    try {
+        $pdo = koneksi_database();
+        $searchTerm = '%' . trim($query) . '%';
+        $stmt = $pdo->prepare(
+            'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
+                    u.nama_pengguna, u.email
+             FROM orders o
+             LEFT JOIN users u ON o.user_id = u.id
+             WHERE o.id::text LIKE :q
+                OR u.nama_pengguna ILIKE :q
+                OR u.email ILIKE :q
+             ORDER BY o.created_at DESC'
+        );
+        $stmt->execute(['q' => $searchTerm]);
+        return $stmt->fetchAll();
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
+/**
+ * Admin: Ambil detail pesanan lengkap
+ * @param int $order_id
+ * @return array<string, mixed>|null
+ */
+function pesanan_admin_detail(int $order_id): ?array
+{
+    if ($order_id <= 0) {
+        return null;
+    }
+
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare(
+            'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
+                    u.nama_pengguna, u.email
+             FROM orders o
+             LEFT JOIN users u ON o.user_id = u.id
+             WHERE o.id = :id
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $order_id]);
+        $order = $stmt->fetch();
+        if (!$order) {
+            return null;
+        }
+
+        // Ambil items pesanan
+        $stmtI = $pdo->prepare(
+            'SELECT id, order_id, product_name, price, size, quantity, product_image
+             FROM order_items
+             WHERE order_id = :oid
+             ORDER BY id'
+        );
+        $stmtI->execute(['oid' => $order_id]);
+        $order['items'] = $stmtI->fetchAll();
+
+        return $order;
+    } catch (Throwable $e) {
+        return null;
+    }
+}
+
+/**
+ * Admin: Batalkan pesanan (hanya jika belum dikirim)
+ * @param int $order_id
+ * @return bool
+ */
+function pesanan_admin_batalkan(int $order_id): bool
+{
+    if ($order_id <= 0) {
+        return false;
+    }
+
+    try {
+        $pdo = koneksi_database();
+
+        // Cek status pesanan - hanya bisa batalkan jika belum dikirim
+        $stmt = $pdo->prepare('SELECT status FROM orders WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $order_id]);
+        $current = $stmt->fetch();
+
+        if (!$current || in_array($current['status'], ['shipped', 'completed', 'cancelled'])) {
+            return false; // Tidak bisa batalkan
+        }
+
+        // Update status ke cancelled
+        $stmt = $pdo->prepare('UPDATE orders SET status = :s WHERE id = :id');
+        return $stmt->execute(['s' => 'cancelled', 'id' => $order_id]);
+
+    } catch (Throwable $e) {
+        return false;
+    }
+}
