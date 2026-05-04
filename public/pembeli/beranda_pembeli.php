@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../../includes/sesi.php';
+require_once __DIR__ . '/../../includes/katalog_produk.php';
+require_once __DIR__ . '/../../includes/pesanan_repositori.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {
@@ -14,7 +16,12 @@ if ($nama_sapa === '') {
 }
 $bilah_pembeli_aktif = 'beranda';
 $tautan_produk = aplikasi_url('pembeli/produk.php');
+$logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
 $merek_ringkas = require __DIR__ . '/../../includes/merek_ringkas.php';
+$kontak_toko = require __DIR__ . '/../../includes/kontak_toko.php';
+$produk_terlaris = pesanan_produk_terlaris_gabung_katalog(4);
+$u_ig = 'https://www.instagram.com/' . rawurlencode((string) ($kontak_toko['sosial']['instagram'] ?? 'easenikers')) . '/';
+$u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial']['tiktok'] ?? 'easenikers'));
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -31,6 +38,9 @@ $merek_ringkas = require __DIR__ . '/../../includes/merek_ringkas.php';
     <section class="hero-toko hero-toko--kompak" aria-labelledby="hero-judul">
         <div class="hero-toko__isi">
             <div class="hero-toko__teks">
+                <p class="hero-toko__logo-wrap">
+                    <img class="hero-toko__logo" src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" width="300" height="56" alt="EA SENIKERS" decoding="async" fetchpriority="high">
+                </p>
                 <p class="hero-toko__meta"><?php echo htmlspecialchars($merek_ringkas['hero_meta_satu_baris'], ENT_QUOTES, 'UTF-8'); ?></p>
                 <h1 id="hero-judul" class="hero-toko__judul"><?php echo htmlspecialchars($merek_ringkas['hero_judul'], ENT_QUOTES, 'UTF-8'); ?></h1>
                 <p class="hero-toko__sapa">Halo, <span class="hero-toko__nama"><?php echo htmlspecialchars($nama_sapa, ENT_QUOTES, 'UTF-8'); ?></span> · <span class="hero-toko__nama-merek">EA SENIKERS</span></p>
@@ -51,28 +61,30 @@ $merek_ringkas = require __DIR__ . '/../../includes/merek_ringkas.php';
 
             <div class="susunan-produk-fitur">
                 <div class="grid-produk-terlaris">
-                    <?php
-                    $produk_demo = [
-                        ['nama' => 'Sneakers Street Runner', 'harga' => 'Rp 899.000'],
-                        ['nama' => 'Kasual Daily Comfort', 'harga' => 'Rp 649.000'],
-                        ['nama' => 'Sport Active Lite', 'harga' => 'Rp 1.199.000'],
-                        ['nama' => 'Classic Leather Series', 'harga' => 'Rp 1.450.000'],
-                    ];
-                    foreach ($produk_demo as $p):
+                    <?php if ($produk_terlaris === []): ?>
+                    <p class="beranda-terlaris-kosong" style="grid-column:1/-1;margin:0;padding:1rem 0;color:#6b7280;font-size:0.95rem;">Belum ada produk di katalog atau koneksi gagal. Cek <code>config.php</code> dan tabel katalog di Supabase.</p>
+                    <?php else: ?>
+                    <?php foreach ($produk_terlaris as $p):
+                        $id = (string) ($p['id_produk'] ?? '');
+                        $nama = (string) ($p['nama_produk'] ?? '');
+                        $brand = (string) ($p['brand'] ?? '');
+                        $harga = (int) ($p['harga'] ?? 0);
+                        $u_detail = aplikasi_url('pembeli/detail_produk.php?id=' . rawurlencode($id));
+                        $u_gambar = katalog_url_gambar_utama($p);
                     ?>
                     <article class="kartu-produk">
+                        <a class="kartu-produk__tautan-gambar" href="<?php echo htmlspecialchars($u_detail, ENT_QUOTES, 'UTF-8'); ?>">
                         <div class="kartu-produk__gambar">
-                            <svg class="kartu-produk__ikon-sepatu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 44" fill="none" aria-hidden="true">
-                                <ellipse cx="36" cy="36" rx="28" ry="5" fill="currentColor" opacity="0.1"/>
-                                <path d="M6 30c2-9 12-14 26-13l22 3a6 6 0 016 5v2a3 3 0 01-3 3H8l-2-2v-5z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" fill="currentColor" fill-opacity="0.07"/>
-                                <path d="M10 28V24l8-12c6-2 16-2 24 2l10 8 4 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.42"/>
-                                <path d="M14 30h40" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.2"/>
-                            </svg>
+                            <img class="kartu-produk__foto" src="<?php echo htmlspecialchars($u_gambar, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?>" loading="lazy" width="400" height="275">
                         </div>
+                        </a>
                         <div class="kartu-produk__isi">
-                            <h3 class="kartu-produk__nama"><?php echo htmlspecialchars($p['nama'], ENT_QUOTES, 'UTF-8'); ?></h3>
-                            <p class="kartu-produk__harga"><?php echo htmlspecialchars($p['harga'], ENT_QUOTES, 'UTF-8'); ?></p>
-                            <a class="tombol-beli" href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php if ($brand !== ''): ?><p class="kartu-produk__brand"><?php echo htmlspecialchars($brand, ENT_QUOTES, 'UTF-8'); ?></p><?php endif; ?>
+                            <h3 class="kartu-produk__nama">
+                                <a class="kartu-produk__tautan-nama" href="<?php echo htmlspecialchars($u_detail, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?></a>
+                            </h3>
+                            <p class="kartu-produk__harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga), ENT_QUOTES, 'UTF-8'); ?></p>
+                            <a class="tombol-beli" href="<?php echo htmlspecialchars($u_detail, ENT_QUOTES, 'UTF-8'); ?>">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
@@ -81,6 +93,7 @@ $merek_ringkas = require __DIR__ . '/../../includes/merek_ringkas.php';
                         </div>
                     </article>
                     <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
 
                 <aside class="kotak-fitur" aria-label="Keunggulan belanja">
@@ -122,6 +135,51 @@ $merek_ringkas = require __DIR__ . '/../../includes/merek_ringkas.php';
             </div>
         </section>
     </main>
+
+    <footer class="beranda-toko__footer" id="kontak-toko">
+        <div class="beranda-toko__footer-isi">
+            <div class="beranda-toko__footer-merek">
+                <img class="beranda-toko__footer-logo" src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" width="220" height="42" alt="" role="presentation" loading="lazy" decoding="async">
+                <p class="beranda-toko__footer-tagline">Belanja online · Kunjungi toko kami</p>
+            </div>
+            <div class="beranda-toko__footer-kolom">
+                <h2 class="beranda-toko__footer-judul">Lokasi toko (offline)</h2>
+                <a class="beranda-toko__tautan-cta" href="<?php echo htmlspecialchars((string) $kontak_toko['url_peta'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">
+                    Buka di Google Maps
+                </a>
+                <p class="beranda-toko__footer-keterangan"><?php echo htmlspecialchars((string) ($kontak_toko['teks_peta'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
+            </div>
+            <div class="beranda-toko__footer-kolom">
+                <h2 class="beranda-toko__footer-judul">WhatsApp</h2>
+                <ul class="beranda-toko__footer-list">
+                    <?php foreach ((array) ($kontak_toko['wa'] ?? []) as $w):
+                        $e = preg_replace('/\D+/', '', (string) ($w['e164'] ?? ''));
+                        if ($e === '') {
+                            continue;
+                        }
+                        $tampil = (string) ($w['tampil'] ?? '');
+                        $waUrl = 'https://wa.me/' . $e;
+                    ?>
+                    <li>
+                        <a href="<?php echo htmlspecialchars($waUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer"><?php echo htmlspecialchars($tampil !== '' ? $tampil : ('+' . $e), ENT_QUOTES, 'UTF-8'); ?></a>
+                    </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <div class="beranda-toko__footer-kolom">
+                <h2 class="beranda-toko__footer-judul">Sosial media</h2>
+                <ul class="beranda-toko__footer-list">
+                    <li>
+                        <a href="<?php echo htmlspecialchars($u_ig, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">Instagram @<?php echo htmlspecialchars((string) ($kontak_toko['sosial']['instagram'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></a>
+                    </li>
+                    <li>
+                        <a href="<?php echo htmlspecialchars($u_tt, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">TikTok @<?php echo htmlspecialchars((string) ($kontak_toko['sosial']['tiktok'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <p class="beranda-toko__footer-hakcipta">© <?php echo date('Y'); ?> EA SENIKERS. Hak cipta dilindungi undang-undang.</p>
+    </footer>
 
 </body>
 </html>

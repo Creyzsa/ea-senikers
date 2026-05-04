@@ -93,7 +93,7 @@ $u_detail_base = aplikasi_url('pembeli/detail_pesanan_pembeli.php');
                 if ($nItem > 1) {
                     $namaTampil .= ' +' . ($nItem - 1) . ' lainnya';
                 }
-                $imgUrl = $first ? pesanan_url_gambar_item($first) : aplikasi_url(KATALOG_FOLDER_GAMBAR . '/placeholder.svg');
+                $imgUrl = $first ? pesanan_url_gambar_item($first) : katalog_url_gambar_placeholder();
                 $uDetail = $u_detail_base . '?id=' . rawurlencode((string) $oid);
                 ?>
                 <article class="pesanan-kartu">

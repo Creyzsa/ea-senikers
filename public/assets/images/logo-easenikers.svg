@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 56" width="300" height="56" role="img" aria-labelledby="t">
+  <title id="t">EA SENIKERS</title>
+  <text x="0" y="38" font-family="system-ui, Segoe UI, sans-serif" font-size="32" font-weight="800" fill="#c9b896" letter-spacing="-0.02em">EA</text>
+  <text x="52" y="38" font-family="system-ui, Segoe UI, sans-serif" font-size="32" font-weight="700" fill="#f8fafc" letter-spacing="0.14em">SENIKERS</text>
+  <line x1="0" y1="48" x2="300" y2="48" stroke="#a8905f" stroke-width="1.5" stroke-opacity="0.45"/>
+</svg>

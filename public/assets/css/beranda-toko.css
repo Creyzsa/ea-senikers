@@ -34,14 +34,18 @@ body.halaman-toko {
     margin-right: auto;
     text-decoration: none;
     color: #fff;
+    display: flex;
+    align-items: center;
+    line-height: 0;
 }
 
-.bilah-toko__nama {
-    margin: 0;
-    font-size: 1.15rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    color: #fff;
+.bilah-toko__logo {
+    display: block;
+    height: 1.7rem;
+    width: auto;
+    max-width: min(10.5rem, 42vw);
+    object-fit: contain;
+    object-position: left center;
 }
 
 .nav-toko {
@@ -218,6 +222,21 @@ body.halaman-toko {
     padding: 0;
 }
 
+.hero-toko__logo-wrap {
+    margin: 0 0 0.15rem;
+    line-height: 0;
+}
+
+.hero-toko__logo {
+    display: block;
+    width: min(300px, 86vw);
+    max-width: 100%;
+    height: auto;
+    max-height: 3.1rem;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.25));
+}
+
 .hero-toko__meta {
     margin: 0;
     font-size: 0.72rem;
@@ -384,6 +403,18 @@ body.halaman-toko {
     transform: translateY(-2px);
 }
 
+.kartu-produk__tautan-gambar {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    outline: none;
+}
+
+.kartu-produk__tautan-gambar:focus-visible {
+    outline: 2px solid var(--oranye-cta, #e85d04);
+    outline-offset: 2px;
+}
+
 .kartu-produk__gambar {
     aspect-ratio: 16 / 11;
     background: linear-gradient(145deg, #fafaf9, #e7e5e4);
@@ -392,6 +423,7 @@ body.halaman-toko {
     justify-content: center;
     color: var(--ikon-placeholder-produk);
     border-bottom: 1px solid var(--abu-tepi);
+    overflow: hidden;
 }
 
 .kartu-produk__gambar svg {
@@ -407,6 +439,33 @@ body.halaman-toko {
     height: auto;
     opacity: 0.88;
     color: var(--ikon-placeholder-produk);
+}
+
+.kartu-produk__foto {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    object-fit: contain;
+    padding: 0.4rem 0.6rem;
+    display: block;
+}
+
+.kartu-produk__brand {
+    margin: 0 0 0.2rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--oranye-cta-hover);
+}
+
+.kartu-produk__tautan-nama {
+    color: inherit;
+    text-decoration: none;
+}
+
+.kartu-produk__tautan-nama:hover {
+    color: var(--oranye-cta-hover, #c2410c);
 }
 
 .kartu-produk__isi {
@@ -588,4 +647,119 @@ body.halaman-toko {
 
 .panel-pembeli-teks .tautan-balik:hover {
     text-decoration: underline;
+}
+
+/* ——— Footer beranda toko (kontak) ——— */
+.beranda-toko__footer {
+    margin-top: 2.5rem;
+    padding: 2rem clamp(1rem, 3vw, 2rem) 1.5rem;
+    background: var(--biru-hero);
+    color: rgba(255, 255, 255, 0.88);
+    border-top: 1px solid rgba(168, 144, 95, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.beranda-toko__footer-isi {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.75rem 2rem;
+    align-items: start;
+}
+
+.beranda-toko__footer-merek {
+    grid-column: 1 / -1;
+    max-width: 32rem;
+}
+
+@media (min-width: 800px) {
+    .beranda-toko__footer-merek {
+        grid-column: auto;
+    }
+}
+
+.beranda-toko__footer-logo {
+    display: block;
+    width: min(220px, 60vw);
+    max-width: 100%;
+    height: auto;
+    max-height: 2.4rem;
+    object-fit: contain;
+    object-position: left;
+    margin-bottom: 0.4rem;
+    opacity: 0.98;
+}
+
+.beranda-toko__footer-tagline {
+    margin: 0;
+    font-size: 0.8rem;
+    color: rgba(201, 184, 150, 0.85);
+    font-weight: 500;
+}
+
+.beranda-toko__footer-judul {
+    margin: 0 0 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(201, 184, 150, 0.95);
+}
+
+.beranda-toko__tautan-cta {
+    display: inline-block;
+    margin-bottom: 0.4rem;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0a0a0a;
+    text-decoration: none;
+    background: linear-gradient(180deg, #c9b896 0%, var(--oranye-cta) 100%);
+    border-radius: 999px;
+    box-shadow: 0 2px 0 rgba(90, 75, 48, 0.3);
+}
+
+.beranda-toko__tautan-cta:hover {
+    filter: brightness(1.05);
+}
+
+.beranda-toko__footer-keterangan {
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.6);
+    max-width: 22rem;
+}
+
+.beranda-toko__footer-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.beranda-toko__footer-list a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    border-bottom: 1px solid transparent;
+}
+
+.beranda-toko__footer-list a:hover {
+    color: rgba(201, 184, 150, 0.98);
+    border-bottom-color: rgba(201, 184, 150, 0.45);
+}
+
+.beranda-toko__footer-hakcipta {
+    margin: 2rem auto 0;
+    padding-top: 1.15rem;
+    text-align: center;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.38);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    max-width: 1100px;
 }
