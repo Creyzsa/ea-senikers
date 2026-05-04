@@ -62,7 +62,7 @@ $u_checkout = aplikasi_url('pembeli/checkout_pembeli.php');
             }
         }
         if ($urls_gambar === []) {
-            $urls_gambar[] = aplikasi_url('assets/images/produk/placeholder.svg');
+            $urls_gambar[] = katalog_url_gambar_placeholder();
         }
         $utama = $urls_gambar[0];
         $nama = (string) ($produk['nama_produk'] ?? '');
