@@ -92,7 +92,7 @@ $u_produk = aplikasi_url('pembeli/produk.php');
                     <tbody>
                         <?php foreach ($baris as $r):
                             $nf = (string) ($r['nama_file'] ?? '');
-                            $thumb = $nf !== '' ? katalog_url_gambar_produk($nf) : aplikasi_url('assets/images/produk/placeholder.svg');
+                            $thumb = $nf !== '' ? katalog_url_gambar_produk($nf) : katalog_url_gambar_placeholder();
                             $kunci = (string) ($r['kunci'] ?? '');
                             $u_hapus = aplikasi_url('pembeli/keranjang_pembeli.php?hapus=' . rawurlencode($kunci));
                             $h = (int) ($r['harga'] ?? 0);
