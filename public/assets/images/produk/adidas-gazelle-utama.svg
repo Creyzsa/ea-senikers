@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" role="img" aria-label="Adidas">
+  <rect width="400" height="300" fill="#0d3b2c"/>
+  <text x="200" y="44" text-anchor="middle" fill="#fff" font-family="Segoe UI,sans-serif" font-size="22" font-weight="800">ADIDAS</text>
+  <path fill="none" stroke="#c9a227" stroke-width="3" d="M70 80h260M70 95h260M70 110h260"/>
+  <path fill="none" stroke="#e8e8e8" stroke-width="4" stroke-linecap="round" d="M55 195c50-45 140-55 230-30s115 50 130 85H65z"/>
+  <text x="200" y="268" text-anchor="middle" fill="#8fbc8f" font-size="13" font-family="Segoe UI,sans-serif">Second · terkurasi</text>
+</svg>

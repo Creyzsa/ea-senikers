@@ -1,31 +1,41 @@
-# ea-senikers
-Website E-Commerce Penjualan Sepatu EA SENIKERS berbasis PHP dan Supabase dengan fitur login, keranjang, checkout, dan pesanan.
-
 # EA SENIKERS 👟
 
-## 📌 Deskripsi
-EA SENIKERS adalah website e-commerce penjualan sepatu berbasis PHP dengan integrasi Supabase.
+EA SENIKERS adalah website e-commerce penjualan sepatu berbasis PHP Native dan Supabase. Sistem ini dibuat untuk membantu proses penjualan sepatu secara online, mulai dari login pengguna, katalog produk, keranjang, checkout, hingga pengelolaan pesanan.
 
-## 🚀 Fitur
-- Login & Register
-- Katalog Produk
-- Keranjang Belanja
-- Checkout
-- Pesanan
-- Admin Panel
+## Fitur Utama
 
-## 🛠 Teknologi
+- Login dan Register pengguna
+- Katalog produk sepatu
+- Detail produk
+- Keranjang belanja
+- Checkout pesanan
+- Riwayat pesanan pembeli
+- Panel admin
+- Integrasi Supabase untuk database dan autentikasi
+
+## Teknologi yang Digunakan
+
 - PHP Native
-- Supabase (Database & Auth)
-- HTML, CSS, JavaScript
+- Supabase
+- HTML
+- CSS
+- JavaScript
+- Laragon / XAMPP
 
-## 👩‍💻 Developer
-- Annisa Aulia Husna
-- Tomi Marta anggeni
-- Rania Aprilia
-- Mowendry
+## Anggota Tim
 
-## 📌 Cara Menjalankan
-1. Clone repository
-2. Jalankan di Laragon / XAMPP
-3. Akses di browser
+| Nama | NIM | 
+|---|---|
+| Annisa Aulia Husna | 2330407006 | 
+| Tomi Marta Anggeni | 2330407026 | 
+| Rania Aprilia | 2430407058 | 
+| Mowendry | 2430407061 | 
+
+## Cara Menjalankan Project
+
+### 1. Clone Repository
+
+Clone project dari GitHub ke komputer lokal:
+
+```bash
+git clone https://github.com/Creyzsa/ea-senikers.git
