@@ -209,7 +209,7 @@ $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
                 statusEl.appendChild(e1);
                 var e2 = document.createElement('div');
                 e2.style.cssText = 'font-size:0.88rem;margin-top:0.6rem;text-align:left;';
-                e2.innerHTML = 'Periksa WiFi / pastikan Laragon menyala. Lalu <strong>muat ulang halaman ini</strong> (tombol segar di browser) — <strong>jangan</strong> klik tautan dari email lagi; kalau perlu minta tautan reset baru.';
+                e2.innerHTML = 'Periksa sambungan internet lalu muat ulang halaman ini. Jika masalah tetap ada, kirim ulang tautan dari email atau hubungi dukungan.';
                 statusEl.appendChild(e2);
             });
             return;
