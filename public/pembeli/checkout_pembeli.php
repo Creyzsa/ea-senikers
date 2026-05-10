@@ -1,10 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Alur "Beli" — langkah berikutnya: alamat & pembayaran (placeholder).
- * Tidak menambah ke keranjang (beda dengan tombol Keranjang).
- */
+/** Langsung bayar satu item dari detail produk (tanpa menyimpan ke keranjang). */
 require_once __DIR__ . '/../../includes/sesi.php';
 require_once __DIR__ . '/../../includes/katalog_produk.php';
 require_once __DIR__ . '/../../includes/keranjang_sesi.php';
@@ -80,7 +77,7 @@ $kondisi = (string) ($produk['kondisi'] ?? '');
     <article class="detail-kartu" style="max-width:36rem;margin:0 auto;">
         <div class="detail-panel">
             <h1 style="margin:0 0 0.5rem;font-size:1.2rem;">Ringkasan pesanan</h1>
-            <p style="margin:0 0 1rem;color:#6b7280;font-size:0.9rem;">Kamu memilih <strong>Beli langsung</strong> — tidak melalui keranjang.</p>
+            <p style="margin:0 0 1rem;color:#6b7280;font-size:0.9rem;"><strong>Pembelian langsung</strong> — Anda tidak menggunakan keranjang untuk item ini.</p>
 
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
                 <p style="margin:0 0 0.25rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--oranye-cta-hover);"><?php echo htmlspecialchars($brand, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -93,10 +90,9 @@ $kondisi = (string) ($produk['kondisi'] ?? '');
             </div>
 
             <div style="border:1px dashed #d1d5db;border-radius:10px;padding:1rem;background:#fffbeb;">
-                <p style="margin:0 0 0.35rem;font-weight:700;color:#92400e;">Langkah berikutnya</p>
+                <p style="margin:0 0 0.35rem;font-weight:700;color:#92400e;">Langkah lanjutan</p>
                 <p style="margin:0;font-size:0.9rem;line-height:1.5;color:#78350f;">
-                    Form <strong>alamat pengiriman</strong> dan <strong>pembayaran</strong> akan ditambahkan di sini (misalnya pilih kurir, metode bayar, konfirmasi).
-                    Data pesanan di atas sudah siap dipakai untuk session / tabel <code>pesanan</code> nanti.
+                    Silakan lakukan pembayaran mengikuti petunjuk yang Anda terima atau hubungi kami untuk konfirmasi alamat kirim dan pembayaran.
                 </p>
             </div>
 

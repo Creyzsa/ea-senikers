@@ -37,7 +37,7 @@ if ($email === '') {
             <h1>Akun saya</h1>
             <p><strong>Nama tampil:</strong> <?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?></p>
             <p style="margin-top:0.65rem;"><strong>Email:</strong> <?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?></p>
-            <p style="margin-top:0.65rem;font-size:0.9rem;opacity:0.85;">Data profil di sini bisa dilengkapi (alamat, telepon) dan disimpan di tabel <code>users</code> atau metadata Supabase.</p>
+            <p style="margin-top:0.65rem;font-size:0.9rem;opacity:0.85;">Nama dan email menampilkan data dari akun Anda saat ini.</p>
             <a class="tautan-balik" href="<?php echo htmlspecialchars($u_beranda, ENT_QUOTES, 'UTF-8'); ?>">← Kembali ke beranda</a>
         </div>
     </main>

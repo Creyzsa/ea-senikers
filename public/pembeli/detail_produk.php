@@ -108,7 +108,7 @@ $u_checkout = aplikasi_url('pembeli/checkout_pembeli.php');
 
                     <h2 class="detail-panel__subjudul">Ukuran</h2>
                     <?php if ($ukuran === []): ?>
-                        <p class="detail-stok-hint">Stok ukuran belum diatur.</p>
+                        <p class="detail-stok-hint">Ukuran dan stok akan segera tersedia.</p>
                     <?php else: ?>
                         <div class="detail-ukuran-grup" role="radiogroup" aria-label="Pilih ukuran">
                             <?php

@@ -53,24 +53,23 @@ $u_detail_base = aplikasi_url('pembeli/detail_pesanan_pembeli.php');
 
 <main class="pesanan-wrap" id="utama">
     <h1 class="pesanan-judul">Pesanan saya</h1>
-    <p class="pesanan-sub">Riwayat pesanan kamu, diurutkan dari yang terbaru.</p>
+    <p class="pesanan-sub">Riwayat pesanan Anda, dari yang terbaru.</p>
 
     <?php if (!$tabel_ada): ?>
         <div class="pesanan-setup-db" role="alert">
-            <strong>Tabel belum dibuat.</strong> Jalankan skrip SQL di project:
-            <code>database/orders_schema.sql</code> pada Supabase (SQL Editor), lalu muat ulang halaman ini.
+            Riwayat pesanan belum dapat ditampilkan. Hubungi admin toko atau coba lagi nanti.
         </div>
     <?php elseif ($id_pengguna <= 0): ?>
         <div class="pesanan-peringatan" role="alert">
-            Akun belum punya <strong>ID pengguna</strong> di tabel <code>users</code>. Coba <strong>Keluar</strong> lalu <strong>Masuk</strong> lagi agar ID tersimpan, atau pastikan email akun ada di Supabase → Table <code>users</code>.
+            Akun Anda belum lengkap. Silakan <strong>Keluar</strong>, lalu <strong>Masuk</strong> lagi, atau hubungi layanan pelanggan.
         </div>
     <?php endif; ?>
 
     <?php if ($tabel_ada && $id_pengguna > 0 && $daftar === []): ?>
         <div class="pesanan-kosong">
-            <div class="pesanan-kosong__ikon" aria-hidden="true">📦</div>
+            <div class="pesanan-kosong__ikon" aria-hidden="true"></div>
             <p class="pesanan-kosong__judul">Belum ada pesanan</p>
-            <p style="margin:0;font-size:0.92rem;">Yuk jelajahi katalog dan mulai belanja.</p>
+            <p style="margin:0;font-size:0.92rem;">Telusuri katalog untuk mulai belanja.</p>
             <p style="margin:1rem 0 0;">
                 <a class="pesanan-tombol-detail" href="<?php echo htmlspecialchars(aplikasi_url('pembeli/produk.php'), ENT_QUOTES, 'UTF-8'); ?>">Lihat produk</a>
             </p>

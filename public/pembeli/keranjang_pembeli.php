@@ -124,7 +124,7 @@ $u_produk = aplikasi_url('pembeli/produk.php');
 
             <div class="keranjang-ringkas">
                 <p class="keranjang-total">Total estimasi: <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong></p>
-                <p class="keranjang-catatan">Checkout multi-item dan alamat pengiriman bisa ditambahkan di langkah berikutnya.</p>
+                <p class="keranjang-catatan">Subtotal dapat berubah mengikuti ongkir atau promosi pada saat pembayaran dikonfirmasi.</p>
                 <p class="keranjang-lanjut">
                     <a class="tautan-balik" href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">← Lanjut belanja</a>
                 </p>

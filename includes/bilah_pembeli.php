@@ -61,11 +61,6 @@ $u_keluar = aplikasi_url('login/keluar.php');
             <?php endif; ?>
         </nav>
         <div class="bilah-toko__aksi">
-            <button type="button" class="tombol-cari" aria-label="Cari produk" disabled title="Segera hadir">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-            </button>
             <a class="tombol-keranjang-oranye<?php echo $bp_aktif === 'keranjang' ? ' tombol-keranjang-oranye--aktif' : ''; ?>"
                href="<?php echo htmlspecialchars($u_keranjang, ENT_QUOTES, 'UTF-8'); ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">

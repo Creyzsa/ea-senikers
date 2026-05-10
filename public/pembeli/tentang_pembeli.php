@@ -28,7 +28,8 @@ $u_beranda = aplikasi_url('pembeli/beranda_pembeli.php');
     <main class="kontainer-toko" id="utama">
         <div class="panel-pembeli-teks">
             <h1>Tentang EA SENIKERS</h1>
-            <p>Halaman ini untuk cerita merek, kontak, dan kebijakan. Konten bisa kamu lengkapi sesuai kebutuhan toko.</p>
+            <p>Kami menyediakan sepatu berkualitas mulai dari sneakers baru hingga pilihan preloved terkurasi, dengan deskripsi jujur dan harga yang transparan.</p>
+            <p style="margin-top:0.75rem;">Informasi kontak lengkap dapat dilihat di bagian footer beranda.</p>
             <p style="margin-top:0.75rem;">
                 <a class="tautan-balik" href="<?php echo htmlspecialchars($u_beranda, ENT_QUOTES, 'UTF-8'); ?>">← Beranda</a>
             </p>

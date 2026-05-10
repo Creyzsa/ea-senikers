@@ -28,7 +28,7 @@ $u_produk = aplikasi_url('pembeli/produk.php');
     <main class="kontainer-toko" id="utama">
         <div class="panel-pembeli-teks">
             <h1>Kategori</h1>
-            <p>Filter kategori produk (misalnya sneakers, apparel) bisa dihubungkan ke kolom kategori di katalog nanti.</p>
+            <p>Semua koleksi tersedia di halaman produk. Gunakan daftar di sana untuk menemukan merek dan model favorit Anda.</p>
             <p style="margin-top:0.75rem;">
                 <a class="tautan-balik" href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">← Lihat semua produk</a>
             </p>

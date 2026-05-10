@@ -35,8 +35,8 @@ $daftar_produk = katalog_ambil_semua_produk();
 
         <?php if ($daftar_produk === []): ?>
             <div class="katalog-kosong">
-                <strong>Belum ada produk atau koneksi gagal</strong>
-                Pastikan tabel Supabase sudah dibuat (jalankan <code>schema_katalog_produk.sql</code>) dan URL/key di <code>config.php</code> benar.
+                <strong>Katalog kosong atau tidak dapat dimuat.</strong>
+                Silakan refresh halaman. Jika masalah berlanjut, hubungi admin toko.
             </div>
         <?php else: ?>
             <div class="katalog-grid">
