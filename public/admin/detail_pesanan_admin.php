@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 require_once __DIR__ . '/../../includes/sesi.php';
 require_once __DIR__ . '/../../includes/pesanan_repositori.php';
 
@@ -9,6 +12,11 @@ if (ambil_peran() !== 'admin') {
     exit;
 }
 
+if (!isset($_SESSION['csrf_admin_pesanan']) || !is_string($_SESSION['csrf_admin_pesanan'])) {
+    $_SESSION['csrf_admin_pesanan'] = bin2hex(random_bytes(24));
+}
+$csrf = $_SESSION['csrf_admin_pesanan'];
+
 $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
 $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF-8');
 
@@ -17,6 +25,32 @@ if ($order_id <= 0) {
     header('Location: pesanan_admin.php');
     exit;
 }
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $aksi = (string) ($_POST['aksi'] ?? '');
+    $token = (string) ($_POST['csrf'] ?? '');
+    $id_post = (int) ($_POST['order_id'] ?? 0);
+    $redirUrl = aplikasi_url('admin/detail_pesanan_admin.php?id=' . rawurlencode((string) $order_id));
+
+    if ($id_post !== $order_id || !hash_equals($csrf, $token)) {
+        $_SESSION['flash_detail_order'] = 'Mohon muat ulang halaman.';
+        $_SESSION['flash_detail_order_warna'] = 'error';
+    } elseif ($aksi === 'ubah_status') {
+        $nb = strtolower(trim((string) ($_POST['status_baru'] ?? '')));
+
+        $ok = pesanan_admin_ubah_status($order_id, $nb);
+
+        $_SESSION['flash_detail_order'] = $ok ? 'Status pesanan diperbarui.' : 'Status tidak dapat diubah pada tahap ini.';
+        $_SESSION['flash_detail_order_warna'] = $ok ? 'sukses' : 'error';
+    }
+
+    header('Location: ' . $redirUrl);
+    exit;
+}
+
+$flash_detail = $_SESSION['flash_detail_order'] ?? null;
+$flash_warna = $_SESSION['flash_detail_order_warna'] ?? 'sukses';
+unset($_SESSION['flash_detail_order'], $_SESSION['flash_detail_order_warna']);
 
 $pesanan = pesanan_admin_detail($order_id);
 if (!$pesanan) {
@@ -28,6 +62,11 @@ $status_labels = pesanan_status_label_id();
 $badge_kelas = pesanan_status_kelas_badge();
 $st = (string) ($pesanan['status'] ?? '');
 $badgeClass = $badge_kelas[$st] ?? 'pesanan-badge pesanan-badge--kuning';
+
+$langkah_tampil = pesanan_langkah_progress();
+$langkah_idx = pesanan_indeks_langkah_aktif($st);
+
+$status_opsi_selanjutnya = pesanan_admin_opsi_status_selanjutnya($st);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -78,7 +117,7 @@ $badgeClass = $badge_kelas[$st] ?? 'pesanan-badge pesanan-badge--kuning';
                     Pengaturan
                 </a>
             </nav>
-            <p class="admin-sisi__kaki">Detail item &amp; alamat pengiriman.</p>
+            <p class="admin-sisi__kaki">© EA SENIKERS</p>
         </aside>
 
         <div class="admin-utama">
@@ -102,6 +141,12 @@ $badgeClass = $badge_kelas[$st] ?? 'pesanan-badge pesanan-badge--kuning';
             <main class="admin-isi">
                 <h1 class="admin-judul-besar">Pesanan #<?php echo htmlspecialchars((string) $pesanan['id'], ENT_QUOTES, 'UTF-8'); ?></h1>
                 <p class="admin-salam"><?php echo htmlspecialchars($pesanan['nama_pengguna'] ?? 'Pembeli', ENT_QUOTES, 'UTF-8'); ?> · <?php echo htmlspecialchars(date('d/m/Y H:i', strtotime((string) ($pesanan['created_at'] ?? 'now'))), ENT_QUOTES, 'UTF-8'); ?></p>
+
+                <?php if (is_string($flash_detail) && $flash_detail !== ''): ?>
+                    <div class="admin-alert admin-alert--<?php echo htmlspecialchars($flash_warna === 'error' ? 'error' : 'sukses', ENT_QUOTES, 'UTF-8'); ?>">
+                        <?php echo htmlspecialchars($flash_detail, ENT_QUOTES, 'UTF-8'); ?>
+                    </div>
+                <?php endif; ?>
 
                 <section class="admin-kartu" aria-labelledby="judul-info-pesanan">
                     <div class="admin-kartu__header">
@@ -134,6 +179,63 @@ $badgeClass = $badge_kelas[$st] ?? 'pesanan-badge pesanan-badge--kuning';
                                 Rp <?php echo htmlspecialchars(number_format((float) ($pesanan['total_price'] ?? 0), 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?>
                             </div>
                         </div>
+
+                        <?php if ($st === 'cancelled'): ?>
+                            <p class="admin-alert admin-alert--error" style="margin-top: 1rem;">Pesanan ini dibatalkan.</p>
+                        <?php elseif ($langkah_idx >= 0): ?>
+                            <div style="margin-top: 1.1rem;">
+                                <strong>Alur di toko</strong>
+                                <ul class="admin-progress-pesanan" style="margin: 0.6rem 0 0;">
+                                    <?php foreach ($langkah_tampil as $ix => $__row): ?>
+                                        <?php $selesai = $ix <= $langkah_idx; ?>
+                                        <li class="admin-progress-pesanan__langkah">
+                                            <?php if ($selesai): ?>
+                                                <span class="admin-progress-pesanan__cek" aria-hidden="true">✓</span>
+                                            <?php else: ?>
+                                                <span aria-hidden="true">○</span>
+                                            <?php endif; ?>
+                                            <?php echo htmlspecialchars((string) ($__row['label'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if ($status_opsi_selanjutnya !== []): ?>
+                            <form class="admin-form-status" method="post" aria-label="Ubah tahap pesanan"
+                                  data-konfirm-batal="<?php echo htmlspecialchars($status_labels['cancelled'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
+                                <input type="hidden" name="aksi" value="ubah_status">
+                                <input type="hidden" name="order_id" value="<?php echo htmlspecialchars((string) $pesanan['id'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <div class="admin-form-grid" style="align-items:end;">
+                                    <label class="admin-field">
+                                        <span>Perbarui tahap</span>
+                                        <select name="status_baru" required class="detail-select-status">
+                                            <?php foreach ($status_opsi_selanjutnya as $val): ?>
+                                                <option value="<?php echo htmlspecialchars($val, ENT_QUOTES, 'UTF-8'); ?>">
+                                                    <?php echo htmlspecialchars((string) ($status_labels[$val] ?? $val), ENT_QUOTES, 'UTF-8'); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </label>
+                                    <button type="submit" class="admin-btn admin-btn--utama">Terapkan</button>
+                                </div>
+                            </form>
+                            <script>
+(function () {
+    var sel = document.querySelector('.detail-select-status');
+    var form = sel && sel.closest('form[data-konfirm-batal]');
+    if (!form || !sel) return;
+    form.addEventListener('submit', function (e) {
+        if (sel.value !== 'cancelled') return;
+        var msg = form.getAttribute('data-konfirm-batal');
+        if (msg && !window.confirm('Yakin membatalkan pesanan ini? Status tidak bisa dibuka kembali.')) {
+            e.preventDefault();
+        }
+    });
+})();
+                            </script>
+                        <?php endif; ?>
 
                         <div class="admin-detail-alamat">
                             <strong>Alamat pengiriman</strong>
