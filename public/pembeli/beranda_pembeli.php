@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../includes/sesi.php';
 require_once __DIR__ . '/../../includes/katalog_produk.php';
 require_once __DIR__ . '/../../includes/pesanan_repositori.php';
+require_once __DIR__ . '/../../includes/keranjang_sesi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {
@@ -14,11 +15,17 @@ $nama_sapa = trim((string) ($_SESSION['nama_pengguna'] ?? ''));
 if ($nama_sapa === '') {
     $nama_sapa = 'Pembeli';
 }
+
 $bilah_pembeli_aktif = 'beranda';
 $tautan_produk = aplikasi_url('pembeli/produk.php');
+$tautan_kategori = aplikasi_url('pembeli/kategori_pembeli.php');
+$tautan_pesanan = aplikasi_url('pembeli/pesanan_pembeli.php');
+$tautan_tentang = aplikasi_url('pembeli/tentang_pembeli.php');
+$tautan_akun = aplikasi_url('pembeli/akun_pembeli.php');
 $logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
 $merek_ringkas = require __DIR__ . '/../../includes/merek_ringkas.php';
 $kontak_toko = require __DIR__ . '/../../includes/kontak_toko.php';
+
 $whatsapp_ada = false;
 foreach ((array) ($kontak_toko['wa'] ?? []) as $__wa) {
     if (trim((string) ($__wa['e164'] ?? '')) !== '') {
@@ -26,7 +33,27 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $__wa) {
         break;
     }
 }
+
+$semua_produk = katalog_ambil_semua_produk();
+$brand_set = [];
+foreach ($semua_produk as $produk) {
+    $brand = trim((string) ($produk['brand'] ?? ''));
+    if ($brand !== '') {
+        $brand_set[$brand] = true;
+    }
+}
 $produk_terlaris = pesanan_produk_terlaris_gabung_katalog(4);
+if ($produk_terlaris === [] && $semua_produk !== []) {
+    $produk_terlaris = array_slice($semua_produk, 0, 4);
+}
+
+$id_pengguna = ambil_id_pengguna_efektif();
+$jumlah_pesanan = 0;
+if ($id_pengguna > 0 && pesanan_cek_tabel_ada()) {
+    $jumlah_pesanan = count(pesanan_ambil_oleh_user($id_pengguna));
+}
+$jumlah_keranjang = keranjang_hitung_jumlah_item();
+
 $u_ig = 'https://www.instagram.com/' . rawurlencode((string) ($kontak_toko['sosial']['instagram'] ?? 'easenikers')) . '/';
 $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial']['tiktok'] ?? 'easenikers'));
 ?>
@@ -35,7 +62,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Beranda — EA SENIKERS</title>
+    <title>Beranda - EA SENIKERS</title>
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
 </head>
 <body class="halaman-toko">
@@ -50,7 +77,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                 </p>
                 <p class="hero-toko__meta"><?php echo htmlspecialchars($merek_ringkas['hero_meta_satu_baris'], ENT_QUOTES, 'UTF-8'); ?></p>
                 <h1 id="hero-judul" class="hero-toko__judul"><?php echo htmlspecialchars($merek_ringkas['hero_judul'], ENT_QUOTES, 'UTF-8'); ?></h1>
-                <p class="hero-toko__sapa">Halo, <span class="hero-toko__nama"><?php echo htmlspecialchars($nama_sapa, ENT_QUOTES, 'UTF-8'); ?></span> · <span class="hero-toko__nama-merek">EA SENIKERS</span></p>
+                <p class="hero-toko__sapa">Halo, <span class="hero-toko__nama"><?php echo htmlspecialchars($nama_sapa, ENT_QUOTES, 'UTF-8'); ?></span> - <span class="hero-toko__nama-merek">EA SENIKERS</span></p>
                 <p class="hero-toko__sub"><?php echo htmlspecialchars($merek_ringkas['hero_sub_bullet'], ENT_QUOTES, 'UTF-8'); ?></p>
                 <div class="hero-toko__aksi">
                     <a class="tombol-oranye-besar hero-toko__cta" href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($merek_ringkas['hero_teks_tombol'], ENT_QUOTES, 'UTF-8'); ?></a>
@@ -60,16 +87,74 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
     </section>
 
     <main class="kontainer-toko" id="utama">
+        <section class="beranda-ringkas" aria-label="Ringkasan toko dan akun">
+            <div>
+                <span>Produk</span>
+                <strong><?php echo (string) count($semua_produk); ?></strong>
+            </div>
+            <div>
+                <span>Merek</span>
+                <strong><?php echo (string) count($brand_set); ?></strong>
+            </div>
+            <div>
+                <span>Keranjang</span>
+                <strong><?php echo (string) $jumlah_keranjang; ?></strong>
+            </div>
+            <div>
+                <span>Pesanan</span>
+                <strong><?php echo (string) $jumlah_pesanan; ?></strong>
+            </div>
+        </section>
+
+        <section class="beranda-akses" aria-labelledby="judul-akses-cepat">
+            <div class="section-heading">
+                <div>
+                    <p class="section-eyebrow">Akses cepat</p>
+                    <h2 id="judul-akses-cepat">Mulai dari tujuan Anda</h2>
+                </div>
+            </div>
+            <div class="beranda-akses-grid">
+                <a href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>">
+                    <span>01</span>
+                    <strong>Produk</strong>
+                    <p>Lihat katalog sneakers baru dan preloved.</p>
+                </a>
+                <a href="<?php echo htmlspecialchars($tautan_kategori, ENT_QUOTES, 'UTF-8'); ?>">
+                    <span>02</span>
+                    <strong>Kategori</strong>
+                    <p>Pilih berdasarkan brand dan kondisi.</p>
+                </a>
+                <a href="<?php echo htmlspecialchars($tautan_pesanan, ENT_QUOTES, 'UTF-8'); ?>">
+                    <span>03</span>
+                    <strong>Pesanan</strong>
+                    <p>Pantau status transaksi Anda.</p>
+                </a>
+                <a href="<?php echo htmlspecialchars($tautan_tentang, ENT_QUOTES, 'UTF-8'); ?>">
+                    <span>04</span>
+                    <strong>Tentang</strong>
+                    <p>Kenali EA SENIKERS dan kanal sosialnya.</p>
+                </a>
+                <a href="<?php echo htmlspecialchars($tautan_akun, ENT_QUOTES, 'UTF-8'); ?>">
+                    <span>05</span>
+                    <strong>Akun</strong>
+                    <p>Kelola identitas dan akses belanja.</p>
+                </a>
+            </div>
+        </section>
+
         <section class="blok-terlaris" aria-labelledby="judul-terlaris">
             <div class="blok-terlaris__header">
-                <h2 id="judul-terlaris" class="blok-terlaris__judul">Produk Terlaris</h2>
-                <a class="blok-terlaris__lihat" href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>">Lihat Semua →</a>
+                <div>
+                    <p class="section-eyebrow">Produk pilihan</p>
+                    <h2 id="judul-terlaris" class="blok-terlaris__judul">Rekomendasi untuk Anda</h2>
+                </div>
+                <a class="blok-terlaris__lihat" href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>">Lihat semua &rarr;</a>
             </div>
 
             <div class="susunan-produk-fitur">
                 <div class="grid-produk-terlaris">
                     <?php if ($produk_terlaris === []): ?>
-                    <p class="beranda-terlaris-kosong" style="grid-column:1/-1;margin:0;padding:1rem 0;color:#6b7280;font-size:0.95rem;">Katalog akan tampil di sini ketika sudah ada produk.</p>
+                    <p class="beranda-terlaris-kosong">Katalog akan tampil di sini ketika sudah ada produk.</p>
                     <?php else: ?>
                     <?php foreach ($produk_terlaris as $p):
                         $id = (string) ($p['id_produk'] ?? '');
@@ -111,8 +196,8 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                             </svg>
                         </span>
                         <div class="kotak-fitur__teks">
-                            <strong>Produk Berkualitas</strong>
-                            <span>Sepatu baru &amp; second dengan kualitas terpilih dan layak pakai</span>
+                            <strong>Produk berkualitas</strong>
+                            <span>Sepatu baru dan preloved dengan kualitas terpilih.</span>
                         </div>
                     </div>
                     <div class="kotak-fitur__baris">
@@ -123,8 +208,8 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                             </svg>
                         </span>
                         <div class="kotak-fitur__teks">
-                            <strong>Kondisi Transparan</strong>
-                            <span>Detail kondisi produk dijelaskan secara jujur (real pict &amp; deskripsi)</span>
+                            <strong>Kondisi transparan</strong>
+                            <span>Detail produk dibuat jelas sebelum Anda checkout.</span>
                         </div>
                     </div>
                     <div class="kotak-fitur__baris">
@@ -134,8 +219,8 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                             </svg>
                         </span>
                         <div class="kotak-fitur__teks">
-                            <strong>Harga Kompetitif</strong>
-                            <span>Harga bersaing sesuai kondisi dan kualitas produk</span>
+                            <strong>Harga terbuka</strong>
+                            <span>Harga katalog tampil jelas sesuai kondisi produk.</span>
                         </div>
                     </div>
                 </aside>
@@ -188,7 +273,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                 </ul>
             </div>
         </div>
-        <p class="beranda-toko__footer-hakcipta">© <?php echo date('Y'); ?> EA SENIKERS. Hak cipta dilindungi undang-undang.</p>
+        <p class="beranda-toko__footer-hakcipta">&copy; <?php echo date('Y'); ?> EA SENIKERS. Hak cipta dilindungi undang-undang.</p>
     </footer>
 
 </body>

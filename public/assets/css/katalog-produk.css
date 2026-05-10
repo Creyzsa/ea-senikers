@@ -104,7 +104,7 @@ body.halaman-katalog {
     padding: 0.2rem 0.5rem;
     font-size: 0.65rem;
     font-weight: 800;
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
     text-transform: uppercase;
     border-radius: 6px;
     background: rgba(10, 10, 10, 0.88);
@@ -131,7 +131,7 @@ body.halaman-katalog {
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0;
     color: var(--oranye-cta-hover);
 }
 
@@ -169,7 +169,7 @@ body.halaman-katalog {
     color: var(--teks-utama);
 }
 
-/* ——— Detail produk (gaya marketplace + tema EA SENIKERS) ——— */
+/* --- Detail produk (gaya marketplace + tema EA SENIKERS) --- */
 body.halaman-detail-produk {
     margin: 0;
     min-height: 100vh;
@@ -279,7 +279,7 @@ body.halaman-detail-produk {
 .detail-panel__brand {
     font-size: 0.75rem;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0;
     text-transform: uppercase;
     color: var(--oranye-cta-hover);
     margin-bottom: 0.25rem;
@@ -305,7 +305,7 @@ body.halaman-detail-produk {
     font-size: 0.7rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
     border-radius: 6px;
     background: #f3f4f6;
     border: 1px solid #e5e7eb;
@@ -589,7 +589,7 @@ body.halaman-detail-produk {
 .keranjang-tabel th {
     font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
     color: var(--teks-redup);
     background: #fafafa;
 }
@@ -659,4 +659,269 @@ body.halaman-detail-produk {
 
 .keranjang-lanjut {
     margin: 1rem 0 0;
+}
+
+/* Katalog pembeli */
+.katalog-latar {
+    min-height: calc(100vh - 5rem);
+    background:
+        linear-gradient(180deg, #f8fafc 0%, #f3f4f6 45%, #fff 100%);
+}
+
+.katalog-kontainer {
+    padding-top: 1rem;
+}
+
+.katalog-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 22rem);
+    gap: 1rem;
+    align-items: stretch;
+    margin-bottom: 1rem;
+    padding: clamp(1.15rem, 3vw, 1.5rem);
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.katalog-hero__teks h1 {
+    margin: 0;
+    max-width: 44rem;
+    font-size: clamp(1.45rem, 3vw, 2.1rem);
+    line-height: 1.12;
+    font-weight: 900;
+    color: var(--teks-utama);
+}
+
+.katalog-hero__teks p:last-child {
+    margin: 0.65rem 0 0;
+    max-width: 44rem;
+    font-size: 0.96rem;
+    line-height: 1.6;
+    color: var(--teks-redup);
+}
+
+.katalog-hero__stat {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.katalog-hero__stat div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0.85rem;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.katalog-hero__stat strong {
+    font-size: 1.45rem;
+    line-height: 1;
+    font-weight: 900;
+}
+
+.katalog-hero__stat span {
+    margin-top: 0.35rem;
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--teks-redup);
+}
+
+.katalog-filter {
+    display: grid;
+    grid-template-columns: minmax(14rem, 1.4fr) repeat(3, minmax(9rem, 0.8fr)) auto;
+    gap: 0.75rem;
+    align-items: end;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 6px 22px rgba(15, 23, 42, 0.05);
+}
+
+.katalog-filter label {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.katalog-filter label span {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--teks-redup);
+}
+
+.katalog-filter input,
+.katalog-filter select {
+    width: 100%;
+    min-height: 2.65rem;
+    padding: 0.65rem 0.72rem;
+    color: var(--teks-utama);
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font: inherit;
+}
+
+.katalog-filter input:focus,
+.katalog-filter select:focus {
+    outline: 3px solid var(--fokus-ring);
+    border-color: var(--oranye-cta);
+    background: #fff;
+}
+
+.katalog-filter__aksi {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tombol-filter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.65rem;
+    padding: 0.65rem 0.9rem;
+    color: #fff;
+    text-decoration: none;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 800;
+    background: #111827;
+    border: 1px solid #111827;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.tombol-filter--sekunder {
+    color: var(--teks-utama);
+    background: #fff;
+    border-color: #d1d5db;
+}
+
+.katalog-hasil-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 0 0 1rem;
+}
+
+.katalog-hasil-bar p {
+    margin: 0;
+    color: var(--teks-redup);
+    font-size: 0.9rem;
+}
+
+.katalog-hasil-bar a {
+    color: var(--oranye-cta-hover);
+    text-decoration: none;
+    font-weight: 800;
+}
+
+.katalog-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.katalog-chip-row a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.6rem;
+    color: #1f2937;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.kartu-katalog {
+    border-radius: 8px;
+    box-shadow: 0 8px 26px rgba(15, 23, 42, 0.06);
+}
+
+.kartu-katalog__gambar-wrap {
+    background: linear-gradient(145deg, #fff, #f3f4f6);
+}
+
+.kartu-katalog__gambar {
+    object-fit: contain;
+    padding: 0.45rem;
+}
+
+.kartu-katalog__isi {
+    padding: 0.8rem 0.85rem 0.95rem;
+}
+
+.kartu-katalog__brand {
+    letter-spacing: 0;
+}
+
+.kartu-katalog__harga {
+    margin-top: auto;
+}
+
+.kartu-katalog__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.35rem;
+    margin-top: 0.7rem;
+    padding: 0.5rem 0.75rem;
+    color: #fff;
+    font-size: 0.84rem;
+    font-weight: 800;
+    background: #111827;
+    border-radius: 8px;
+}
+
+.kartu-katalog__badge-kondisi {
+    letter-spacing: 0;
+    border-radius: 8px;
+}
+
+.kartu-katalog__badge-kondisi--netral {
+    background: #374151;
+}
+
+.katalog-kembali {
+    margin-top: 1.25rem;
+    text-align: center;
+}
+
+.katalog-kembali a {
+    color: var(--oranye-cta-hover);
+    text-decoration: none;
+    font-weight: 800;
+}
+
+@media (max-width: 980px) {
+    .katalog-hero,
+    .katalog-filter {
+        grid-template-columns: 1fr;
+    }
+
+    .katalog-filter__aksi {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 620px) {
+    .katalog-hero__stat {
+        grid-template-columns: 1fr;
+    }
+
+    .katalog-filter__aksi,
+    .tombol-filter {
+        width: 100%;
+    }
 }
