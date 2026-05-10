@@ -38,7 +38,7 @@ foreach (admin_daftar_ukuran_default() as $uk) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $token = (string) ($_POST['csrf'] ?? '');
     if (!hash_equals($csrf, $token)) {
-        $errors[] = 'Sesi form tidak valid. Muat ulang halaman lalu coba lagi.';
+        $errors[] = 'Mohon muat ulang halaman.';
     }
 
     $aksi = (string) ($_POST['aksi'] ?? '');
@@ -145,7 +145,19 @@ if ($editId !== '' && $errors === []) {
 }
 
 $q = trim((string) ($_GET['q'] ?? ''));
-$daftarProduk = admin_produk_ambil_semua($q);
+
+$daftar_utuh = admin_produk_ambil_semua('');
+$daftarProduk = $q === '' ? $daftar_utuh : admin_produk_ambil_semua($q);
+
+$total_sku = count($daftar_utuh);
+$siap_hit = 0;
+
+foreach ($daftar_utuh as $__sku) {
+    if (!empty($__sku['siap_jual'])) {
+        ++$siap_hit;
+    }
+}
+
 $namaAdmin = htmlspecialchars((string) ($_SESSION['nama_pengguna'] ?? ''), ENT_QUOTES, 'UTF-8');
 $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF-8');
 $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
@@ -198,7 +210,7 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                 Pengaturan
             </a>
         </nav>
-        <p class="admin-sisi__kaki">Kelola katalog produk, stok ukuran, dan galeri gambar.</p>
+        <p class="admin-sisi__kaki">© EA SENIKERS</p>
     </aside>
 
     <div class="admin-utama">
@@ -221,7 +233,13 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
 
         <main class="admin-isi admin-isi-produk">
             <h1 class="admin-judul-besar">Manajemen Produk</h1>
-            <p class="admin-salam">Kelola katalog profesional: info produk, harga, kondisi, stok ukuran 36-45, dan galeri gambar.</p>
+            <p class="admin-salam">Tambahkan produk, atur stok ukuran (36–45), dan unggah foto.</p>
+
+            <div class="admin-pil-strip" role="presentation" aria-label="Ringkasan katalog">
+                <span class="admin-pil-dat"><strong><?php echo (int) $total_sku; ?></strong> item</span>
+                <span class="admin-pil-dat"><strong><?php echo (int) $siap_hit; ?></strong> ready</span>
+                <span class="admin-pil-dat"><strong><?php echo max(0, $total_sku - $siap_hit); ?></strong> habis stok</span>
+            </div>
 
             <?php if (is_array($flash)): ?>
                 <div class="admin-alert admin-alert--<?php echo htmlspecialchars((string) ($flash['jenis'] ?? 'info'), ENT_QUOTES, 'UTF-8'); ?>">
