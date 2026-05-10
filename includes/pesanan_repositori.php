@@ -321,6 +321,40 @@ function pesanan_admin_ambil_semua(): array
 }
 
 /**
+ * Admin beranda: pesanan terbaru dengan nama produk pertama (satu query).
+ *
+ * @return list<array<string, mixed>>
+ */
+function pesanan_admin_ambil_terbaru_ringkas(int $batas = 5): array
+{
+    if ($batas < 1) {
+        $batas = 5;
+    }
+    if ($batas > 50) {
+        $batas = 50;
+    }
+
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare(
+            'SELECT o.id, o.total_price, o.status, o.created_at,
+                    u.nama_pengguna,
+                    (SELECT oi.product_name FROM order_items oi WHERE oi.order_id = o.id ORDER BY oi.id ASC LIMIT 1) AS produk_ringkas
+             FROM orders o
+             LEFT JOIN users u ON o.user_id = u.id
+             ORDER BY o.created_at DESC
+             LIMIT :lim'
+        );
+        $stmt->bindValue(':lim', $batas, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
+/**
  * Admin: Cari pesanan berdasarkan query (ID pesanan, nama user, email)
  * @param string $query
  * @return list<array<string, mixed>>
@@ -399,6 +433,176 @@ function pesanan_admin_detail(int $order_id): ?array
  * @param int $order_id
  * @return bool
  */
+/**
+ * Langkah lanjutan status yang boleh dipilih admin (satu tingkat maju atau batal).
+ *
+ * @return list<string>
+ */
+function pesanan_admin_opsi_status_selanjutnya(string $status_sekarang): array
+{
+    $opsi = [];
+
+    switch ($status_sekarang) {
+        case 'pending':
+            $opsi = ['paid', 'cancelled'];
+            break;
+
+        case 'paid':
+            $opsi = ['processed', 'cancelled'];
+            break;
+
+        case 'processed':
+            $opsi = ['shipped', 'cancelled'];
+            break;
+
+        case 'shipped':
+            $opsi = ['completed'];
+            break;
+    }
+
+    return $opsi;
+}
+
+function pesanan_admin_status_transisi_diizinkan(string $dari, string $ke): bool
+{
+    if ($dari === $ke) {
+        return false;
+    }
+    $allowed = pesanan_admin_opsi_status_selanjutnya($dari);
+
+    return in_array($ke, $allowed, true);
+}
+
+/**
+ * Perbarui status pesanan oleh admin dengan aturan rantai maju / batal.
+ */
+function pesanan_admin_ubah_status(int $order_id, string $status_baru): bool
+{
+    $allowed_enum = ['pending', 'paid', 'processed', 'shipped', 'completed', 'cancelled'];
+    if ($order_id <= 0 || !in_array($status_baru, $allowed_enum, true)) {
+        return false;
+    }
+
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare('SELECT status FROM orders WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $order_id]);
+        $current = $stmt->fetch();
+        if (!$current) {
+            return false;
+        }
+        $dari = (string) ($current['status'] ?? '');
+
+        if (!pesanan_admin_status_transisi_diizinkan($dari, $status_baru)) {
+            return false;
+        }
+
+        $stmt_u = $pdo->prepare('UPDATE orders SET status = :s WHERE id = :id');
+
+        return $stmt_u->execute(['s' => $status_baru, 'id' => $order_id]);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+/**
+ * Hitung pesanan tiap status (dashboard / chip filter).
+ *
+ * @return array<string, int>
+ */
+function pesanan_admin_hitung_per_status(): array
+{
+    $basis = [];
+    foreach (array_keys(pesanan_status_label_id()) as $k) {
+        $basis[(string) $k] = 0;
+    }
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->query('SELECT status, COUNT(*)::int AS jumlah FROM orders GROUP BY status');
+        if (!$stmt) {
+            return $basis;
+        }
+
+        foreach ($stmt->fetchAll() as $r) {
+            $s = (string) ($r['status'] ?? '');
+            if ($s !== '') {
+                $basis[$s] = (int) ($r['jumlah'] ?? 0);
+            }
+        }
+    } catch (Throwable $e) {
+        return $basis;
+    }
+
+    return $basis;
+}
+
+/**
+ * Admin daftar pesanan dengan filter status opsional dan pencarian.
+ *
+ * @return list<array<string, mixed>>
+ */
+function pesanan_admin_daftar_berfilter(?string $filter_status = null, string $q = ''): array
+{
+    $filter_status = $filter_status !== null ? trim(strtolower($filter_status)) : null;
+    if ($filter_status === '') {
+        $filter_status = null;
+    }
+    $q = trim($q);
+
+    try {
+        $pdo = koneksi_database();
+
+        if ($q !== '') {
+            $like = '%' . $q . '%';
+            if ($filter_status !== null && array_key_exists($filter_status, pesanan_status_label_id())) {
+                $stmt = $pdo->prepare(
+                    'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
+                            u.nama_pengguna, u.email
+                     FROM orders o
+                     LEFT JOIN users u ON o.user_id = u.id
+                     WHERE o.status = :st
+                       AND (o.id::text LIKE :q OR u.nama_pengguna ILIKE :qi OR u.email ILIKE :qi)
+                     ORDER BY o.created_at DESC'
+                );
+                $stmt->execute(['st' => $filter_status, 'q' => $like, 'qi' => $like]);
+
+                return $stmt->fetchAll();
+            }
+
+            $stmt = $pdo->prepare(
+                'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
+                        u.nama_pengguna, u.email
+                 FROM orders o
+                 LEFT JOIN users u ON o.user_id = u.id
+                 WHERE o.id::text LIKE :q OR u.nama_pengguna ILIKE :qi OR u.email ILIKE :qi
+                 ORDER BY o.created_at DESC'
+            );
+
+            $stmt->execute(['q' => $like, 'qi' => $like]);
+
+            return $stmt->fetchAll();
+        }
+
+        if ($filter_status !== null && array_key_exists($filter_status, pesanan_status_label_id())) {
+            $stmt = $pdo->prepare(
+                'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
+                        u.nama_pengguna, u.email
+                 FROM orders o
+                 LEFT JOIN users u ON o.user_id = u.id
+                 WHERE o.status = :st
+                 ORDER BY o.created_at DESC'
+            );
+            $stmt->execute(['st' => $filter_status]);
+
+            return $stmt->fetchAll();
+        }
+
+        return pesanan_admin_ambil_semua();
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
 function pesanan_admin_batalkan(int $order_id): bool
 {
     if ($order_id <= 0) {
