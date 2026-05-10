@@ -1,5 +1,9 @@
 <?php
+
+declare(strict_types=1);
+
 require_once __DIR__ . '/../../includes/sesi.php';
+require_once __DIR__ . '/../../includes/admin_pengaturan_repositori.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
@@ -8,8 +12,45 @@ if (ambil_peran() !== 'admin') {
     exit;
 }
 
+if (!isset($_SESSION['csrf_admin_pengaturan']) || !is_string($_SESSION['csrf_admin_pengaturan'])) {
+    $_SESSION['csrf_admin_pengaturan'] = bin2hex(random_bytes(24));
+}
+$csrf = $_SESSION['csrf_admin_pengaturan'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $token = (string) ($_POST['csrf'] ?? '');
+    if (!hash_equals($csrf, $token)) {
+        $_SESSION['flash_admin_pengaturan'] = ['jenis' => 'error', 'teks' => 'Mohon muat ulang halaman.'];
+    } else {
+        $ok = admin_pengaturan_simpan_terapan([
+            'nama_toko' => (string) ($_POST['nama_toko'] ?? ''),
+            'email_toko' => (string) ($_POST['email_toko'] ?? ''),
+            'telepon_toko' => (string) ($_POST['telepon_toko'] ?? ''),
+            'alamat_toko' => (string) ($_POST['alamat_toko'] ?? ''),
+            'metode_pembayaran' => (string) ($_POST['metode_pembayaran'] ?? 'transfer'),
+            'biaya_pengiriman' => (string) ($_POST['biaya_pengiriman'] ?? '0'),
+            'nomor_wa_1' => (string) ($_POST['nomor_wa_1'] ?? ''),
+            'nomor_wa_2' => (string) ($_POST['nomor_wa_2'] ?? ''),
+        ]);
+        if ($ok) {
+            $_SESSION['flash_admin_pengaturan'] = ['jenis' => 'sukses', 'teks' => 'Pengaturan berhasil disimpan.'];
+        } else {
+            $_SESSION['flash_admin_pengaturan'] = ['jenis' => 'error', 'teks' => 'Penyimpanan gagal (periksa izin akses server).'];
+        }
+    }
+
+    header('Location: ' . aplikasi_url('admin/pengaturan_admin.php'));
+    exit;
+}
+
+$flash_pa = $_SESSION['flash_admin_pengaturan'] ?? null;
+unset($_SESSION['flash_admin_pengaturan']);
+
+$cfg = admin_pengaturan_muat_terapan();
+
 $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
 $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF-8');
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -60,7 +101,7 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                     Pengaturan
                 </a>
             </nav>
-            <p class="admin-sisi__kaki">Preferensi tampilan &amp; info toko — formulir contoh.</p>
+            <p class="admin-sisi__kaki">© EA SENIKERS</p>
         </aside>
 
         <div class="admin-utama">
@@ -83,9 +124,17 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
 
             <main class="admin-isi">
                 <h1 class="admin-judul-besar">Pengaturan toko</h1>
-                <p class="admin-salam">Informasi kontak dan pembayaran untuk tampilan depan — simpan akan aktif setelah backend pengaturan dihubungkan.</p>
+                <p class="admin-salam">Identitas dan preferensi pembayaran toko. Perubahan disimpan secara otomatis setelah Anda menekan simpan.</p>
 
-                <form class="admin-form" method="post" action="#">
+                <?php if (is_array($flash_pa)): ?>
+                    <div class="admin-alert admin-alert--<?php echo htmlspecialchars((string) (($flash_pa['jenis'] ?? '') === 'error' ? 'error' : 'sukses'), ENT_QUOTES, 'UTF-8'); ?>">
+                        <?php echo htmlspecialchars((string) ($flash_pa['teks'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                    </div>
+                <?php endif; ?>
+
+                <form class="admin-form" method="post">
+                    <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
+
                     <section class="admin-kartu" aria-labelledby="judul-info-toko">
                         <div class="admin-kartu__header">
                             <h2 id="judul-info-toko">Informasi toko</h2>
@@ -94,24 +143,50 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                             <div class="admin-form-grid">
                                 <div class="admin-field">
                                     <label for="nama-toko">Nama toko</label>
-                                    <input type="text" id="nama-toko" name="nama_toko" value="EA SENIKERS" required autocomplete="organization">
+                                    <input type="text" id="nama-toko" name="nama_toko" value="<?php echo htmlspecialchars((string) $cfg['nama_toko'], ENT_QUOTES, 'UTF-8'); ?>" required autocomplete="organization">
                                 </div>
                                 <div class="admin-field">
                                     <label for="email-toko">Email toko</label>
-                                    <input type="email" id="email-toko" name="email_toko" value="info@easenikers.com" required autocomplete="email">
+                                    <input type="email" id="email-toko" name="email_toko" value="<?php echo htmlspecialchars((string) $cfg['email_toko'], ENT_QUOTES, 'UTF-8'); ?>" required autocomplete="email">
                                 </div>
                                 <div class="admin-field">
                                     <label for="telepon-toko">Telepon</label>
-                                    <input type="tel" id="telepon-toko" name="telepon_toko" value="+62 812-3456-7890" autocomplete="tel">
+                                    <input type="tel" id="telepon-toko" name="telepon_toko" value="<?php echo htmlspecialchars((string) $cfg['telepon_toko'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="tel">
                                 </div>
                                 <div class="admin-field admin-field--full">
                                     <label for="alamat-toko">Alamat</label>
-                                    <textarea id="alamat-toko" name="alamat_toko" rows="3">Jl. Contoh No. 123, Jakarta</textarea>
+                                    <textarea id="alamat-toko" name="alamat_toko" rows="3"><?php echo htmlspecialchars((string) $cfg['alamat_toko'], ENT_QUOTES, 'UTF-8'); ?></textarea>
                                 </div>
                             </div>
                         </div>
                     </section>
 
+                    <?php
+                    $__wa1 = (string) $cfg['nomor_wa_1'];
+                    $__wa2 = (string) $cfg['nomor_wa_2'];
+                    $__wa1_tampil = $__wa1 !== '' ? '+' . $__wa1 : '';
+                    $__wa2_tampil = $__wa2 !== '' ? '+' . $__wa2 : '';
+                    ?>
+                    <section class="admin-kartu" aria-labelledby="judul-wa">
+                        <div class="admin-kartu__header">
+                            <h2 id="judul-wa">Layanan WhatsApp</h2>
+                        </div>
+                        <div class="admin-form-konten">
+                            <p class="admin-form-keterangan">Nomor ini ditampilkan di footer beranda pembeli sebagai tautan layanan WhatsApp. Gunakan format internasional (mis. <code>+6282259343380</code>).</p>
+                            <div class="admin-form-grid">
+                                <div class="admin-field">
+                                    <label for="nomor-wa-1">Nomor WhatsApp 1</label>
+                                    <input type="tel" id="nomor-wa-1" name="nomor_wa_1" value="<?php echo htmlspecialchars($__wa1_tampil, ENT_QUOTES, 'UTF-8'); ?>" placeholder="+6282259343380" autocomplete="tel">
+                                </div>
+                                <div class="admin-field">
+                                    <label for="nomor-wa-2">Nomor WhatsApp 2</label>
+                                    <input type="tel" id="nomor-wa-2" name="nomor_wa_2" value="<?php echo htmlspecialchars($__wa2_tampil, ENT_QUOTES, 'UTF-8'); ?>" placeholder="+6282171590759" autocomplete="tel">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <?php $__m = (string) $cfg['metode_pembayaran']; ?>
                     <section class="admin-kartu" aria-labelledby="judul-bayar">
                         <div class="admin-kartu__header">
                             <h2 id="judul-bayar">Pembayaran &amp; pengiriman</h2>
@@ -121,14 +196,14 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                                 <div class="admin-field">
                                     <label for="metode-pembayaran">Metode pembayaran utama</label>
                                     <select id="metode-pembayaran" name="metode_pembayaran">
-                                        <option value="transfer">Transfer bank</option>
-                                        <option value="cod">Cash on delivery</option>
-                                        <option value="ewallet">E-wallet</option>
+                                        <option value="transfer" <?php echo $__m === 'transfer' ? 'selected' : ''; ?>>Transfer bank</option>
+                                        <option value="cod" <?php echo $__m === 'cod' ? 'selected' : ''; ?>>Cash on delivery</option>
+                                        <option value="ewallet" <?php echo $__m === 'ewallet' ? 'selected' : ''; ?>>E-wallet</option>
                                     </select>
                                 </div>
                                 <div class="admin-field">
                                     <label for="biaya-pengiriman">Biaya pengiriman default (Rp)</label>
-                                    <input type="number" id="biaya-pengiriman" name="biaya_pengiriman" value="25000" min="0" step="1000">
+                                    <input type="number" id="biaya-pengiriman" name="biaya_pengiriman" value="<?php echo htmlspecialchars((string) (int) $cfg['biaya_pengiriman'], ENT_QUOTES, 'UTF-8'); ?>" min="0" step="1000">
                                 </div>
                             </div>
                         </div>
@@ -136,7 +211,7 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
 
                     <div class="admin-form-aksi">
                         <button type="submit" class="admin-btn admin-btn--utama">Simpan pengaturan</button>
-                        <button type="reset" class="admin-btn admin-btn--sekunder">Reset form</button>
+                        <a class="admin-btn admin-btn--sekunder" href="<?php echo htmlspecialchars(aplikasi_url('admin/pengaturan_admin.php'), ENT_QUOTES, 'UTF-8'); ?>">Batal perubahan</a>
                     </div>
                 </form>
             </main>
