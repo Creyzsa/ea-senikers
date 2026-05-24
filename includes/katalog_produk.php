@@ -53,9 +53,38 @@ function katalog_ambil_semua_produk(): array
         return [];
     }
     if (isset($rows['id_produk'])) {
+        katalog_isi_ringkasan_stok($rows);
         return [$rows];
     }
+    foreach ($rows as &$__row) {
+        if (is_array($__row)) {
+            katalog_isi_ringkasan_stok($__row);
+        }
+    }
+    unset($__row);
     return $rows;
+}
+
+/**
+ * Isi field turunan `total_stok` dan `siap_jual` pada array produk
+ * berdasarkan daftar `produk_ukuran`. Field ini bukan kolom database,
+ * dihitung di PHP setiap kali baca produk.
+ *
+ * @param array<string, mixed> $produk
+ */
+function katalog_isi_ringkasan_stok(array &$produk): void
+{
+    $ukuran_list = $produk['produk_ukuran'] ?? [];
+    $total = 0;
+    if (is_array($ukuran_list)) {
+        foreach ($ukuran_list as $u) {
+            if (is_array($u)) {
+                $total += max(0, (int) ($u['stok'] ?? 0));
+            }
+        }
+    }
+    $produk['total_stok'] = $total;
+    $produk['siap_jual'] = $total > 0;
 }
 
 /**
@@ -82,9 +111,14 @@ function katalog_ambil_produk_ber_id(string $id_produk): ?array
         return null;
     }
     if (isset($rows['id_produk'])) {
+        katalog_isi_ringkasan_stok($rows);
         return $rows;
     }
-    return is_array($rows[0] ?? null) ? $rows[0] : null;
+    $satu = is_array($rows[0] ?? null) ? $rows[0] : null;
+    if ($satu !== null) {
+        katalog_isi_ringkasan_stok($satu);
+    }
+    return $satu;
 }
 
 /** URL gambar utama (pertama menurut urutan) atau placeholder. */
