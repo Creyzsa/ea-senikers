@@ -104,15 +104,6 @@ $u_checkout = aplikasi_url('pembeli/checkout_pembeli.php');
                 <p class="detail-panel__harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga), ENT_QUOTES, 'UTF-8'); ?></p>
                 <span class="detail-panel__chip <?php echo htmlspecialchars($chip_kondisi, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(kondisi_label_pembeli($kondisi), ENT_QUOTES, 'UTF-8'); ?></span>
 
-                <?php if (strcasecmp($kondisi, 'Baru') !== 0 && $kondisi !== ''): ?>
-                    <p class="detail-panel__trust" aria-label="Catatan untuk produk preloved">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>Foto asli (bukan stok merek). Kondisi dijelaskan apa adanya di deskripsi di bawah.</span>
-                    </p>
-                <?php endif; ?>
-
                 <?php if (is_string($flash_keranjang_error) && $flash_keranjang_error !== ''): ?>
                     <p class="detail-flash-error" role="alert"><?php echo htmlspecialchars($flash_keranjang_error, ENT_QUOTES, 'UTF-8'); ?></p>
                 <?php endif; ?>
@@ -163,6 +154,9 @@ $u_checkout = aplikasi_url('pembeli/checkout_pembeli.php');
                 </form>
 
                 <h2 class="detail-panel__subjudul">Deskripsi</h2>
+                <?php if (strcasecmp($kondisi, 'Baru') !== 0 && $kondisi !== ''): ?>
+                    <p class="detail-panel__catatan-kondisi">Foto adalah produk asli. Kondisi dijelaskan apa adanya.</p>
+                <?php endif; ?>
                 <p class="detail-panel__deskripsi"><?php echo htmlspecialchars($deskripsi, ENT_QUOTES, 'UTF-8'); ?></p>
             </div>
         </div>

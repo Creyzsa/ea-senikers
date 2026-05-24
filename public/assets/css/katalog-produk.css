@@ -971,25 +971,13 @@ body.halaman-detail-produk {
     backdrop-filter: blur(4px);
 }
 
-/* --- Detail produk: trust note untuk preloved --- */
-.detail-panel__trust {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.55rem;
-    margin: 0.85rem 0 0;
-    padding: 0.65rem 0.85rem;
-    font-size: 0.83rem;
+/* --- Detail produk: catatan halus untuk preloved (di bawah heading Deskripsi) --- */
+.detail-panel__catatan-kondisi {
+    margin: 0 0 0.45rem;
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--teks-redup);
     line-height: 1.5;
-    color: #14532d;
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 8px;
-}
-
-.detail-panel__trust svg {
-    flex-shrink: 0;
-    margin-top: 0.1rem;
-    color: var(--hijau-sukses, #1b4332);
 }
 
 /* --- Detail produk: stok hint per ukuran --- */

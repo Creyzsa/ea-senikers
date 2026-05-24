@@ -105,7 +105,7 @@ $u_produk = aplikasi_url('pembeli/produk.php');
                                     <img src="<?php echo htmlspecialchars($thumb, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="56" height="56" class="keranjang-thumb">
                                     <div>
                                         <p class="keranjang-nama"><?php echo htmlspecialchars((string) ($r['nama_produk'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
-                                        <p class="keranjang-meta"><?php echo htmlspecialchars((string) ($r['brand'] ?? ''), ENT_QUOTES, 'UTF-8'); ?> · <?php echo htmlspecialchars((string) ($r['kondisi'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
+                                        <p class="keranjang-meta"><?php echo htmlspecialchars((string) ($r['brand'] ?? ''), ENT_QUOTES, 'UTF-8'); ?> · <?php echo htmlspecialchars(kondisi_label_pembeli((string) ($r['kondisi'] ?? '')), ENT_QUOTES, 'UTF-8'); ?></p>
                                     </div>
                                 </div>
                             </td>
@@ -123,8 +123,8 @@ $u_produk = aplikasi_url('pembeli/produk.php');
             </div>
 
             <div class="keranjang-ringkas">
-                <p class="keranjang-total">Total estimasi: <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong></p>
-                <p class="keranjang-catatan">Subtotal dapat berubah mengikuti ongkir atau promosi pada saat pembayaran dikonfirmasi.</p>
+                <p class="keranjang-total">Subtotal produk: <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong></p>
+                <p class="keranjang-catatan">Ongkos kirim ditambahkan saat checkout, mengikuti pilihan kurir dan alamat tujuan Anda.</p>
                 <p class="keranjang-lanjut">
                     <a class="tautan-balik" href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">← Lanjut belanja</a>
                 </p>

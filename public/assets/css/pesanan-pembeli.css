@@ -307,6 +307,45 @@
     font-size: 1.05rem;
 }
 
+.pesanan-ringkasan-nilai {
+    text-align: right;
+    max-width: 14rem;
+    line-height: 1.45;
+}
+
+.pesanan-ringkasan-kosong {
+    color: var(--teks-redup);
+    font-size: 0.82rem;
+    font-style: italic;
+}
+
+.pesanan-bantuan-wa {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+    padding: 0.7rem 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #fff;
+    background: #25D366;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.pesanan-bantuan-wa:hover {
+    background: #1ebe5b;
+    transform: translateY(-1px);
+}
+
+.pesanan-bantuan-wa svg {
+    flex-shrink: 0;
+}
+
 .pesanan-batal-banner {
     padding: 0.75rem 1rem;
     margin-bottom: 1rem;
