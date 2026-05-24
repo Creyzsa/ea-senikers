@@ -795,6 +795,35 @@ body.halaman-admin {
     color: var(--teks-redup);
 }
 
+.admin-kosong {
+    color: var(--teks-redup);
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.admin-btn-wa-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.55rem;
+    padding: 0.32rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    background: #25D366;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+
+.admin-btn-wa-mini:hover {
+    background: #1ebe5b;
+}
+
+.admin-btn-wa-mini svg {
+    flex-shrink: 0;
+}
+
 .admin-thumb {
     width: 52px;
     height: 52px;

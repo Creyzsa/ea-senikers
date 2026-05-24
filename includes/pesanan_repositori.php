@@ -400,7 +400,7 @@ function pesanan_admin_detail(int $order_id): ?array
         $pdo = koneksi_database();
         $stmt = $pdo->prepare(
             'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
-                    u.nama_pengguna, u.email
+                    u.nama_pengguna, u.email, u.no_hp, u.nama_penerima
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
              WHERE o.id = :id

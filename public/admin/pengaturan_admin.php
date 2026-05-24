@@ -124,7 +124,7 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
 
             <main class="admin-isi">
                 <h1 class="admin-judul-besar">Pengaturan toko</h1>
-                <p class="admin-salam">Identitas dan preferensi pembayaran toko. Perubahan disimpan secara otomatis setelah Anda menekan simpan.</p>
+                <p class="admin-salam">Identitas dan preferensi pembayaran toko. Perubahan disimpan saat Anda menekan tombol <strong>Simpan pengaturan</strong> di bawah.</p>
 
                 <?php if (is_array($flash_pa)): ?>
                     <div class="admin-alert admin-alert--<?php echo htmlspecialchars((string) (($flash_pa['jenis'] ?? '') === 'error' ? 'error' : 'sukses'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -192,6 +192,7 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                             <h2 id="judul-bayar">Pembayaran &amp; pengiriman</h2>
                         </div>
                         <div class="admin-form-konten">
+                            <p class="admin-form-keterangan">Pengaturan sementara sebelum integrasi <strong>RajaOngkir</strong> &amp; <strong>Tripay</strong>. Setelah Tahap 2 aktif, ongkir akan dihitung otomatis berdasar berat &amp; alamat pembeli, dan metode pembayaran akan diatur lewat gateway.</p>
                             <div class="admin-form-grid">
                                 <div class="admin-field">
                                     <label for="metode-pembayaran">Metode pembayaran utama</label>

@@ -67,6 +67,20 @@ $langkah_tampil = pesanan_langkah_progress();
 $langkah_idx = pesanan_indeks_langkah_aktif($st);
 
 $status_opsi_selanjutnya = pesanan_admin_opsi_status_selanjutnya($st);
+
+$pembeli_no_hp_raw = trim((string) ($pesanan['no_hp'] ?? ''));
+$pembeli_no_hp_digit = preg_replace('/\D+/', '', $pembeli_no_hp_raw);
+$pembeli_wa = '';
+if (is_string($pembeli_no_hp_digit) && $pembeli_no_hp_digit !== '') {
+    $nomor_internasional = (string) $pembeli_no_hp_digit;
+    if (strncmp($nomor_internasional, '0', 1) === 0) {
+        $nomor_internasional = '62' . substr($nomor_internasional, 1);
+    }
+    $pesan_admin_wa = "Halo, saya admin EA SENIKERS. Mau konfirmasi pesanan #{$order_id} (status: " . ($status_labels[$st] ?? $st) . '). Terima kasih.';
+    $pembeli_wa = 'https://wa.me/' . $nomor_internasional . '?text=' . rawurlencode($pesan_admin_wa);
+}
+$alamat_pengiriman = trim((string) ($pesanan['shipping_address'] ?? ''));
+$bayar_pengiriman = trim((string) ($pesanan['payment_method'] ?? ''));
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -163,6 +177,15 @@ $status_opsi_selanjutnya = pesanan_admin_opsi_status_selanjutnya($st);
                                 <strong>Pembeli</strong><br>
                                 <?php echo htmlspecialchars($pesanan['nama_pengguna'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?>
                                 <span class="admin-meta"><br><?php echo htmlspecialchars($pesanan['email'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
+                                <?php if ($pembeli_no_hp_raw !== ''): ?>
+                                    <span class="admin-meta"><br>HP: <?php echo htmlspecialchars($pembeli_no_hp_raw, ENT_QUOTES, 'UTF-8'); ?></span>
+                                <?php endif; ?>
+                                <?php if ($pembeli_wa !== ''): ?>
+                                    <a class="admin-btn-wa-mini" href="<?php echo htmlspecialchars($pembeli_wa, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413z"/></svg>
+                                        Hubungi via WhatsApp
+                                    </a>
+                                <?php endif; ?>
                             </div>
                             <div>
                                 <strong>Status</strong><br>
@@ -172,7 +195,11 @@ $status_opsi_selanjutnya = pesanan_admin_opsi_status_selanjutnya($st);
                             </div>
                             <div>
                                 <strong>Metode pembayaran</strong><br>
-                                <?php echo htmlspecialchars((string) ($pesanan['payment_method'] ?? 'N/A'), ENT_QUOTES, 'UTF-8'); ?>
+                                <?php if ($bayar_pengiriman !== ''): ?>
+                                    <?php echo htmlspecialchars($bayar_pengiriman, ENT_QUOTES, 'UTF-8'); ?>
+                                <?php else: ?>
+                                    <em class="admin-kosong">Belum dipilih saat checkout</em>
+                                <?php endif; ?>
                             </div>
                             <div>
                                 <strong>Total</strong><br>
@@ -239,7 +266,13 @@ $status_opsi_selanjutnya = pesanan_admin_opsi_status_selanjutnya($st);
 
                         <div class="admin-detail-alamat">
                             <strong>Alamat pengiriman</strong>
-                            <div><?php echo nl2br(htmlspecialchars((string) ($pesanan['shipping_address'] ?? 'N/A'), ENT_QUOTES, 'UTF-8')); ?></div>
+                            <div>
+                                <?php if ($alamat_pengiriman !== ''): ?>
+                                    <?php echo nl2br(htmlspecialchars($alamat_pengiriman, ENT_QUOTES, 'UTF-8')); ?>
+                                <?php else: ?>
+                                    <em class="admin-kosong">Belum diisi pembeli saat checkout</em>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -260,20 +293,27 @@ $status_opsi_selanjutnya = pesanan_admin_opsi_status_selanjutnya($st);
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ((array) ($pesanan['items'] ?? []) as $item): ?>
-                                    <tr>
-                                        <td>
-                                            <div class="admin-detail-produk-baris">
-                                                <img src="<?php echo htmlspecialchars(pesanan_url_gambar_item($item), ENT_QUOTES, 'UTF-8'); ?>" alt="" width="52" height="52" loading="lazy" decoding="async">
-                                                <strong><?php echo htmlspecialchars((string) ($item['product_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></strong>
-                                            </div>
-                                        </td>
-                                        <td><?php echo htmlspecialchars((string) ($item['size'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><?php echo htmlspecialchars((string) ($item['quantity'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td>Rp <?php echo htmlspecialchars(number_format((float) ($item['price'] ?? 0), 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td>Rp <?php echo htmlspecialchars(number_format((float) ($item['price'] ?? 0) * (int) ($item['quantity'] ?? 0), 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?></td>
+                                <?php $items_pesanan = (array) ($pesanan['items'] ?? []); ?>
+                                <?php if ($items_pesanan === []): ?>
+                                    <tr class="admin-tr-kosong">
+                                        <td colspan="5">Tidak ada item tercatat untuk pesanan ini.</td>
                                     </tr>
-                                <?php endforeach; ?>
+                                <?php else: ?>
+                                    <?php foreach ($items_pesanan as $item): ?>
+                                        <tr>
+                                            <td>
+                                                <div class="admin-detail-produk-baris">
+                                                    <img src="<?php echo htmlspecialchars(pesanan_url_gambar_item($item), ENT_QUOTES, 'UTF-8'); ?>" alt="" width="52" height="52" loading="lazy" decoding="async">
+                                                    <strong><?php echo htmlspecialchars((string) ($item['product_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></strong>
+                                                </div>
+                                            </td>
+                                            <td><?php echo htmlspecialchars((string) ($item['size'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td><?php echo htmlspecialchars((string) ($item['quantity'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td>Rp <?php echo htmlspecialchars(number_format((float) ($item['price'] ?? 0), 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td>Rp <?php echo htmlspecialchars(number_format((float) ($item['price'] ?? 0) * (int) ($item['quantity'] ?? 0), 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
