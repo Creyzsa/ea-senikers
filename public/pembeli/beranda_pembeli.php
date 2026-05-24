@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../../includes/sesi.php';
 require_once __DIR__ . '/../../includes/katalog_produk.php';
 require_once __DIR__ . '/../../includes/pesanan_repositori.php';
-require_once __DIR__ . '/../../includes/keranjang_sesi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {
@@ -35,24 +34,10 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $__wa) {
 }
 
 $semua_produk = katalog_ambil_semua_produk();
-$brand_set = [];
-foreach ($semua_produk as $produk) {
-    $brand = trim((string) ($produk['brand'] ?? ''));
-    if ($brand !== '') {
-        $brand_set[$brand] = true;
-    }
-}
 $produk_terlaris = pesanan_produk_terlaris_gabung_katalog(4);
 if ($produk_terlaris === [] && $semua_produk !== []) {
     $produk_terlaris = array_slice($semua_produk, 0, 4);
 }
-
-$id_pengguna = ambil_id_pengguna_efektif();
-$jumlah_pesanan = 0;
-if ($id_pengguna > 0 && pesanan_cek_tabel_ada()) {
-    $jumlah_pesanan = count(pesanan_ambil_oleh_user($id_pengguna));
-}
-$jumlah_keranjang = keranjang_hitung_jumlah_item();
 
 $u_ig = 'https://www.instagram.com/' . rawurlencode((string) ($kontak_toko['sosial']['instagram'] ?? 'easenikers')) . '/';
 $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial']['tiktok'] ?? 'easenikers'));
@@ -87,25 +72,6 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
     </section>
 
     <main class="kontainer-toko" id="utama">
-        <section class="beranda-ringkas" aria-label="Ringkasan toko dan akun">
-            <div>
-                <span>Produk</span>
-                <strong><?php echo (string) count($semua_produk); ?></strong>
-            </div>
-            <div>
-                <span>Merek</span>
-                <strong><?php echo (string) count($brand_set); ?></strong>
-            </div>
-            <div>
-                <span>Keranjang</span>
-                <strong><?php echo (string) $jumlah_keranjang; ?></strong>
-            </div>
-            <div>
-                <span>Pesanan</span>
-                <strong><?php echo (string) $jumlah_pesanan; ?></strong>
-            </div>
-        </section>
-
         <section class="beranda-akses" aria-labelledby="judul-akses-cepat">
             <div class="section-heading">
                 <div>

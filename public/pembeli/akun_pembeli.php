@@ -45,6 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'kecamatan' => (string) ($_POST['kecamatan'] ?? ''),
             'kode_pos' => (string) ($_POST['kode_pos'] ?? ''),
             'alamat_detail' => (string) ($_POST['alamat_detail'] ?? ''),
+            'lat' => (string) ($_POST['lat'] ?? ''),
+            'lng' => (string) ($_POST['lng'] ?? ''),
         ];
         $errors = profil_pembeli_validasi($input);
         if ($errors === []) {
@@ -89,6 +91,7 @@ foreach (['no_hp', 'nama_penerima', 'provinsi', 'kota', 'kecamatan', 'alamat_det
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Akun saya - EA SENIKERS</title>
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body class="halaman-toko">
 
@@ -162,15 +165,30 @@ foreach (['no_hp', 'nama_penerima', 'provinsi', 'kota', 'kecamatan', 'alamat_det
                     </label>
                     <label class="akun-field">
                         <span>Provinsi</span>
-                        <input type="text" name="provinsi" value="<?php echo htmlspecialchars($profil['provinsi'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="120" autocomplete="address-level1">
+                        <select name="provinsi" required data-cascading="provinsi" data-saved="<?php echo htmlspecialchars($profil['provinsi'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="address-level1">
+                            <option value="">Memuat provinsi...</option>
+                            <?php if (trim($profil['provinsi']) !== ''): ?>
+                                <option value="<?php echo htmlspecialchars($profil['provinsi'], ENT_QUOTES, 'UTF-8'); ?>" selected><?php echo htmlspecialchars($profil['provinsi'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <?php endif; ?>
+                        </select>
                     </label>
                     <label class="akun-field">
                         <span>Kota / kabupaten</span>
-                        <input type="text" name="kota" value="<?php echo htmlspecialchars($profil['kota'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="120" autocomplete="address-level2">
+                        <select name="kota" required data-cascading="kota" data-saved="<?php echo htmlspecialchars($profil['kota'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="address-level2">
+                            <option value="">-- Pilih provinsi dulu --</option>
+                            <?php if (trim($profil['kota']) !== ''): ?>
+                                <option value="<?php echo htmlspecialchars($profil['kota'], ENT_QUOTES, 'UTF-8'); ?>" selected><?php echo htmlspecialchars($profil['kota'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <?php endif; ?>
+                        </select>
                     </label>
                     <label class="akun-field">
                         <span>Kecamatan</span>
-                        <input type="text" name="kecamatan" value="<?php echo htmlspecialchars($profil['kecamatan'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="120" autocomplete="address-level3">
+                        <select name="kecamatan" required data-cascading="kecamatan" data-saved="<?php echo htmlspecialchars($profil['kecamatan'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="address-level3">
+                            <option value="">-- Pilih kota dulu --</option>
+                            <?php if (trim($profil['kecamatan']) !== ''): ?>
+                                <option value="<?php echo htmlspecialchars($profil['kecamatan'], ENT_QUOTES, 'UTF-8'); ?>" selected><?php echo htmlspecialchars($profil['kecamatan'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <?php endif; ?>
+                        </select>
                     </label>
                     <label class="akun-field">
                         <span>Kode pos</span>
@@ -182,6 +200,29 @@ foreach (['no_hp', 'nama_penerima', 'provinsi', 'kota', 'kecamatan', 'alamat_det
                     <span>Alamat detail (jalan, nomor rumah, RT/RW, patokan)</span>
                     <textarea name="alamat_detail" rows="3" required maxlength="500" autocomplete="street-address"><?php echo htmlspecialchars($profil['alamat_detail'], ENT_QUOTES, 'UTF-8'); ?></textarea>
                 </label>
+
+                <div class="akun-field akun-field--penuh peta-alamat" data-peta-wrap>
+                    <div class="peta-alamat__judul-baris">
+                        <span>Titik lokasi di peta <small>(opsional, untuk kurir)</small></span>
+                        <button type="button" class="tombol-page-sekunder peta-alamat__tombol" data-peta-lokasi-saya>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 11a3 3 0 100-6 3 3 0 000 6z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 11a7.5 7.5 0 11-15 0c0-4.97 7.5-13 7.5-13s7.5 8.03 7.5 13z"/>
+                            </svg>
+                            Lokasi saya
+                        </button>
+                    </div>
+                    <div class="peta-alamat__kanvas" id="peta-alamat" role="application" aria-label="Peta untuk memilih titik lokasi"></div>
+                    <p class="peta-alamat__info" data-peta-info>
+                        <?php if (trim($profil['lat']) !== '' && trim($profil['lng']) !== ''): ?>
+                            Titik tersimpan: <strong data-peta-koordinat><?php echo htmlspecialchars($profil['lat'] . ', ' . $profil['lng'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                        <?php else: ?>
+                            Klik di peta atau tekan <em>Lokasi saya</em> untuk menentukan titik. Boleh dikosongi.
+                        <?php endif; ?>
+                    </p>
+                    <input type="hidden" name="lat" data-peta-lat value="<?php echo htmlspecialchars($profil['lat'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="hidden" name="lng" data-peta-lng value="<?php echo htmlspecialchars($profil['lng'], ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
 
                 <div class="akun-form-aksi">
                     <button type="submit" class="tombol-page-utama">Simpan profil pengiriman</button>
@@ -223,5 +264,8 @@ foreach (['no_hp', 'nama_penerima', 'provinsi', 'kota', 'kecamatan', 'alamat_det
         </p>
     </main>
 
+    <script src="<?php echo htmlspecialchars(aplikasi_url('assets/js/cascading-alamat.js'), ENT_QUOTES, 'UTF-8'); ?>" defer></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+    <script src="<?php echo htmlspecialchars(aplikasi_url('assets/js/peta-alamat.js'), ENT_QUOTES, 'UTF-8'); ?>" defer></script>
 </body>
 </html>

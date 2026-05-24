@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 /**
- * Repositori profil pembeli — baca & simpan no HP dan alamat default
- * yang nantinya dipakai sebagai pre-fill saat checkout.
+ * Repositori profil pembeli — baca & simpan no HP, alamat default,
+ * dan titik koordinat (lat/lng) yang nantinya dipakai sebagai pre-fill
+ * saat checkout.
  *
  * Kolom yang dikelola di tabel `users`:
- *   no_hp, nama_penerima, provinsi, kota, kecamatan, kode_pos, alamat_detail
+ *   no_hp, nama_penerima, provinsi, kota, kecamatan, kode_pos,
+ *   alamat_detail, lat, lng
  */
 require_once __DIR__ . '/database.php';
 
@@ -19,7 +21,9 @@ require_once __DIR__ . '/database.php';
  *   kota: string,
  *   kecamatan: string,
  *   kode_pos: string,
- *   alamat_detail: string
+ *   alamat_detail: string,
+ *   lat: string,
+ *   lng: string
  * }
  */
 function profil_pembeli_kosong(): array
@@ -32,6 +36,8 @@ function profil_pembeli_kosong(): array
         'kecamatan' => '',
         'kode_pos' => '',
         'alamat_detail' => '',
+        'lat' => '',
+        'lng' => '',
     ];
 }
 
@@ -49,7 +55,7 @@ function profil_pembeli_ambil(int $user_id): array
     try {
         $pdo = koneksi_database();
         $stmt = $pdo->prepare(
-            'SELECT no_hp, nama_penerima, provinsi, kota, kecamatan, kode_pos, alamat_detail
+            'SELECT no_hp, nama_penerima, provinsi, kota, kecamatan, kode_pos, alamat_detail, lat, lng
              FROM users
              WHERE id = :id
              LIMIT 1'
@@ -67,6 +73,8 @@ function profil_pembeli_ambil(int $user_id): array
             'kecamatan' => (string) ($baris['kecamatan'] ?? ''),
             'kode_pos' => (string) ($baris['kode_pos'] ?? ''),
             'alamat_detail' => (string) ($baris['alamat_detail'] ?? ''),
+            'lat' => $baris['lat'] !== null ? (string) $baris['lat'] : '',
+            'lng' => $baris['lng'] !== null ? (string) $baris['lng'] : '',
         ];
     } catch (Throwable $e) {
         return profil_pembeli_kosong();
@@ -112,6 +120,21 @@ function profil_pembeli_validasi(array $input): array
         $errors[] = 'Alamat detail wajib diisi.';
     }
 
+    $lat_raw = trim((string) ($input['lat'] ?? ''));
+    $lng_raw = trim((string) ($input['lng'] ?? ''));
+    if (($lat_raw === '') !== ($lng_raw === '')) {
+        $errors[] = 'Titik peta tidak lengkap, ulangi pilih lokasi di peta.';
+    } else {
+        if ($lat_raw !== '') {
+            if (!is_numeric($lat_raw) || (float) $lat_raw < -90 || (float) $lat_raw > 90) {
+                $errors[] = 'Latitude titik peta tidak valid.';
+            }
+            if (!is_numeric($lng_raw) || (float) $lng_raw < -180 || (float) $lng_raw > 180) {
+                $errors[] = 'Longitude titik peta tidak valid.';
+            }
+        }
+    }
+
     return $errors;
 }
 
@@ -135,9 +158,17 @@ function profil_pembeli_simpan(int $user_id, array $input): bool
                 kota = :kota,
                 kecamatan = :kecamatan,
                 kode_pos = :kode_pos,
-                alamat_detail = :alamat_detail
+                alamat_detail = :alamat_detail,
+                lat = :lat,
+                lng = :lng
              WHERE id = :id'
         );
+
+        $lat_raw = trim((string) ($input['lat'] ?? ''));
+        $lng_raw = trim((string) ($input['lng'] ?? ''));
+        $lat = $lat_raw !== '' && is_numeric($lat_raw) ? (float) $lat_raw : null;
+        $lng = $lng_raw !== '' && is_numeric($lng_raw) ? (float) $lng_raw : null;
+
         return $stmt->execute([
             'no_hp' => preg_replace('/\D+/', '', (string) ($input['no_hp'] ?? '')),
             'nama_penerima' => trim((string) ($input['nama_penerima'] ?? '')),
@@ -146,6 +177,8 @@ function profil_pembeli_simpan(int $user_id, array $input): bool
             'kecamatan' => trim((string) ($input['kecamatan'] ?? '')),
             'kode_pos' => trim((string) ($input['kode_pos'] ?? '')),
             'alamat_detail' => trim((string) ($input['alamat_detail'] ?? '')),
+            'lat' => $lat,
+            'lng' => $lng,
             'id' => $user_id,
         ]);
     } catch (Throwable $e) {
