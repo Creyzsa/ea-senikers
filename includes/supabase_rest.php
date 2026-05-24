@@ -11,9 +11,12 @@ require_once __DIR__ . '/supabase_auth.php';
 /**
  * @param 'GET'|'POST'|'PATCH'|'DELETE' $metode
  * @param array<string, scalar|null> $query Query string (mis. select, order)
+ * @param string|array<mixed>|null $body Body request. Array akan di-json_encode otomatis.
+ *        Untuk POST/PATCH dengan body, header `Prefer: return=representation`
+ *        ditambahkan supaya Supabase mengembalikan baris hasil insert/update.
  * @return array{ok: bool, http: int, data: mixed, raw: string, curl_errno: int, curl_error: string}
  */
-function supabase_rest_request(string $metode, string $path_rel, array $query = [], ?string $body_json = null): array
+function supabase_rest_request(string $metode, string $path_rel, array $query = [], string|array|null $body = null): array
 {
     $base = supabase_url_dasar();
     if ($base === '') {
@@ -33,15 +36,28 @@ function supabase_rest_request(string $metode, string $path_rel, array $query = 
         $url .= '?' . http_build_query($query);
     }
 
+    $body_json = null;
+    if (is_array($body)) {
+        $body_json = json_encode($body);
+        if ($body_json === false) {
+            $body_json = null;
+        }
+    } elseif (is_string($body)) {
+        $body_json = $body;
+    }
+
     $headers = supabase_header_curl();
     $headers[] = 'Accept: application/json';
 
+    $metode = strtoupper($metode);
     if ($body_json !== null) {
         $headers[] = 'Content-Type: application/json';
+        if ($metode === 'POST' || $metode === 'PATCH' || $metode === 'PUT') {
+            $headers[] = 'Prefer: return=representation';
+        }
     }
 
     $ch = curl_init($url);
-    $metode = strtoupper($metode);
     $opsi = [
         CURLOPT_HTTPHEADER => $headers,
         CURLOPT_RETURNTRANSFER => true,

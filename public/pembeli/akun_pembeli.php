@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../includes/sesi.php';
+require_once __DIR__ . '/../../includes/profil_pembeli_repositori.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {
@@ -14,7 +15,49 @@ $u_produk = aplikasi_url('pembeli/produk.php');
 $u_pesanan = aplikasi_url('pembeli/pesanan_pembeli.php');
 $u_keranjang = aplikasi_url('pembeli/keranjang_pembeli.php');
 $u_keluar = aplikasi_url('login/keluar.php');
+$u_akun = aplikasi_url('pembeli/akun_pembeli.php');
 $kontak_toko = require __DIR__ . '/../../includes/kontak_toko.php';
+
+if (!isset($_SESSION['csrf_akun_pembeli']) || !is_string($_SESSION['csrf_akun_pembeli'])) {
+    $_SESSION['csrf_akun_pembeli'] = bin2hex(random_bytes(24));
+}
+$csrf = $_SESSION['csrf_akun_pembeli'];
+
+$id_pengguna = ambil_id_pengguna_efektif();
+$errors = [];
+$flash = $_SESSION['flash_akun_pembeli'] ?? null;
+unset($_SESSION['flash_akun_pembeli']);
+
+$profil = profil_pembeli_ambil($id_pengguna);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $token = (string) ($_POST['csrf'] ?? '');
+    if (!hash_equals($csrf, $token)) {
+        $errors[] = 'Mohon muat ulang halaman.';
+    } elseif ($id_pengguna <= 0) {
+        $errors[] = 'Akun belum terhubung, mohon masuk ulang.';
+    } else {
+        $input = [
+            'no_hp' => (string) ($_POST['no_hp'] ?? ''),
+            'nama_penerima' => (string) ($_POST['nama_penerima'] ?? ''),
+            'provinsi' => (string) ($_POST['provinsi'] ?? ''),
+            'kota' => (string) ($_POST['kota'] ?? ''),
+            'kecamatan' => (string) ($_POST['kecamatan'] ?? ''),
+            'kode_pos' => (string) ($_POST['kode_pos'] ?? ''),
+            'alamat_detail' => (string) ($_POST['alamat_detail'] ?? ''),
+        ];
+        $errors = profil_pembeli_validasi($input);
+        if ($errors === []) {
+            if (profil_pembeli_simpan($id_pengguna, $input)) {
+                $_SESSION['flash_akun_pembeli'] = ['jenis' => 'sukses', 'teks' => 'Profil pengiriman berhasil disimpan.'];
+                header('Location: ' . $u_akun . '#profil-pengiriman');
+                exit;
+            }
+            $errors[] = 'Gagal menyimpan profil. Coba lagi sebentar.';
+        }
+        $profil = array_merge($profil, $input);
+    }
+}
 
 $nama = trim((string) ($_SESSION['nama_pengguna'] ?? ''));
 $email = trim((string) ($_SESSION['email_pengguna'] ?? ''));
@@ -28,6 +71,15 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
         $wa_utama = 'https://wa.me/' . $e164;
         break;
     }
+}
+
+$alamat_lengkap = false;
+foreach (['no_hp', 'nama_penerima', 'provinsi', 'kota', 'kecamatan', 'alamat_detail'] as $__k) {
+    if (trim((string) ($profil[$__k] ?? '')) === '') {
+        $alamat_lengkap = false;
+        break;
+    }
+    $alamat_lengkap = true;
 }
 ?>
 <!DOCTYPE html>
@@ -65,10 +117,76 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                 <p>Dipakai untuk akses akun dan komunikasi transaksi.</p>
             </article>
             <article class="akun-info-card">
-                <span>Status</span>
-                <strong>Pembeli aktif</strong>
-                <p>Akun dapat mengakses katalog, keranjang, checkout, dan riwayat pesanan.</p>
+                <span>Profil pengiriman</span>
+                <strong><?php echo $alamat_lengkap ? 'Lengkap' : 'Belum lengkap'; ?></strong>
+                <p><?php echo $alamat_lengkap ? 'Alamat siap dipakai saat checkout.' : 'Isi alamat & nomor HP di bawah agar checkout cepat.'; ?></p>
             </article>
+        </section>
+
+        <section class="akun-section" id="profil-pengiriman" aria-labelledby="judul-profil-pengiriman">
+            <div class="section-heading">
+                <div>
+                    <p class="section-eyebrow">Alamat pengiriman</p>
+                    <h2 id="judul-profil-pengiriman">Profil pengiriman default</h2>
+                </div>
+            </div>
+
+            <?php if (is_array($flash)): ?>
+                <div class="akun-alert akun-alert--<?php echo htmlspecialchars((string) ($flash['jenis'] ?? 'info'), ENT_QUOTES, 'UTF-8'); ?>">
+                    <?php echo htmlspecialchars((string) ($flash['teks'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($errors !== []): ?>
+                <div class="akun-alert akun-alert--error">
+                    <strong>Periksa kembali isian:</strong>
+                    <ul>
+                        <?php foreach ($errors as $err): ?>
+                            <li><?php echo htmlspecialchars((string) $err, ENT_QUOTES, 'UTF-8'); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
+            <form class="akun-form-profil" method="post" action="<?php echo htmlspecialchars($u_akun, ENT_QUOTES, 'UTF-8'); ?>#profil-pengiriman" novalidate>
+                <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
+
+                <div class="akun-form-grid">
+                    <label class="akun-field">
+                        <span>Nama penerima</span>
+                        <input type="text" name="nama_penerima" value="<?php echo htmlspecialchars($profil['nama_penerima'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="120" autocomplete="name">
+                    </label>
+                    <label class="akun-field">
+                        <span>Nomor HP</span>
+                        <input type="tel" name="no_hp" value="<?php echo htmlspecialchars($profil['no_hp'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="20" inputmode="numeric" autocomplete="tel" placeholder="08xxxxxxxxxx">
+                    </label>
+                    <label class="akun-field">
+                        <span>Provinsi</span>
+                        <input type="text" name="provinsi" value="<?php echo htmlspecialchars($profil['provinsi'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="120" autocomplete="address-level1">
+                    </label>
+                    <label class="akun-field">
+                        <span>Kota / kabupaten</span>
+                        <input type="text" name="kota" value="<?php echo htmlspecialchars($profil['kota'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="120" autocomplete="address-level2">
+                    </label>
+                    <label class="akun-field">
+                        <span>Kecamatan</span>
+                        <input type="text" name="kecamatan" value="<?php echo htmlspecialchars($profil['kecamatan'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="120" autocomplete="address-level3">
+                    </label>
+                    <label class="akun-field">
+                        <span>Kode pos</span>
+                        <input type="text" name="kode_pos" value="<?php echo htmlspecialchars($profil['kode_pos'], ENT_QUOTES, 'UTF-8'); ?>" maxlength="6" inputmode="numeric" autocomplete="postal-code" placeholder="60123">
+                    </label>
+                </div>
+
+                <label class="akun-field akun-field--penuh">
+                    <span>Alamat detail (jalan, nomor rumah, RT/RW, patokan)</span>
+                    <textarea name="alamat_detail" rows="3" required maxlength="500" autocomplete="street-address"><?php echo htmlspecialchars($profil['alamat_detail'], ENT_QUOTES, 'UTF-8'); ?></textarea>
+                </label>
+
+                <div class="akun-form-aksi">
+                    <button type="submit" class="tombol-page-utama">Simpan profil pengiriman</button>
+                </div>
+            </form>
         </section>
 
         <section class="akun-section" aria-labelledby="judul-akses">

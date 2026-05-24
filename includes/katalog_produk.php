@@ -133,3 +133,58 @@ function katalog_urutkan_ukuran(array $ukuran): array
     });
     return $ukuran;
 }
+
+/**
+ * Ringkasan ringan untuk sub-navigasi pembeli (daftar merek + kondisi yang tersedia).
+ * Hanya mengambil kolom brand & kondisi agar permintaan kecil; dicache per-request.
+ *
+ * @return array{brands: array<string, int>, kondisi_baru_ada: bool, kondisi_preloved: string|null}
+ */
+function katalog_ambil_meta_navigasi(): array
+{
+    static $cache = null;
+    if ($cache !== null) {
+        return $cache;
+    }
+
+    $hasil = supabase_rest_request('GET', '/rest/v1/produk', [
+        'select' => 'brand,kondisi',
+    ]);
+
+    $brands = [];
+    $kondisi_baru_ada = false;
+    $kondisi_preloved = null;
+
+    if ($hasil['ok'] && is_array($hasil['data'])) {
+        $rows = $hasil['data'];
+        if (isset($rows['brand']) || isset($rows['kondisi'])) {
+            $rows = [$rows];
+        }
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $brand = trim((string) ($row['brand'] ?? ''));
+            $kondisi = trim((string) ($row['kondisi'] ?? ''));
+            if ($brand !== '') {
+                $brands[$brand] = ($brands[$brand] ?? 0) + 1;
+            }
+            if ($kondisi !== '') {
+                if (strcasecmp($kondisi, 'Baru') === 0) {
+                    $kondisi_baru_ada = true;
+                } elseif ($kondisi_preloved === null) {
+                    $kondisi_preloved = $kondisi;
+                }
+            }
+        }
+    }
+
+    ksort($brands, SORT_NATURAL | SORT_FLAG_CASE);
+
+    $cache = [
+        'brands' => $brands,
+        'kondisi_baru_ada' => $kondisi_baru_ada,
+        'kondisi_preloved' => $kondisi_preloved,
+    ];
+    return $cache;
+}

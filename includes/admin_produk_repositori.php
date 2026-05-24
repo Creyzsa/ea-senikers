@@ -73,10 +73,14 @@ function admin_produk_tambah(array $payload, array $stok_ukuran, array $files): 
     $kategori = trim((string) ($payload['kategori'] ?? ''));
     $kondisi = trim((string) ($payload['kondisi'] ?? ''));
     $harga = (int) ($payload['harga'] ?? 0);
+    $berat_gram = (int) ($payload['berat_gram'] ?? 0);
     $deskripsi = trim((string) ($payload['deskripsi'] ?? ''));
 
     if ($nama === '' || $harga <= 0) {
         throw new Exception('Nama produk dan harga wajib diisi.');
+    }
+    if ($berat_gram <= 0) {
+        throw new Exception('Berat produk wajib diisi (gram, lebih dari 0).');
     }
 
     // Insert produk
@@ -86,6 +90,7 @@ function admin_produk_tambah(array $payload, array $stok_ukuran, array $files): 
         'kategori' => $kategori,
         'kondisi' => $kondisi,
         'harga' => $harga,
+        'berat_gram' => $berat_gram,
         'deskripsi' => $deskripsi,
     ];
 
@@ -94,7 +99,11 @@ function admin_produk_tambah(array $payload, array $stok_ukuran, array $files): 
         throw new Exception('Gagal menambah produk: ' . json_encode($hasil));
     }
 
-    $id_produk = $hasil['data']['id_produk'] ?? '';
+    $data_baru = $hasil['data'];
+    if (is_array($data_baru) && isset($data_baru[0]) && is_array($data_baru[0])) {
+        $data_baru = $data_baru[0];
+    }
+    $id_produk = is_array($data_baru) ? (string) ($data_baru['id_produk'] ?? '') : '';
     if ($id_produk === '') {
         throw new Exception('ID produk tidak diterima dari database.');
     }
@@ -131,10 +140,14 @@ function admin_produk_update(string $id_produk, array $payload, array $stok_ukur
     $kategori = trim((string) ($payload['kategori'] ?? ''));
     $kondisi = trim((string) ($payload['kondisi'] ?? ''));
     $harga = (int) ($payload['harga'] ?? 0);
+    $berat_gram = (int) ($payload['berat_gram'] ?? 0);
     $deskripsi = trim((string) ($payload['deskripsi'] ?? ''));
 
     if ($nama === '' || $harga <= 0) {
         throw new Exception('Nama produk dan harga wajib diisi.');
+    }
+    if ($berat_gram <= 0) {
+        throw new Exception('Berat produk wajib diisi (gram, lebih dari 0).');
     }
 
     // Update produk
@@ -144,6 +157,7 @@ function admin_produk_update(string $id_produk, array $payload, array $stok_ukur
         'kategori' => $kategori,
         'kondisi' => $kondisi,
         'harga' => $harga,
+        'berat_gram' => $berat_gram,
         'deskripsi' => $deskripsi,
     ];
 
