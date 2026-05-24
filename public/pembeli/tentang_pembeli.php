@@ -129,7 +129,7 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
             <div class="tentang-panel tentang-panel--gelap">
                 <p class="section-eyebrow">Kontak toko</p>
                 <h2>Butuh bantuan memilih?</h2>
-                <p>Gunakan WhatsApp toko atau cek lokasi offline dari footer beranda bila informasi sudah diisi oleh admin.</p>
+                <p>Gunakan WhatsApp toko atau kunjungi toko offline kami di Padang Panjang.</p>
                 <div class="tentang-link-row">
                     <?php if ($wa_utama !== ''): ?>
                         <a href="<?php echo htmlspecialchars($wa_utama, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">WhatsApp</a>
