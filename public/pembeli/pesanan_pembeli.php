@@ -27,19 +27,13 @@ if ($filter_status !== '' && !array_key_exists($filter_status, $labels)) {
 }
 
 $hitung_status = array_fill_keys(array_keys($labels), 0);
-$total_belanja = 0;
 foreach ($daftar as $order) {
     $st = (string) ($order['status'] ?? 'pending');
     if (isset($hitung_status[$st])) {
         $hitung_status[$st]++;
     }
-    $total_belanja += (int) ($order['total_price'] ?? 0);
 }
 $jumlah_pesanan = count($daftar);
-$jumlah_diproses = ($hitung_status['pending'] ?? 0)
-    + ($hitung_status['paid'] ?? 0)
-    + ($hitung_status['processed'] ?? 0)
-    + ($hitung_status['shipped'] ?? 0);
 $daftar_tampil = $filter_status === ''
     ? $daftar
     : array_values(array_filter($daftar, static fn (array $order): bool => (string) ($order['status'] ?? 'pending') === $filter_status));
@@ -89,21 +83,6 @@ $u_produk = aplikasi_url('pembeli/produk.php');
         </div>
         <a class="pesanan-tombol-belanja" href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">Belanja lagi</a>
     </section>
-
-    <div class="pesanan-ringkas-grid" aria-label="Ringkasan pesanan">
-        <div class="pesanan-ringkas-card">
-            <span>Total pesanan</span>
-            <strong><?php echo (string) $jumlah_pesanan; ?></strong>
-        </div>
-        <div class="pesanan-ringkas-card">
-            <span>Sedang berjalan</span>
-            <strong><?php echo (string) $jumlah_diproses; ?></strong>
-        </div>
-        <div class="pesanan-ringkas-card">
-            <span>Total belanja</span>
-            <strong><?php echo htmlspecialchars(katalog_format_rupiah($total_belanja), ENT_QUOTES, 'UTF-8'); ?></strong>
-        </div>
-    </div>
 
     <?php if (!$tabel_ada): ?>
         <div class="pesanan-setup-db" role="alert">

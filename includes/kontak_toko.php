@@ -10,10 +10,14 @@ declare(strict_types=1);
 require_once __DIR__ . '/admin_pengaturan_repositori.php';
 
 return [
-    /** Tautan lengkap ke lokasi di Google Maps */
-    'url_peta' => 'https://www.google.com/maps',
-    /** Satu atau beberapa baris alamat / petunjuk singkat di bawah tautan Maps */
-    'teks_peta' => '',
+    /**
+     * Tautan ke listing toko di Google Maps. Memakai nama bisnis + kota agar
+     * langsung membuka pin resmi "EA Senikers" (rating, foto, jam buka) — bukan
+     * sekadar pencarian alamat.
+     */
+    'url_peta' => 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode('EA Senikers, Padang Panjang'),
+    /** Alamat lengkap seperti yang tertera di listing Google Maps. */
+    'teks_peta' => 'Jalan Dr Jl. Abu Hanifah, Guguk Malintang, Kec. Padang Panjang Tim., Kota Padang Panjang, Sumatera Barat 27118',
     /**
      * Daftar WhatsApp aktif (dari pengaturan admin): e164 hanya digit + label tampil.
      * @var list<array{e164: string, tampil: string}>

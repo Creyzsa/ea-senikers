@@ -17,10 +17,6 @@ if ($nama_sapa === '') {
 
 $bilah_pembeli_aktif = 'beranda';
 $tautan_produk = aplikasi_url('pembeli/produk.php');
-$tautan_kategori = aplikasi_url('pembeli/kategori_pembeli.php');
-$tautan_pesanan = aplikasi_url('pembeli/pesanan_pembeli.php');
-$tautan_tentang = aplikasi_url('pembeli/tentang_pembeli.php');
-$tautan_akun = aplikasi_url('pembeli/akun_pembeli.php');
 $logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
 $merek_ringkas = require __DIR__ . '/../../includes/merek_ringkas.php';
 $kontak_toko = require __DIR__ . '/../../includes/kontak_toko.php';
@@ -72,42 +68,6 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
     </section>
 
     <main class="kontainer-toko" id="utama">
-        <section class="beranda-akses" aria-labelledby="judul-akses-cepat">
-            <div class="section-heading">
-                <div>
-                    <p class="section-eyebrow">Akses cepat</p>
-                    <h2 id="judul-akses-cepat">Mulai dari tujuan Anda</h2>
-                </div>
-            </div>
-            <div class="beranda-akses-grid">
-                <a href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>">
-                    <span>01</span>
-                    <strong>Produk</strong>
-                    <p>Lihat katalog sneakers baru dan preloved.</p>
-                </a>
-                <a href="<?php echo htmlspecialchars($tautan_kategori, ENT_QUOTES, 'UTF-8'); ?>">
-                    <span>02</span>
-                    <strong>Kategori</strong>
-                    <p>Pilih berdasarkan brand dan kondisi.</p>
-                </a>
-                <a href="<?php echo htmlspecialchars($tautan_pesanan, ENT_QUOTES, 'UTF-8'); ?>">
-                    <span>03</span>
-                    <strong>Pesanan</strong>
-                    <p>Pantau status transaksi Anda.</p>
-                </a>
-                <a href="<?php echo htmlspecialchars($tautan_tentang, ENT_QUOTES, 'UTF-8'); ?>">
-                    <span>04</span>
-                    <strong>Tentang</strong>
-                    <p>Kenali EA SENIKERS dan kanal sosialnya.</p>
-                </a>
-                <a href="<?php echo htmlspecialchars($tautan_akun, ENT_QUOTES, 'UTF-8'); ?>">
-                    <span>05</span>
-                    <strong>Akun</strong>
-                    <p>Kelola identitas dan akses belanja.</p>
-                </a>
-            </div>
-        </section>
-
         <section class="blok-terlaris" aria-labelledby="judul-terlaris">
             <div class="blok-terlaris__header">
                 <div>

@@ -11,10 +11,6 @@ if (ambil_peran() !== 'admin') {
 }
 
 $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
-$pesanan_terbaru = pesanan_admin_ambil_terbaru_ringkas(5);
-$status_label_pesanan = pesanan_status_label_id();
-$badge_kelas_pesanan = pesanan_status_kelas_badge();
-$url_detail_pesanan_base = htmlspecialchars(aplikasi_url('admin/detail_pesanan_admin.php'), ENT_QUOTES, 'UTF-8');
 
 $stat = admin_dashboard_stat_kartu();
 $delta_pendapatan = admin_dashboard_delta_persen((float) $stat['pendapatan_30'], (float) $stat['pendapatan_30_sebelumnya']);
@@ -255,53 +251,6 @@ if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
                     </section>
                 </div>
 
-                <section class="admin-bagian-tabel" aria-labelledby="judul-tabel">
-                    <h2 id="judul-tabel" class="admin-panel__judul">Pesanan terbaru</h2>
-                    <div class="admin-tabel-wrap">
-                        <table class="admin-tabel">
-                            <thead>
-                                <tr>
-                                    <th scope="col">ID</th>
-                                    <th scope="col">Pelanggan</th>
-                                    <th scope="col">Produk</th>
-                                    <th scope="col">Total</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if ($pesanan_terbaru === []): ?>
-                                <tr class="admin-tr-kosong">
-                                    <td colspan="6">Belum ada pesanan untuk ditampilkan.</td>
-                                </tr>
-                                <?php else: ?>
-                                    <?php foreach ($pesanan_terbaru as $row): ?>
-                                        <?php
-                                        $oid = (int) ($row['id'] ?? 0);
-                                        $st = (string) ($row['status'] ?? '');
-                                        $badgeClass = $badge_kelas_pesanan[$st] ?? 'pesanan-badge pesanan-badge--kuning';
-                                        $labelSt = $status_label_pesanan[$st] ?? $st;
-                                        $namaPel = (string) ($row['nama_pengguna'] ?? '—');
-                                        $produk = trim((string) ($row['produk_ringkas'] ?? ''));
-                                        if ($produk === '') {
-                                            $produk = '—';
-                                        }
-                                        $total = number_format((float) ($row['total_price'] ?? 0), 0, ',', '.');
-                                        ?>
-                                        <tr>
-                                            <td><strong>#<?php echo $oid; ?></strong></td>
-                                            <td><?php echo htmlspecialchars($namaPel, ENT_QUOTES, 'UTF-8'); ?></td>
-                                            <td><?php echo htmlspecialchars($produk, ENT_QUOTES, 'UTF-8'); ?></td>
-                                            <td>Rp <?php echo htmlspecialchars($total, ENT_QUOTES, 'UTF-8'); ?></td>
-                                            <td><span class="<?php echo htmlspecialchars($badgeClass, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($labelSt, ENT_QUOTES, 'UTF-8'); ?></span></td>
-                                            <td><a class="admin-btn admin-btn--mini admin-btn--sekunder" href="<?php echo $url_detail_pesanan_base; ?>?id=<?php echo $oid; ?>">Detail</a></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
             </main>
         </div>
     </div>

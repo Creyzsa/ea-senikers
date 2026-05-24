@@ -60,33 +60,57 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
             </div>
         </section>
 
-        <section class="tentang-section" aria-labelledby="judul-nilai">
+        <section class="tentang-section" aria-labelledby="judul-tentang-kami">
             <div class="section-heading">
                 <div>
-                    <p class="section-eyebrow">Nilai toko</p>
-                    <h2 id="judul-nilai">Dibuat untuk belanja yang terasa aman</h2>
+                    <p class="section-eyebrow">Tentang kami</p>
+                    <h2 id="judul-tentang-kami">Sneakers untuk setiap langkah pemakaiannya</h2>
                 </div>
             </div>
-            <div class="tentang-value-grid">
-                <article>
-                    <span>01</span>
-                    <h3>Kurasi kualitas</h3>
-                    <p>Produk dipilih agar layak tampil dan nyaman dipertimbangkan sebelum dibeli.</p>
+            <div class="tentang-cerita">
+                <p>EA SENIKERS adalah toko sepatu online yang menjual <strong>sneakers multi-merek</strong> — Nike, Adidas, Vans, Converse, New Balance, dan beberapa label lain. Kami melayani dua kategori utama: produk <strong>baru</strong> langsung dari supplier resmi, dan koleksi <strong>preloved terkurasi</strong> yang kami pilih satu per satu agar layak dipertimbangkan.</p>
+                <p>Komitmen kami sederhana: <strong>transparansi</strong>. Setiap produk preloved kami beri penjelasan kondisi yang jujur — bukan sekadar &ldquo;mulus&rdquo;, tapi detail seperti ada bercak, jahitan yang mulai longgar, atau sol yang sedikit aus. Harga selalu tampil di katalog tanpa perlu chat. Foto produk diambil sendiri, bukan stok katalog merek.</p>
+                <p>Cocok untuk <strong>sneakerhead</strong> yang ingin menambah koleksi tanpa khawatir, <strong>pengguna kasual</strong> yang mencari sepatu nyaman sehari-hari, juga <strong>pembeli pertama</strong> yang ingin masuk ke dunia sneakers dengan harga ramah lewat koleksi preloved kami.</p>
+            </div>
+        </section>
+
+        <section class="tentang-section" aria-labelledby="judul-tips">
+            <div class="section-heading">
+                <div>
+                    <p class="section-eyebrow">Panduan</p>
+                    <h2 id="judul-tips">Tips merawat sneakers agar awet</h2>
+                </div>
+            </div>
+            <div class="tentang-tips-grid">
+                <article class="tentang-tips-card">
+                    <span class="tentang-tips-card__nomor">01</span>
+                    <h3>Kenali bahan sepatu</h3>
+                    <p>Kanvas, kulit sintetis, suede, dan mesh butuh perawatan berbeda. Kenali bahannya dulu sebelum membersihkan agar tidak salah cara.</p>
                 </article>
-                <article>
-                    <span>02</span>
-                    <h3>Kondisi transparan</h3>
-                    <p>Informasi produk dibuat jelas, terutama untuk koleksi preloved yang butuh detail kondisi.</p>
+                <article class="tentang-tips-card">
+                    <span class="tentang-tips-card__nomor">02</span>
+                    <h3>Bersihkan langsung saat kena noda</h3>
+                    <p>Pakai kain microfiber lembap untuk noda baru — jangan tunggu mengering. Noda yang dibiarkan semalam jadi jauh lebih sulit hilang.</p>
                 </article>
-                <article>
-                    <span>03</span>
-                    <h3>Harga terbuka</h3>
-                    <p>Harga ditampilkan langsung di katalog sehingga pembeli bisa membandingkan dengan cepat.</p>
+                <article class="tentang-tips-card">
+                    <span class="tentang-tips-card__nomor">03</span>
+                    <h3>Lepas tali sebelum dicuci</h3>
+                    <p>Tali sepatu biasanya beda bahan dari upper, jadi pisahkan saat mencuci. Sikat kering dulu kotoran kasarnya, baru cuci bagian sepatu.</p>
                 </article>
-                <article>
-                    <span>04</span>
-                    <h3>Layanan terhubung</h3>
-                    <p>Kontak toko dan sosial media disediakan agar pembeli mudah bertanya sebelum checkout.</p>
+                <article class="tentang-tips-card">
+                    <span class="tentang-tips-card__nomor">04</span>
+                    <h3>Hindari mesin cuci</h3>
+                    <p>Putaran mesin cuci bisa merusak bentuk sol dan melepas lem perekat. Cuci manual dengan sikat halus jauh lebih aman untuk struktur sepatu.</p>
+                </article>
+                <article class="tentang-tips-card">
+                    <span class="tentang-tips-card__nomor">05</span>
+                    <h3>Jangan jemur langsung di matahari</h3>
+                    <p>Sinar UV bikin warna pudar dan bahan jadi getas. Angin-anginkan di tempat teduh dengan sirkulasi udara baik.</p>
+                </article>
+                <article class="tentang-tips-card">
+                    <span class="tentang-tips-card__nomor">06</span>
+                    <h3>Simpan di tempat sejuk &amp; kering</h3>
+                    <p>Hindari menumpuk sepatu. Pakai rak khusus, tambahkan silica gel di dalamnya untuk mencegah jamur saat musim hujan.</p>
                 </article>
             </div>
         </section>
