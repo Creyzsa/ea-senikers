@@ -82,7 +82,12 @@ $u_checkout = aplikasi_url('pembeli/checkout_pembeli.php');
     <article class="detail-kartu">
         <div class="detail-susunan">
             <div class="detail-galeri">
-                <img id="gambar-utama" class="detail-gambar-utama" src="<?php echo htmlspecialchars($utama, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?>" width="600" height="600">
+                <button type="button" class="detail-gambar-tombol" data-lightbox-buka aria-label="Perbesar gambar produk">
+                    <img id="gambar-utama" class="detail-gambar-utama" src="<?php echo htmlspecialchars($utama, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?>" width="600" height="600">
+                    <span class="detail-gambar-zoom" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m-3-3h6"/></svg>
+                    </span>
+                </button>
                 <?php if (count($urls_gambar) > 1): ?>
                 <div class="detail-thumb-bar" role="tablist" aria-label="Pilih gambar">
                     <?php foreach ($urls_gambar as $i => $u): ?>
@@ -97,7 +102,16 @@ $u_checkout = aplikasi_url('pembeli/checkout_pembeli.php');
                 <p class="detail-panel__brand"><?php echo htmlspecialchars($brand, ENT_QUOTES, 'UTF-8'); ?></p>
                 <h1><?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?></h1>
                 <p class="detail-panel__harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga), ENT_QUOTES, 'UTF-8'); ?></p>
-                <span class="detail-panel__chip <?php echo htmlspecialchars($chip_kondisi, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($kondisi, ENT_QUOTES, 'UTF-8'); ?></span>
+                <span class="detail-panel__chip <?php echo htmlspecialchars($chip_kondisi, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(kondisi_label_pembeli($kondisi), ENT_QUOTES, 'UTF-8'); ?></span>
+
+                <?php if (strcasecmp($kondisi, 'Baru') !== 0 && $kondisi !== ''): ?>
+                    <p class="detail-panel__trust" aria-label="Catatan untuk produk preloved">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Foto asli (bukan stok merek). Kondisi dijelaskan apa adanya di deskripsi di bawah.</span>
+                    </p>
+                <?php endif; ?>
 
                 <?php if (is_string($flash_keranjang_error) && $flash_keranjang_error !== ''): ?>
                     <p class="detail-flash-error" role="alert"><?php echo htmlspecialchars($flash_keranjang_error, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -121,10 +135,21 @@ $u_checkout = aplikasi_url('pembeli/checkout_pembeli.php');
                                 if ($st > 0) {
                                     $radio_pertama = false;
                                 }
+                                $kelas_ukuran = 'detail-ukuran';
+                                if ($st <= 0) {
+                                    $kelas_ukuran .= ' detail-ukuran--habis';
+                                } elseif ($st <= 3) {
+                                    $kelas_ukuran .= ' detail-ukuran--terbatas';
+                                }
                                 ?>
-                            <div class="detail-ukuran<?php echo $st <= 0 ? ' detail-ukuran--habis' : ''; ?>">
+                            <div class="<?php echo $kelas_ukuran; ?>">
                                 <input type="radio" name="ukuran" value="<?php echo htmlspecialchars($uk, ENT_QUOTES, 'UTF-8'); ?>" id="<?php echo htmlspecialchars($id_radio, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $st <= 0 ? 'disabled' : ''; ?> <?php echo $cek ? 'checked' : ''; ?> <?php echo $ada_ukuran_siap ? 'required' : ''; ?>>
-                                <label for="<?php echo htmlspecialchars($id_radio, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($uk, ENT_QUOTES, 'UTF-8'); ?></label>
+                                <label for="<?php echo htmlspecialchars($id_radio, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <span class="detail-ukuran__nomor"><?php echo htmlspecialchars($uk, ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <?php if ($st > 0 && $st <= 3): ?>
+                                        <span class="detail-ukuran__sisa">sisa <?php echo (int) $st; ?></span>
+                                    <?php endif; ?>
+                                </label>
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -145,11 +170,22 @@ $u_checkout = aplikasi_url('pembeli/checkout_pembeli.php');
     <?php endif; ?>
 </div>
 
-<?php if ($produk !== null && count($urls_gambar) > 1): ?>
+<?php if ($produk !== null): ?>
+<div class="detail-lightbox" data-lightbox hidden role="dialog" aria-modal="true" aria-label="Pratinjau gambar produk">
+    <button type="button" class="detail-lightbox__tutup" data-lightbox-tutup aria-label="Tutup pratinjau">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    <img class="detail-lightbox__gambar" data-lightbox-gambar src="" alt="Pratinjau produk">
+</div>
 <script>
 (function () {
     var utama = document.getElementById('gambar-utama');
     var thumbs = document.querySelectorAll('.detail-thumb');
+    var lightbox = document.querySelector('[data-lightbox]');
+    var lbGambar = document.querySelector('[data-lightbox-gambar]');
+    var tombolBuka = document.querySelector('[data-lightbox-buka]');
+    var tombolTutup = document.querySelector('[data-lightbox-tutup]');
+
     thumbs.forEach(function (btn) {
         btn.addEventListener('click', function () {
             var src = btn.getAttribute('data-src');
@@ -157,6 +193,28 @@ $u_checkout = aplikasi_url('pembeli/checkout_pembeli.php');
             thumbs.forEach(function (b) { b.classList.remove('detail-thumb--aktif'); });
             btn.classList.add('detail-thumb--aktif');
         });
+    });
+
+    function bukaLightbox() {
+        if (!lightbox || !utama || !lbGambar) return;
+        lbGambar.src = utama.src;
+        lightbox.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+    function tutupLightbox() {
+        if (!lightbox) return;
+        lightbox.hidden = true;
+        document.body.style.overflow = '';
+    }
+    if (tombolBuka) tombolBuka.addEventListener('click', bukaLightbox);
+    if (tombolTutup) tombolTutup.addEventListener('click', tutupLightbox);
+    if (lightbox) {
+        lightbox.addEventListener('click', function (e) {
+            if (e.target === lightbox) tutupLightbox();
+        });
+    }
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && lightbox && !lightbox.hidden) tutupLightbox();
     });
 })();
 </script>

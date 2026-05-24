@@ -37,6 +37,21 @@ function katalog_format_rupiah(int $harga): string
 }
 
 /**
+ * Label kondisi untuk ditampilkan ke pembeli.
+ * Data internal memakai 'Baru' / 'Second' (untuk admin form),
+ * tetapi pembeli melihatnya sebagai 'Baru' / 'Preloved' agar selaras
+ * dengan terminologi marketing di seluruh situs.
+ */
+function kondisi_label_pembeli(string $kondisi): string
+{
+    $kondisi_bersih = trim($kondisi);
+    if (strcasecmp($kondisi_bersih, 'Second') === 0) {
+        return 'Preloved';
+    }
+    return $kondisi_bersih;
+}
+
+/**
  * @return list<array<string, mixed>>
  */
 function katalog_ambil_semua_produk(): array

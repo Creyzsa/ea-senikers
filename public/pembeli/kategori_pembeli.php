@@ -147,7 +147,7 @@ $koleksi_utama = [
             <div class="kategori-chip-panel">
                 <?php foreach ($kondisi_map as $kondisi => $meta): ?>
                     <a href="<?php echo htmlspecialchars(aplikasi_url('pembeli/produk.php?kondisi=' . rawurlencode((string) $kondisi)), ENT_QUOTES, 'UTF-8'); ?>">
-                        <strong><?php echo htmlspecialchars((string) $kondisi, ENT_QUOTES, 'UTF-8'); ?></strong>
+                        <strong><?php echo htmlspecialchars(kondisi_label_pembeli((string) $kondisi), ENT_QUOTES, 'UTF-8'); ?></strong>
                         <span><?php echo (int) $meta['jumlah']; ?> produk</span>
                     </a>
                 <?php endforeach; ?>

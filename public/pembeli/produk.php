@@ -150,7 +150,7 @@ $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($
                 <select name="kondisi">
                     <option value="">Semua kondisi</option>
                     <?php foreach ($opsi_kondisi as $kondisi): ?>
-                        <option value="<?php echo htmlspecialchars($kondisi, ENT_QUOTES, 'UTF-8'); ?>"<?php echo strcasecmp($kondisi_filter, $kondisi) === 0 ? ' selected' : ''; ?>><?php echo htmlspecialchars($kondisi, ENT_QUOTES, 'UTF-8'); ?></option>
+                        <option value="<?php echo htmlspecialchars($kondisi, ENT_QUOTES, 'UTF-8'); ?>"<?php echo strcasecmp($kondisi_filter, $kondisi) === 0 ? ' selected' : ''; ?>><?php echo htmlspecialchars(kondisi_label_pembeli($kondisi), ENT_QUOTES, 'UTF-8'); ?></option>
                     <?php endforeach; ?>
                 </select>
             </label>
@@ -194,7 +194,7 @@ $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($
                         <a href="<?php echo htmlspecialchars(produk_url_filter(['q' => $q, 'kondisi' => $kondisi_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Merek: <?php echo htmlspecialchars($brand_filter, ENT_QUOTES, 'UTF-8'); ?></a>
                     <?php endif; ?>
                     <?php if ($kondisi_filter !== ''): ?>
-                        <a href="<?php echo htmlspecialchars(produk_url_filter(['q' => $q, 'brand' => $brand_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Kondisi: <?php echo htmlspecialchars($kondisi_filter, ENT_QUOTES, 'UTF-8'); ?></a>
+                        <a href="<?php echo htmlspecialchars(produk_url_filter(['q' => $q, 'brand' => $brand_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Kondisi: <?php echo htmlspecialchars(kondisi_label_pembeli($kondisi_filter), ENT_QUOTES, 'UTF-8'); ?></a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -215,7 +215,7 @@ $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($
                     <div class="kartu-katalog__gambar-wrap">
                         <img class="kartu-katalog__gambar" src="<?php echo htmlspecialchars($url_gambar, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?>" loading="lazy" width="400" height="400">
                         <?php if ($kondisi !== ''): ?>
-                            <span class="kartu-katalog__badge-kondisi <?php echo htmlspecialchars($kelas_kondisi, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($kondisi, ENT_QUOTES, 'UTF-8'); ?></span>
+                            <span class="kartu-katalog__badge-kondisi <?php echo htmlspecialchars($kelas_kondisi, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(kondisi_label_pembeli($kondisi), ENT_QUOTES, 'UTF-8'); ?></span>
                         <?php endif; ?>
                     </div>
                     <div class="kartu-katalog__isi">
