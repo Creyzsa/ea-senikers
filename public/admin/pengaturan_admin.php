@@ -31,6 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'biaya_pengiriman' => (string) ($_POST['biaya_pengiriman'] ?? '0'),
             'nomor_wa_1' => (string) ($_POST['nomor_wa_1'] ?? ''),
             'nomor_wa_2' => (string) ($_POST['nomor_wa_2'] ?? ''),
+            'rajaongkir_api_key' => (string) ($_POST['rajaongkir_api_key'] ?? ''),
+            'rajaongkir_kota_asal_nama' => (string) ($_POST['rajaongkir_kota_asal_nama'] ?? ''),
+            'rajaongkir_kota_asal_id' => (string) ($_POST['rajaongkir_kota_asal_id'] ?? '0'),
+            'tripay_mode' => (string) ($_POST['tripay_mode'] ?? 'sandbox'),
+            'tripay_merchant_code' => (string) ($_POST['tripay_merchant_code'] ?? ''),
+            'tripay_api_key' => (string) ($_POST['tripay_api_key'] ?? ''),
+            'tripay_private_key' => (string) ($_POST['tripay_private_key'] ?? ''),
         ]);
         if ($ok) {
             $_SESSION['flash_admin_pengaturan'] = ['jenis' => 'sukses', 'teks' => 'Pengaturan berhasil disimpan.'];
@@ -205,6 +212,77 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                                 <div class="admin-field">
                                     <label for="biaya-pengiriman">Biaya pengiriman default (Rp)</label>
                                     <input type="number" id="biaya-pengiriman" name="biaya_pengiriman" value="<?php echo htmlspecialchars((string) (int) $cfg['biaya_pengiriman'], ENT_QUOTES, 'UTF-8'); ?>" min="0" step="1000">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="admin-kartu" aria-labelledby="judul-rajaongkir">
+                        <div class="admin-kartu__header">
+                            <h2 id="judul-rajaongkir">Integrasi RajaOngkir</h2>
+                            <span class="admin-lencana admin-lencana--tunda">Tahap 2</span>
+                        </div>
+                        <div class="admin-form-konten">
+                            <p class="admin-form-keterangan">
+                                Untuk hitung ongkos kirim otomatis. Daftar gratis di
+                                <a href="https://collaborator.komerce.id/" target="_blank" rel="noopener noreferrer">collaborator.komerce.id</a>
+                                (RajaOngkir kini dikelola Komerce, API baru level <em>district/kecamatan</em>).
+                                Lokasi asal pengiriman adalah kecamatan tempat paket dikirim — biasanya kecamatan tempat toko offline berada.
+                            </p>
+                            <div class="admin-form-grid">
+                                <div class="admin-field admin-field--full">
+                                    <label for="rajaongkir-api-key">API Key</label>
+                                    <input type="password" id="rajaongkir-api-key" name="rajaongkir_api_key" value="<?php echo htmlspecialchars((string) $cfg['rajaongkir_api_key'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" placeholder="Salin dari dashboard Komerce → Shipping Cost → API Key">
+                                </div>
+                                <div class="admin-field">
+                                    <label for="rajaongkir-kota-asal-nama">Lokasi asal (label)</label>
+                                    <input type="text" id="rajaongkir-kota-asal-nama" name="rajaongkir_kota_asal_nama" value="<?php echo htmlspecialchars((string) $cfg['rajaongkir_kota_asal_nama'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="Padang Panjang Timur, Padang Panjang">
+                                </div>
+                                <div class="admin-field">
+                                    <label for="rajaongkir-kota-asal-id">Lokasi asal (destination_id)</label>
+                                    <input type="number" id="rajaongkir-kota-asal-id" name="rajaongkir_kota_asal_id" value="<?php echo htmlspecialchars((string) (int) $cfg['rajaongkir_kota_asal_id'], ENT_QUOTES, 'UTF-8'); ?>" min="0" step="1" placeholder="ID level district">
+                                </div>
+                            </div>
+                            <p class="admin-form-keterangan" style="margin-top:0.6rem;">
+                                <strong>Cara dapat destination_id:</strong> setelah API Key terisi &amp; tersimpan,
+                                buka alat bantu <a href="<?php echo htmlspecialchars(aplikasi_url('admin/cek_rajaongkir.php'), ENT_QUOTES, 'UTF-8'); ?>"><strong>Cek RajaOngkir</strong></a>
+                                untuk validasi koneksi, cari ID lokasi asal lewat search, dan simulasi ongkir.
+                            </p>
+                        </div>
+                    </section>
+
+                    <?php $__tripay_mode = (string) $cfg['tripay_mode']; ?>
+                    <section class="admin-kartu" aria-labelledby="judul-tripay">
+                        <div class="admin-kartu__header">
+                            <h2 id="judul-tripay">Integrasi Tripay</h2>
+                            <span class="admin-lencana admin-lencana--tunda">Tahap 2</span>
+                        </div>
+                        <div class="admin-form-konten">
+                            <p class="admin-form-keterangan">
+                                Payment gateway untuk Virtual Account, QRIS, E-wallet. Daftar di
+                                <a href="https://tripay.co.id/member/register" target="_blank" rel="noopener noreferrer">tripay.co.id</a>.
+                                Mulai dengan <strong>Sandbox</strong> untuk uji coba, ganti <strong>Production</strong> saat siap menerima pembayaran nyata.
+                                Kredensial dapat dilihat di Dashboard Tripay → Merchant.
+                            </p>
+                            <div class="admin-form-grid">
+                                <div class="admin-field">
+                                    <label for="tripay-mode">Mode</label>
+                                    <select id="tripay-mode" name="tripay_mode">
+                                        <option value="sandbox" <?php echo $__tripay_mode === 'sandbox' ? 'selected' : ''; ?>>Sandbox (uji coba)</option>
+                                        <option value="production" <?php echo $__tripay_mode === 'production' ? 'selected' : ''; ?>>Production (live)</option>
+                                    </select>
+                                </div>
+                                <div class="admin-field">
+                                    <label for="tripay-merchant-code">Merchant Code</label>
+                                    <input type="text" id="tripay-merchant-code" name="tripay_merchant_code" value="<?php echo htmlspecialchars((string) $cfg['tripay_merchant_code'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="T12345" autocomplete="off">
+                                </div>
+                                <div class="admin-field admin-field--full">
+                                    <label for="tripay-api-key">API Key</label>
+                                    <input type="password" id="tripay-api-key" name="tripay_api_key" value="<?php echo htmlspecialchars((string) $cfg['tripay_api_key'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" placeholder="DEV-xxxxxxxxxxxx (sandbox) atau xxxxxxxxxxxx (production)">
+                                </div>
+                                <div class="admin-field admin-field--full">
+                                    <label for="tripay-private-key">Private Key</label>
+                                    <input type="password" id="tripay-private-key" name="tripay_private_key" value="<?php echo htmlspecialchars((string) $cfg['tripay_private_key'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" placeholder="Untuk verifikasi signature callback">
                                 </div>
                             </div>
                         </div>

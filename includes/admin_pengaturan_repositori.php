@@ -45,7 +45,23 @@ function admin_pengaturan_format_wa(string $masukan): string
 }
 
 /**
- * @return array{nama_toko:string,email_toko:string,telepon_toko:string,alamat_toko:string,metode_pembayaran:string,biaya_pengiriman:int,nomor_wa_1:string,nomor_wa_2:string}
+ * @return array{
+ *   nama_toko:string,
+ *   email_toko:string,
+ *   telepon_toko:string,
+ *   alamat_toko:string,
+ *   metode_pembayaran:string,
+ *   biaya_pengiriman:int,
+ *   nomor_wa_1:string,
+ *   nomor_wa_2:string,
+ *   rajaongkir_api_key:string,
+ *   rajaongkir_kota_asal_nama:string,
+ *   rajaongkir_kota_asal_id:int,
+ *   tripay_mode:string,
+ *   tripay_merchant_code:string,
+ *   tripay_api_key:string,
+ *   tripay_private_key:string
+ * }
  */
 function admin_pengaturan_muat_terapan(): array
 {
@@ -58,6 +74,13 @@ function admin_pengaturan_muat_terapan(): array
         'biaya_pengiriman' => 25000,
         'nomor_wa_1' => '6282259343380',
         'nomor_wa_2' => '6282171590759',
+        'rajaongkir_api_key' => '',
+        'rajaongkir_kota_asal_nama' => '',
+        'rajaongkir_kota_asal_id' => 0,
+        'tripay_mode' => 'sandbox',
+        'tripay_merchant_code' => '',
+        'tripay_api_key' => '',
+        'tripay_private_key' => '',
     ];
 
     $path = admin_pengaturan_simpan_ke_file();
@@ -82,6 +105,16 @@ function admin_pengaturan_muat_terapan(): array
     $wa1 = admin_pengaturan_normalisasi_wa((string) ($out['nomor_wa_1'] ?? $bawaan['nomor_wa_1']));
     $wa2 = admin_pengaturan_normalisasi_wa((string) ($out['nomor_wa_2'] ?? $bawaan['nomor_wa_2']));
 
+    $kota_asal_id = (int) ($out['rajaongkir_kota_asal_id'] ?? $bawaan['rajaongkir_kota_asal_id']);
+    if ($kota_asal_id < 0) {
+        $kota_asal_id = 0;
+    }
+
+    $tripay_mode = strtolower(trim((string) ($out['tripay_mode'] ?? $bawaan['tripay_mode'])));
+    if (!in_array($tripay_mode, ['sandbox', 'production'], true)) {
+        $tripay_mode = 'sandbox';
+    }
+
     return [
         'nama_toko' => trim((string) ($out['nama_toko'] ?? $bawaan['nama_toko'])) ?: $bawaan['nama_toko'],
         'email_toko' => trim((string) ($out['email_toko'] ?? $bawaan['email_toko'])),
@@ -92,6 +125,13 @@ function admin_pengaturan_muat_terapan(): array
         'biaya_pengiriman' => $biaya,
         'nomor_wa_1' => $wa1,
         'nomor_wa_2' => $wa2,
+        'rajaongkir_api_key' => trim((string) ($out['rajaongkir_api_key'] ?? '')),
+        'rajaongkir_kota_asal_nama' => trim((string) ($out['rajaongkir_kota_asal_nama'] ?? '')),
+        'rajaongkir_kota_asal_id' => $kota_asal_id,
+        'tripay_mode' => $tripay_mode,
+        'tripay_merchant_code' => trim((string) ($out['tripay_merchant_code'] ?? '')),
+        'tripay_api_key' => trim((string) ($out['tripay_api_key'] ?? '')),
+        'tripay_private_key' => trim((string) ($out['tripay_private_key'] ?? '')),
     ];
 }
 
@@ -118,7 +158,7 @@ function admin_pengaturan_daftar_wa(): array
 }
 
 /**
- * @param array{nama_toko?:string,email_toko?:string,telepon_toko?:string,alamat_toko?:string,metode_pembayaran?:string,biaya_pengiriman?:int|string,nomor_wa_1?:string,nomor_wa_2?:string} $data
+ * @param array<string,mixed> $data Diterima dari $_POST, field opsional.
  */
 function admin_pengaturan_simpan_terapan(array $data): bool
 {
@@ -136,6 +176,17 @@ function admin_pengaturan_simpan_terapan(array $data): bool
 
     $email = strtolower(trim((string) ($data['email_toko'] ?? '')));
 
+    $kota_asal_id_raw = $data['rajaongkir_kota_asal_id'] ?? 0;
+    $kota_asal_id = is_numeric($kota_asal_id_raw) ? (int) $kota_asal_id_raw : 0;
+    if ($kota_asal_id < 0) {
+        $kota_asal_id = 0;
+    }
+
+    $tripay_mode = strtolower(trim((string) ($data['tripay_mode'] ?? 'sandbox')));
+    if (!in_array($tripay_mode, ['sandbox', 'production'], true)) {
+        $tripay_mode = 'sandbox';
+    }
+
     $payload = [
         'nama_toko' => trim((string) ($data['nama_toko'] ?? '')),
         'email_toko' => $email !== '' ? $email : 'info@easenikers.com',
@@ -145,6 +196,13 @@ function admin_pengaturan_simpan_terapan(array $data): bool
         'biaya_pengiriman' => $biaya,
         'nomor_wa_1' => admin_pengaturan_normalisasi_wa((string) ($data['nomor_wa_1'] ?? '')),
         'nomor_wa_2' => admin_pengaturan_normalisasi_wa((string) ($data['nomor_wa_2'] ?? '')),
+        'rajaongkir_api_key' => trim((string) ($data['rajaongkir_api_key'] ?? '')),
+        'rajaongkir_kota_asal_nama' => trim((string) ($data['rajaongkir_kota_asal_nama'] ?? '')),
+        'rajaongkir_kota_asal_id' => $kota_asal_id,
+        'tripay_mode' => $tripay_mode,
+        'tripay_merchant_code' => trim((string) ($data['tripay_merchant_code'] ?? '')),
+        'tripay_api_key' => trim((string) ($data['tripay_api_key'] ?? '')),
+        'tripay_private_key' => trim((string) ($data['tripay_private_key'] ?? '')),
         'updated_at' => gmdate('c'),
     ];
 
