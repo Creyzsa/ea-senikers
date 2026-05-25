@@ -3,8 +3,8 @@
  * Verifikasi token_hash dari email (POST) — menghindari otp_expired karena pemindai email
  * memanggil GET ke URL Supabase sebelum pengguna klik.
  */
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/supabase_auth.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/auth_db/supabase_auth.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
 
 $gagal = aplikasi_url('login/konfirmasi_email.php') . '?verify=gagal';

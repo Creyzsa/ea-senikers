@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../includes/sesi.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 
 sesi_hancurkan_total();
 

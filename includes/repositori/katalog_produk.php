@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * Katalog produk — data dari Supabase PostgREST.
  */
-require_once __DIR__ . '/supabase_rest.php';
-require_once __DIR__ . '/url_bantu.php';
+require_once __DIR__ . '/../auth_db/supabase_rest.php';
+require_once __DIR__ . '/../url_bantu.php';
 
 /** Path relatif folder gambar produk di bawah URL_APLIKASI (public). */
 const KATALOG_FOLDER_GAMBAR = 'assets/images/produk';

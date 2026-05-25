@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/pesanan_repositori.php';
-require_once __DIR__ . '/../../includes/katalog_produk.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
+require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
-$kontak_toko = require __DIR__ . '/../../includes/kontak_toko.php';
+$kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {

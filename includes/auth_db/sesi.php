@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/url_bantu.php';
+require_once __DIR__ . '/../url_bantu.php';
 
 /**
  * Sesi dipakai untuk menyimpan status masuk (siapa yang sedang login).

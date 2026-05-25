@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * Repositori admin produk — operasi CRUD untuk panel admin.
  */
-require_once __DIR__ . '/supabase_rest.php';
-require_once __DIR__ . '/url_bantu.php';
+require_once __DIR__ . '/../auth_db/supabase_rest.php';
+require_once __DIR__ . '/../url_bantu.php';
 require_once __DIR__ . '/katalog_produk.php';
 
 /** Ukuran default untuk produk. */

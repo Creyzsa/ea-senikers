@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 function admin_pengaturan_simpan_ke_file(): string
 {
-    return __DIR__ . '/pengaturan_toko_admin.json';
+    return __DIR__ . '/../pengaturan_toko_admin.json';
 }
 
 /**

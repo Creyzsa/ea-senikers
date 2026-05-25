@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/rajaongkir.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/integrasi/rajaongkir.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {

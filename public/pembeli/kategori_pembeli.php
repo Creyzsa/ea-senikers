@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/katalog_produk.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {

@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/katalog_produk.php';
-require_once __DIR__ . '/../../includes/pesanan_repositori.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
+require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {
@@ -18,8 +18,8 @@ if ($nama_sapa === '') {
 $bilah_pembeli_aktif = 'beranda';
 $tautan_produk = aplikasi_url('pembeli/produk.php');
 $logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
-$merek_ringkas = require __DIR__ . '/../../includes/merek_ringkas.php';
-$kontak_toko = require __DIR__ . '/../../includes/kontak_toko.php';
+$merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
+$kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
 $whatsapp_ada = false;
 foreach ((array) ($kontak_toko['wa'] ?? []) as $__wa) {

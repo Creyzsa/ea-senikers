@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/profil_pembeli_repositori.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/repositori/profil_pembeli_repositori.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {
@@ -16,7 +16,7 @@ $u_pesanan = aplikasi_url('pembeli/pesanan_pembeli.php');
 $u_keranjang = aplikasi_url('pembeli/keranjang_pembeli.php');
 $u_keluar = aplikasi_url('login/keluar.php');
 $u_akun = aplikasi_url('pembeli/akun_pembeli.php');
-$kontak_toko = require __DIR__ . '/../../includes/kontak_toko.php';
+$kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
 if (!isset($_SESSION['csrf_akun_pembeli']) || !is_string($_SESSION['csrf_akun_pembeli'])) {
     $_SESSION['csrf_akun_pembeli'] = bin2hex(random_bytes(24));

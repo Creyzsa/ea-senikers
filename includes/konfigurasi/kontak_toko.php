@@ -7,7 +7,7 @@ declare(strict_types=1);
  * Daftar WhatsApp dibaca dari pengaturan admin (panel Pengaturan toko) sehingga
  * admin dapat memperbarui nomor layanan tanpa mengubah kode.
  */
-require_once __DIR__ . '/admin_pengaturan_repositori.php';
+require_once __DIR__ . '/../repositori/admin_pengaturan_repositori.php';
 
 return [
     /**

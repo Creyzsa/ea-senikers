@@ -136,35 +136,71 @@ Akses `http://localhost/EASENIKERS/public/` dan masuk dengan akun yang sudah dib
 
 ## Struktur Folder
 
+Project disusun dengan pemisahan tegas antara **backend logic** (`includes/`),
+**database** (`database/`), dan **document root web** (`public/`). Folder
+`includes/` lalu dipecah menjadi subfolder bertema agar mudah dilacak.
+
 ```
 EASENIKERS/
-├── config.php                 # konfigurasi DB & Supabase (gitignored)
+├── config.php                       # kredensial Supabase (gitignored)
+├── README.md                        # dokumentasi ini
+│
 ├── database/
-│   └── migrations/            # file SQL untuk Supabase
-├── includes/                  # logika PHP yang di-include
-│   ├── sesi.php               # autentikasi sesi
-│   ├── database.php           # koneksi PDO ke Supabase
-│   ├── supabase_auth.php      # wrapper Supabase Auth
-│   ├── supabase_rest.php      # wrapper Supabase REST/PostgREST
-│   ├── katalog_produk.php     # fungsi katalog (fetch, format, label)
-│   ├── pesanan_repositori.php # query pesanan (admin & pembeli)
-│   ├── admin_*_repositori.php # repositori per fitur admin
-│   ├── profil_pembeli_repositori.php
-│   ├── kontak_toko.php        # config alamat toko & sosmed
-│   ├── merek_ringkas.php      # config copy brand
-│   └── url_bantu.php          # helper URL aplikasi
-└── public/                    # document root web
-    ├── index.php
-    ├── login/                 # daftar, masuk, reset sandi, dll.
-    ├── pembeli/               # halaman pembeli
-    ├── admin/                 # halaman admin
+│   └── migrations/                  # file SQL urutan migrasi Supabase
+│
+├── includes/                        # backend PHP (di-require oleh public/)
+│   │
+│   ├── auth_db/                     # AUTENTIKASI & KONEKSI DATABASE
+│   │   ├── sesi.php                 # sesi login, cookie ingat-saya
+│   │   ├── database.php             # koneksi PDO ke Supabase Postgres
+│   │   ├── supabase_auth.php        # wrapper Supabase Auth (signup/login)
+│   │   └── supabase_rest.php        # wrapper PostgREST untuk CRUD katalog
+│   │
+│   ├── repositori/                  # AKSES DATA (query & CRUD per fitur)
+│   │   ├── katalog_produk.php       # fetch produk, format harga, label
+│   │   ├── pesanan_repositori.php   # CRUD pesanan + status transisi
+│   │   ├── profil_pembeli_repositori.php  # profil pengiriman pembeli
+│   │   ├── admin_dashboard_repositori.php
+│   │   ├── admin_pengaturan_repositori.php
+│   │   ├── admin_pengguna_repositori.php
+│   │   └── admin_produk_repositori.php
+│   │
+│   ├── integrasi/                   # API EKSTERNAL
+│   │   └── rajaongkir.php           # wrapper RajaOngkir Komerce API
+│   │
+│   ├── konfigurasi/                 # KONFIGURASI STATIS (file PHP & JSON)
+│   │   ├── kontak_toko.php          # alamat toko, WA, sosial media
+│   │   ├── merek_ringkas.php        # copy hero, tagline merek
+│   │   └── deskripsi_merek_login.php
+│   │
+│   ├── bilah_pembeli.php            # komponen header pembeli (sticky nav)
+│   ├── keranjang_sesi.php           # state keranjang di $_SESSION
+│   ├── url_bantu.php                # helper aplikasi_url() & path
+│   └── pengaturan_toko_admin.json   # config disimpan admin (gitignored)
+│
+└── public/                          # DOCUMENT ROOT WEB SERVER
+    ├── index.php                    # entry point
+    │
+    ├── login/                       # daftar, masuk, reset sandi, OTP
+    ├── pembeli/                     # halaman pembeli (beranda, katalog, dll)
+    ├── admin/                       # panel admin
+    │
     ├── api/
-    │   └── payment_callback.php  # webhook payment (Tahap 2)
+    │   └── payment_callback.php     # webhook payment Tripay (Tahap 2)
+    │
     └── assets/
-        ├── css/
-        ├── js/
-        └── images/
+        ├── css/                     # stylesheet
+        ├── js/                      # JavaScript (peta, dropdown alamat)
+        └── images/                  # logo, ikon, gambar produk
 ```
+
+**Aturan penamaan subfolder includes/:**
+- `auth_db/` — semua hal yang berurusan dengan kredensial & koneksi DB
+- `repositori/` — kelas/fungsi yang **membaca/menulis data**
+- `integrasi/` — wrapper API eksternal (RajaOngkir, Tripay nanti, dll)
+- `konfigurasi/` — file statis yang **dibaca** oleh halaman (alamat, copy)
+- Root `includes/` — utilitas yang dipakai lintas-modul (helper, sesi
+  state, komponen UI)
 
 ---
 
@@ -175,6 +211,7 @@ EASENIKERS/
 | `tahap1_berat_dan_profil.sql` | Tambah kolom `berat_gram` (int) di tabel `produk`. Tambah kolom profil pengiriman (`no_hp`, `nama_penerima`, `provinsi`, `kota`, `kecamatan`, `kode_pos`, `alamat_detail`) di tabel `users`. |
 | `tahap1_2_peta_alamat.sql` | Tambah kolom `lat`, `lng` (double precision, nullable) di tabel `users` dengan CHECK constraint rentang valid lat/lng. |
 | `tahap1_3_perbaiki_rls_produk.sql` | Matikan Row Level Security pada tabel `produk`, `produk_gambar`, `produk_ukuran` agar admin CRUD lewat REST API (anon key) tidak diblok. |
+| `tahap2_orders_shipping.sql` | Tambah kolom `kurir`, `layanan`, `ongkir`, `destination_id`, `nomor_resi` di tabel `orders` untuk informasi pengiriman dari RajaOngkir. |
 
 Semua migration aman dijalankan ulang (pakai `IF NOT EXISTS` / cek constraint).
 
@@ -205,20 +242,21 @@ Pondasi data & UX siap untuk input produk:
 - Profil pengiriman pembeli dengan cascading dropdown alamat & peta titik lokasi
 - Polish UX lengkap pada area pembeli & admin
 
-### ⏳ Tahap 2 — Menunggu akun layanan
+### ⏳ Tahap 2 — Sebagian Selesai
 
 Integrasi pengiriman & pembayaran:
 
-- RajaOngkir API untuk hitung ongkos kirim (butuh berat produk → sudah tersedia, butuh kota asal/tujuan → sudah tersedia)
-- Tripay sebagai payment gateway (callback signature, link bayar, status sinkronisasi)
-- Form checkout asli (pre-fill dari profil pengiriman pembeli)
-- Input nomor resi pengiriman di admin
+- ✅ **RajaOngkir** (Komerce API) — wrapper, admin tool cek koneksi, search destinasi, hitung ongkir, integrasi penuh di checkout pembeli (auto-pick destinasi via kode pos profil, fallback manual)
+- ✅ Form checkout asli dengan create order ke database (kurir, layanan, ongkir, destination_id)
+- ✅ Form admin input nomor resi saat status pesanan berubah ke "Dikirim"
+- ⏳ **Tripay** sebagai payment gateway — slot konfigurasi sudah disediakan di Pengaturan admin, integrasi nyata (callback signature, link bayar, status sinkronisasi) menyusul
 
 ### 🔜 Tahap 3 — Pasca-launch
 
 - Notifikasi WhatsApp/email otomatis (pesanan masuk, pembayaran berhasil, pengiriman)
 - Export pesanan ke Excel/PDF
 - Halaman tracking resi otomatis
+- Auto-resolve `destination_id` RajaOngkir dari koordinat peta profil pembeli (saat profil disimpan, sistem cari ID otomatis sehingga checkout langsung hitung tanpa pilih kelurahan)
 
 ---
 

@@ -11,7 +11,7 @@ declare(strict_types=1);
  *   no_hp, nama_penerima, provinsi, kota, kecamatan, kode_pos,
  *   alamat_detail, lat, lng
  */
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../auth_db/database.php';
 
 /**
  * @return array{

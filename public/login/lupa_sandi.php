@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/supabase_auth.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/auth_db/supabase_auth.php';
 
 if (sudah_masuk()) {
     header('Location: ' . aplikasi_url('index.php'));
@@ -41,7 +41,7 @@ $kelas_error = 'pesan-error' . ($pesan_kesalahan !== '' ? ' pesan-error--goyang'
 <body class="halaman-masuk">
 
     <div class="bungkus-halaman-login">
-        <?php include __DIR__ . '/../../includes/deskripsi_merek_login.php'; ?>
+        <?php include __DIR__ . '/../../includes/konfigurasi/deskripsi_merek_login.php'; ?>
 
         <main class="kartu-masuk" aria-labelledby="judul-lupa">
         <header class="merek">

@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Repositori pesanan — PostgreSQL (Supabase).
  */
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../auth_db/database.php';
 require_once __DIR__ . '/katalog_produk.php';
 
 /**

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../includes/sesi.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {
@@ -14,8 +14,8 @@ $bilah_pembeli_aktif = 'tentang';
 $u_beranda = aplikasi_url('pembeli/beranda_pembeli.php');
 $u_produk = aplikasi_url('pembeli/produk.php');
 $logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
-$merek_ringkas = require __DIR__ . '/../../includes/merek_ringkas.php';
-$kontak_toko = require __DIR__ . '/../../includes/kontak_toko.php';
+$merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
+$kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
 $instagram = trim((string) ($kontak_toko['sosial']['instagram'] ?? 'easenikers'));
 $tiktok = trim((string) ($kontak_toko['sosial']['tiktok'] ?? 'easecondbrandofficial'));

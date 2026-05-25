@@ -16,13 +16,13 @@ declare(strict_types=1);
  *      di DB, redirect ke halaman detail pesanan.
  */
 
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/katalog_produk.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 require_once __DIR__ . '/../../includes/keranjang_sesi.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
-require_once __DIR__ . '/../../includes/profil_pembeli_repositori.php';
-require_once __DIR__ . '/../../includes/pesanan_repositori.php';
-require_once __DIR__ . '/../../includes/rajaongkir.php';
+require_once __DIR__ . '/../../includes/repositori/profil_pembeli_repositori.php';
+require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
+require_once __DIR__ . '/../../includes/integrasi/rajaongkir.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {

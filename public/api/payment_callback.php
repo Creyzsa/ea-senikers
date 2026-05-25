@@ -11,8 +11,8 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 require_once __DIR__ . '/../../config.php';
-require_once __DIR__ . '/../../includes/database.php';
-require_once __DIR__ . '/../../includes/pesanan_repositori.php';
+require_once __DIR__ . '/../../includes/auth_db/database.php';
+require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

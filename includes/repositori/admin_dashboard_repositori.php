@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Dashboard admin — ringkasan angka, grafik, dan aktivitas dari database + katalog Supabase.
  */
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../auth_db/database.php';
 require_once __DIR__ . '/pesanan_repositori.php';
 require_once __DIR__ . '/katalog_produk.php';
 

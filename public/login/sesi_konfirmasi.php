@@ -2,7 +2,7 @@
 /**
  * Terima access_token dari konfirmasi_email.php (POST), validasi ke Supabase, lalu buat sesi PHP.
  */
-require_once __DIR__ . '/../../includes/sesi.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
 
 $redirect_masuk = aplikasi_url('login/masuk.php');

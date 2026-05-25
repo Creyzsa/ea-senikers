@@ -18,7 +18,7 @@ declare(strict_types=1);
  *   - API key dibaca dari pengaturan admin (file JSON gitignored).
  */
 
-require_once __DIR__ . '/admin_pengaturan_repositori.php';
+require_once __DIR__ . '/../repositori/admin_pengaturan_repositori.php';
 
 const RAJAONGKIR_BASE_URL = 'https://rajaongkir.komerce.id/api/v1';
 

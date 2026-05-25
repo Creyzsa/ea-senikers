@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Pengguna untuk panel admin — tabel PostgreSQL users.
  */
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../auth_db/database.php';
 
 /**
  * @param string|null $q Pencarian di username/email (kosong = semua)

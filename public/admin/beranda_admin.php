@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/pesanan_repositori.php';
-require_once __DIR__ . '/../../includes/admin_dashboard_repositori.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
+require_once __DIR__ . '/../../includes/repositori/admin_dashboard_repositori.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
