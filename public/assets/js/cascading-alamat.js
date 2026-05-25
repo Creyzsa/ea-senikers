@@ -149,5 +149,75 @@
         }
     });
 
+    /**
+     * Cari opsi <select> yang labelnya cocok dengan target nama.
+     * Exact match (case-insensitive) didahulukan, fallback ke substring.
+     */
+    function cariOpsi(sel, target) {
+        if (!target) return null;
+        const t = String(target).toLowerCase().trim();
+        // Exact match
+        for (let i = 0; i < sel.options.length; i++) {
+            const opt = sel.options[i];
+            if (!opt.value) continue;
+            if (opt.value.toLowerCase().trim() === t) return opt;
+        }
+        // Substring match (dua arah, mis. emsifa "KABUPATEN TANAH DATAR" vs "Tanah Datar")
+        for (let i = 0; i < sel.options.length; i++) {
+            const opt = sel.options[i];
+            if (!opt.value) continue;
+            const v = opt.value.toLowerCase().trim();
+            if (v.indexOf(t) !== -1 || t.indexOf(v) !== -1) return opt;
+        }
+        return null;
+    }
+
+    /**
+     * Isi cascading dropdown + kode pos dari hasil reverse-geocode peta.
+     * Dipanggil oleh peta-alamat.js saat marker dipindah.
+     *
+     * @param {Object} addr Field hasil Nominatim (state, county, city, municipality, ...)
+     */
+    window.aplikasiAlamatDariPeta = async function (addr) {
+        if (!addr || typeof addr !== 'object') return;
+
+        const targetProvinsi = addr.state || '';
+        const optProvinsi = cariOpsi(selProvinsi, targetProvinsi);
+        if (!optProvinsi) return;
+        selProvinsi.value = optProvinsi.value;
+
+        const provinsiId = optProvinsi.dataset.id;
+        if (!provinsiId) return;
+        await muatKota(provinsiId, '', '');
+
+        // Kabupaten/kota: Nominatim taruh di county atau city, kadang region
+        const targetKota = addr.county || addr.city || addr.region || '';
+        const optKota = cariOpsi(selKota, targetKota);
+        if (!optKota) return;
+        selKota.value = optKota.value;
+
+        const kotaId = optKota.dataset.id;
+        if (!kotaId) return;
+        await muatKecamatan(kotaId, '');
+
+        // Kecamatan: bisa di municipality/town/subdistrict/suburb tergantung lokasi
+        const targetKec = addr.municipality
+            || addr.subdistrict
+            || addr.town
+            || addr.suburb
+            || addr.village
+            || '';
+        const optKec = cariOpsi(selKecamatan, targetKec);
+        if (optKec) {
+            selKecamatan.value = optKec.value;
+        }
+
+        // Kode pos
+        const inputKodePos = document.querySelector('input[name="kode_pos"]');
+        if (inputKodePos && addr.postcode) {
+            inputKodePos.value = String(addr.postcode);
+        }
+    };
+
     muatProvinsi();
 })();

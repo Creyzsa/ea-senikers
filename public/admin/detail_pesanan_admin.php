@@ -37,10 +37,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['flash_detail_order_warna'] = 'error';
     } elseif ($aksi === 'ubah_status') {
         $nb = strtolower(trim((string) ($_POST['status_baru'] ?? '')));
+        $nomor_resi_input = trim((string) ($_POST['nomor_resi'] ?? ''));
 
-        $ok = pesanan_admin_ubah_status($order_id, $nb);
-
-        $_SESSION['flash_detail_order'] = $ok ? 'Status pesanan diperbarui.' : 'Status tidak dapat diubah pada tahap ini.';
+        // Bila admin pindah ke status "shipped", nomor resi sebaiknya diisi.
+        if ($nb === 'shipped' && $nomor_resi_input === '') {
+            $_SESSION['flash_detail_order'] = 'Nomor resi wajib diisi saat menandai pesanan sebagai "Dikirim".';
+            $_SESSION['flash_detail_order_warna'] = 'error';
+        } else {
+            $ok = pesanan_admin_ubah_status($order_id, $nb);
+            if ($ok && $nomor_resi_input !== '') {
+                pesanan_simpan_nomor_resi($order_id, $nomor_resi_input);
+            }
+            $_SESSION['flash_detail_order'] = $ok ? 'Status pesanan diperbarui.' : 'Status tidak dapat diubah pada tahap ini.';
+            $_SESSION['flash_detail_order_warna'] = $ok ? 'sukses' : 'error';
+        }
+    } elseif ($aksi === 'simpan_resi') {
+        $nomor_resi_input = trim((string) ($_POST['nomor_resi'] ?? ''));
+        $ok = pesanan_simpan_nomor_resi($order_id, $nomor_resi_input);
+        $_SESSION['flash_detail_order'] = $ok ? 'Nomor resi disimpan.' : 'Gagal menyimpan nomor resi.';
         $_SESSION['flash_detail_order_warna'] = $ok ? 'sukses' : 'error';
     }
 
@@ -81,6 +95,10 @@ if (is_string($pembeli_no_hp_digit) && $pembeli_no_hp_digit !== '') {
 }
 $alamat_pengiriman = trim((string) ($pesanan['shipping_address'] ?? ''));
 $bayar_pengiriman = trim((string) ($pesanan['payment_method'] ?? ''));
+$kurir_pesanan = trim((string) ($pesanan['kurir'] ?? ''));
+$layanan_pesanan = trim((string) ($pesanan['layanan'] ?? ''));
+$ongkir_pesanan = (int) ($pesanan['ongkir'] ?? 0);
+$resi_pesanan = trim((string) ($pesanan['nomor_resi'] ?? ''));
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -205,6 +223,25 @@ $bayar_pengiriman = trim((string) ($pesanan['payment_method'] ?? ''));
                                 <strong>Total</strong><br>
                                 Rp <?php echo htmlspecialchars(number_format((float) ($pesanan['total_price'] ?? 0), 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?>
                             </div>
+                            <div>
+                                <strong>Kurir</strong><br>
+                                <?php if ($kurir_pesanan !== ''): ?>
+                                    <?php echo htmlspecialchars(strtoupper($kurir_pesanan) . ($layanan_pesanan !== '' ? ' · ' . $layanan_pesanan : ''), ENT_QUOTES, 'UTF-8'); ?>
+                                    <?php if ($ongkir_pesanan > 0): ?>
+                                        <span class="admin-meta"><br>Ongkir: Rp <?php echo number_format($ongkir_pesanan, 0, ',', '.'); ?></span>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <em class="admin-kosong">Belum dipilih</em>
+                                <?php endif; ?>
+                            </div>
+                            <div>
+                                <strong>Nomor resi</strong><br>
+                                <?php if ($resi_pesanan !== ''): ?>
+                                    <code><?php echo htmlspecialchars($resi_pesanan, ENT_QUOTES, 'UTF-8'); ?></code>
+                                <?php else: ?>
+                                    <em class="admin-kosong">Belum diisi</em>
+                                <?php endif; ?>
+                            </div>
                         </div>
 
                         <?php if ($st === 'cancelled'): ?>
@@ -229,6 +266,7 @@ $bayar_pengiriman = trim((string) ($pesanan['payment_method'] ?? ''));
                         <?php endif; ?>
 
                         <?php if ($status_opsi_selanjutnya !== []): ?>
+                            <?php $next_bisa_ship = in_array('shipped', $status_opsi_selanjutnya, true); ?>
                             <form class="admin-form-status" method="post" aria-label="Ubah tahap pesanan"
                                   data-konfirm-batal="<?php echo htmlspecialchars($status_labels['cancelled'], ENT_QUOTES, 'UTF-8'); ?>">
                                 <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
@@ -245,6 +283,12 @@ $bayar_pengiriman = trim((string) ($pesanan['payment_method'] ?? ''));
                                             <?php endforeach; ?>
                                         </select>
                                     </label>
+                                    <?php if ($next_bisa_ship): ?>
+                                        <label class="admin-field">
+                                            <span>Nomor resi (wajib saat status = Dikirim)</span>
+                                            <input type="text" name="nomor_resi" value="<?php echo htmlspecialchars($resi_pesanan, ENT_QUOTES, 'UTF-8'); ?>" maxlength="60" placeholder="contoh: JX1234567890">
+                                        </label>
+                                    <?php endif; ?>
                                     <button type="submit" class="admin-btn admin-btn--utama">Terapkan</button>
                                 </div>
                             </form>
@@ -274,6 +318,21 @@ $bayar_pengiriman = trim((string) ($pesanan['payment_method'] ?? ''));
                                 <?php endif; ?>
                             </div>
                         </div>
+
+                        <?php if (in_array($st, ['shipped', 'completed'], true)): ?>
+                            <form class="admin-form-status" method="post" aria-label="Edit nomor resi" style="margin-top:1rem;">
+                                <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
+                                <input type="hidden" name="aksi" value="simpan_resi">
+                                <input type="hidden" name="order_id" value="<?php echo (int) $pesanan['id']; ?>">
+                                <div class="admin-form-grid" style="align-items:end;">
+                                    <label class="admin-field">
+                                        <span>Edit nomor resi</span>
+                                        <input type="text" name="nomor_resi" value="<?php echo htmlspecialchars($resi_pesanan, ENT_QUOTES, 'UTF-8'); ?>" maxlength="60" placeholder="contoh: JX1234567890">
+                                    </label>
+                                    <button type="submit" class="admin-btn admin-btn--sekunder">Simpan resi</button>
+                                </div>
+                            </form>
+                        <?php endif; ?>
                     </div>
                 </section>
 

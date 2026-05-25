@@ -282,7 +282,10 @@ if ($aksi === 'cek_ongkir') {
                                                                 <br><small style="color:var(--teks-redup)"><?php echo htmlspecialchars($o['desc'], ENT_QUOTES, 'UTF-8'); ?></small>
                                                             <?php endif; ?>
                                                         </td>
-                                                        <td><?php echo htmlspecialchars($o['etd'] !== '' ? $o['etd'] . ' hari' : '—', ENT_QUOTES, 'UTF-8'); ?></td>
+                                                        <td><?php
+                                                            $etd_clean = trim((string) preg_replace('/\s*\b(days?|hari)\b\s*/i', '', $o['etd']));
+                                                            echo htmlspecialchars($etd_clean !== '' ? $etd_clean . ' hari' : '—', ENT_QUOTES, 'UTF-8');
+                                                        ?></td>
                                                         <td><strong>Rp <?php echo number_format($o['cost'], 0, ',', '.'); ?></strong></td>
                                                     </tr>
                                                 <?php endforeach; ?>

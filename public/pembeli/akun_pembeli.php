@@ -51,6 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors = profil_pembeli_validasi($input);
         if ($errors === []) {
             if (profil_pembeli_simpan($id_pengguna, $input)) {
+                // Alamat profil berubah → state destinasi/kurir di checkout
+                // tidak lagi sinkron. Hapus supaya saat masuk checkout lagi
+                // sistem auto-pick ulang dari alamat profil terbaru.
+                unset(
+                    $_SESSION['checkout_destinasi'],
+                    $_SESSION['checkout_kurir'],
+                    $_SESSION['checkout_destinasi_auto']
+                );
                 $_SESSION['flash_akun_pembeli'] = ['jenis' => 'sukses', 'teks' => 'Profil pengiriman berhasil disimpan.'];
                 header('Location: ' . $u_akun . '#profil-pengiriman');
                 exit;

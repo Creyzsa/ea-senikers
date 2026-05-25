@@ -74,18 +74,24 @@
         }
 
         function balikkanGeocode(lat, lng) {
-            const url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat='
+            // accept-language=id supaya nama provinsi/kota balik Indonesia (cocok dgn emsifa)
+            const url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&accept-language=id&lat='
                 + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng);
             fetch(url, { headers: { 'Accept': 'application/json' } })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (data) {
-                    if (!info) return;
-                    const koord = '<strong data-peta-koordinat>' + lat + ', ' + lng + '</strong>';
-                    if (data && data.display_name) {
-                        const nama = data.display_name.replace(/, Indonesia$/, '');
-                        info.innerHTML = 'Titik terpilih: ' + koord + '<br><span class="peta-alamat__nama">' + escapeHTML(nama) + '</span>';
-                    } else {
-                        info.innerHTML = 'Titik terpilih: ' + koord;
+                    if (info) {
+                        const koord = '<strong data-peta-koordinat>' + lat + ', ' + lng + '</strong>';
+                        if (data && data.display_name) {
+                            const nama = data.display_name.replace(/, Indonesia$/, '');
+                            info.innerHTML = 'Titik terpilih: ' + koord + '<br><span class="peta-alamat__nama">' + escapeHTML(nama) + '</span>';
+                        } else {
+                            info.innerHTML = 'Titik terpilih: ' + koord;
+                        }
+                    }
+                    // Auto-fill cascading dropdown + kode pos kalau ada hasil
+                    if (data && data.address && typeof window.aplikasiAlamatDariPeta === 'function') {
+                        window.aplikasiAlamatDariPeta(data.address);
                     }
                 })
                 .catch(function () {

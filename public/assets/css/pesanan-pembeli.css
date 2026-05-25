@@ -550,3 +550,15 @@
         width: 100%;
     }
 }
+
+/* --- Flash notifikasi pesanan baru --- */
+.pesanan-flash-sukses {
+    margin: 0.85rem 0 1.25rem;
+    padding: 0.85rem 1.05rem;
+    color: var(--sukses-teks);
+    background: var(--sukses-bg);
+    border: 1px solid var(--sukses-tepi);
+    border-radius: 8px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}

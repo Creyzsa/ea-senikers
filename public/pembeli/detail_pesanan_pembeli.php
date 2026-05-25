@@ -58,7 +58,15 @@ $items = $order['items'] ?? [];
 $total = (int) ($order['total_price'] ?? 0);
 $alamat = trim((string) ($order['shipping_address'] ?? ''));
 $bayar = trim((string) ($order['payment_method'] ?? ''));
+$kurir = trim((string) ($order['kurir'] ?? ''));
+$layanan = trim((string) ($order['layanan'] ?? ''));
+$ongkir = (int) ($order['ongkir'] ?? 0);
+$nomor_resi = trim((string) ($order['nomor_resi'] ?? ''));
+$subtotal_produk = max(0, $total - $ongkir);
 $u_list = aplikasi_url('pembeli/pesanan_pembeli.php');
+
+$flash_baru = $_SESSION['flash_pesanan_baru'] ?? null;
+unset($_SESSION['flash_pesanan_baru']);
 
 $wa_pesanan = '';
 foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
@@ -94,6 +102,10 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
         <?php echo htmlspecialchars(pesanan_format_tanggal_detail(isset($order['created_at']) ? (string) $order['created_at'] : null), ENT_QUOTES, 'UTF-8'); ?>
         · <span class="<?php echo htmlspecialchars($badge, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($labelStatus, ENT_QUOTES, 'UTF-8'); ?></span>
     </p>
+
+    <?php if (is_string($flash_baru) && $flash_baru !== ''): ?>
+        <div class="pesanan-flash-sukses" role="status"><?php echo htmlspecialchars($flash_baru, ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
 
     <?php if ($batal): ?>
         <div class="pesanan-batal-banner" role="status">Pesanan ini dibatalkan.</div>
@@ -154,21 +166,43 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                     <span>Alamat pengiriman</span>
                     <span class="pesanan-ringkasan-nilai">
                         <?php if ($alamat !== ''): ?>
-                            <?php echo htmlspecialchars($alamat, ENT_QUOTES, 'UTF-8'); ?>
+                            <?php echo nl2br(htmlspecialchars($alamat, ENT_QUOTES, 'UTF-8')); ?>
                         <?php else: ?>
-                            <em class="pesanan-ringkasan-kosong">Akan diisi saat checkout</em>
+                            <em class="pesanan-ringkasan-kosong">Belum diisi</em>
                         <?php endif; ?>
                     </span>
                 </div>
+                <?php if ($kurir !== '' || $layanan !== ''): ?>
+                    <div class="pesanan-ringkasan-baris">
+                        <span>Kurir</span>
+                        <span class="pesanan-ringkasan-nilai">
+                            <?php echo htmlspecialchars(strtoupper($kurir) . ($layanan !== '' ? ' · ' . $layanan : ''), ENT_QUOTES, 'UTF-8'); ?>
+                        </span>
+                    </div>
+                <?php endif; ?>
+                <?php if ($nomor_resi !== ''): ?>
+                    <div class="pesanan-ringkasan-baris">
+                        <span>Nomor resi</span>
+                        <span class="pesanan-ringkasan-nilai"><strong><?php echo htmlspecialchars($nomor_resi, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                    </div>
+                <?php endif; ?>
                 <div class="pesanan-ringkasan-baris">
                     <span>Metode pembayaran</span>
                     <span class="pesanan-ringkasan-nilai">
                         <?php if ($bayar !== ''): ?>
                             <?php echo htmlspecialchars($bayar, ENT_QUOTES, 'UTF-8'); ?>
                         <?php else: ?>
-                            <em class="pesanan-ringkasan-kosong">Akan diisi saat checkout</em>
+                            <em class="pesanan-ringkasan-kosong">Menyusul (Tripay)</em>
                         <?php endif; ?>
                     </span>
+                </div>
+                <div class="pesanan-ringkasan-baris">
+                    <span>Subtotal produk</span>
+                    <span class="pesanan-ringkasan-nilai"><?php echo htmlspecialchars(katalog_format_rupiah($subtotal_produk), ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <div class="pesanan-ringkasan-baris">
+                    <span>Ongkos kirim</span>
+                    <span class="pesanan-ringkasan-nilai"><?php echo htmlspecialchars(katalog_format_rupiah($ongkir), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
                 <div class="pesanan-ringkasan-baris pesanan-ringkasan-baris--total">
                     <span>Total</span>

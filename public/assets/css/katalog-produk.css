@@ -1060,3 +1060,498 @@ body.halaman-detail-produk {
 .detail-lightbox__tutup:hover {
     background: rgba(255, 255, 255, 0.22);
 }
+
+/* ===== Checkout pembeli ===== */
+.checkout-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: clamp(1rem, 3vw, 2rem);
+}
+
+.checkout-judul {
+    margin: 0.6rem 0 1.2rem;
+    font-size: clamp(1.35rem, 3vw, 1.7rem);
+    font-weight: 900;
+    color: var(--teks-utama);
+}
+
+.checkout-alert {
+    margin-bottom: 1rem;
+    padding: 0.85rem 1.05rem;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    border: 1px solid transparent;
+}
+
+.checkout-alert--error {
+    color: var(--error-teks);
+    background: var(--error-bg);
+    border-color: var(--error-tepi);
+}
+
+.checkout-alert--peringatan {
+    color: #78350f;
+    background: #fffbeb;
+    border-color: #fcd34d;
+}
+
+.checkout-alert a {
+    color: inherit;
+    font-weight: 700;
+}
+
+.checkout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.checkout-kolom-utama,
+.checkout-kolom-ringkas {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.checkout-kartu {
+    padding: clamp(1rem, 2.5vw, 1.3rem);
+    background: #fff;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 10px;
+    box-shadow: var(--bayangan-kartu);
+}
+
+.checkout-kartu__judul {
+    margin: 0 0 0.85rem;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.checkout-produk-baris {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr) auto;
+    gap: 0.85rem;
+    align-items: center;
+}
+
+.checkout-produk-gambar {
+    width: 84px;
+    height: 84px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--abu-tepi);
+    background: #f4f4f5;
+}
+
+.checkout-produk-brand {
+    margin: 0 0 0.25rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--oranye-cta-hover);
+}
+
+.checkout-produk-nama {
+    margin: 0 0 0.25rem;
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.checkout-produk-meta {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--teks-redup);
+}
+
+.checkout-berat-anomali {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.1rem 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--error-teks);
+    background: var(--error-bg);
+    border: 1px solid var(--error-tepi);
+    border-radius: 999px;
+}
+
+.checkout-produk-harga {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.checkout-alamat {
+    margin: 0 0 0.55rem;
+    line-height: 1.6;
+    color: var(--teks-utama);
+    font-size: 0.92rem;
+}
+
+.checkout-link-kecil {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--oranye-cta);
+    text-decoration: none;
+}
+
+.checkout-link-kecil:hover {
+    text-decoration: underline;
+}
+
+.checkout-auto-cari {
+    margin: 0 0 0.7rem;
+    padding: 0.65rem 0.9rem;
+    background: rgba(168, 144, 95, 0.1);
+    border: 1px solid var(--aksen-emas-garis);
+    border-radius: 8px;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--teks-utama);
+}
+
+.checkout-auto-cari strong {
+    color: var(--oranye-cta-hover);
+}
+
+.checkout-auto-cari--peringatan {
+    color: #78350f;
+    background: #fffbeb;
+    border-color: #fcd34d;
+}
+
+.checkout-auto-cari--peringatan strong {
+    color: #92400e;
+}
+
+/* Hasil destinasi: kode pos di bawah label + highlight kalau match */
+.checkout-destinasi-isi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.checkout-destinasi-pilih {
+    flex-shrink: 0;
+}
+
+.checkout-destinasi-zip {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--teks-redup);
+}
+
+.checkout-destinasi-zip--match {
+    color: var(--hijau-sukses);
+    font-weight: 800;
+}
+
+.checkout-destinasi-baris--match {
+    border-color: var(--hijau-sukses);
+    background: var(--hijau-sukses-lembut, rgba(27, 67, 50, 0.06));
+}
+
+.checkout-destinasi-baris--match:hover {
+    border-color: var(--hijau-sukses);
+    background: rgba(27, 67, 50, 0.1);
+}
+
+.checkout-cari-form {
+    display: flex;
+    gap: 0.55rem;
+    margin-bottom: 0.9rem;
+}
+
+.checkout-cari-form input[type="search"] {
+    flex: 1;
+    padding: 0.65rem 0.85rem;
+    font: inherit;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.checkout-cari-form input[type="search"]:focus {
+    outline: none;
+    border-color: var(--oranye-cta);
+    box-shadow: 0 0 0 3px var(--fokus-ring);
+}
+
+.checkout-destinasi-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 22rem;
+    overflow-y: auto;
+}
+
+.checkout-destinasi-form {
+    margin: 0;
+}
+
+.checkout-destinasi-baris {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.7rem 0.9rem;
+    background: #fafaf9;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--teks-utama);
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.checkout-destinasi-baris:hover {
+    background: #fff;
+    border-color: var(--oranye-cta);
+}
+
+.checkout-destinasi-baris span {
+    color: var(--oranye-cta);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+/* Form inline (tombol "Ganti" pada destinasi terpilih) */
+.checkout-inline-form {
+    display: inline;
+    margin: 0;
+    margin-left: auto;
+}
+
+.checkout-tombol-link {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-weight: 700;
+    color: var(--oranye-cta);
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 0.82rem;
+}
+
+.checkout-tombol-link:hover {
+    text-decoration: underline;
+}
+
+/* Form kurir pakai button yang tampil seperti card */
+.checkout-kurir-form {
+    margin: 0;
+}
+
+.checkout-kurir-link {
+    width: 100%;
+    background: #fafaf9;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+    color: var(--teks-utama);
+}
+
+.checkout-kosong-cari {
+    margin: 0;
+    padding: 0.85rem;
+    color: var(--teks-redup);
+    background: #f9fafb;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.checkout-error-baris {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    color: var(--error-teks);
+    background: var(--error-bg);
+    border: 1px solid var(--error-tepi);
+    border-radius: 8px;
+    font-size: 0.88rem;
+}
+
+.checkout-destinasi-aktif {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.7rem;
+    margin: 0 0 1rem;
+    padding: 0.7rem 0.9rem;
+    background: rgba(168, 144, 95, 0.1);
+    border: 1px solid var(--aksen-emas-garis);
+    border-radius: 8px;
+    font-size: 0.88rem;
+}
+
+.checkout-destinasi-aktif span {
+    color: var(--teks-redup);
+}
+
+.checkout-destinasi-aktif strong {
+    color: var(--teks-utama);
+}
+
+.checkout-destinasi-aktif a {
+    margin-left: auto;
+    font-weight: 700;
+    color: var(--oranye-cta);
+    text-decoration: none;
+    font-size: 0.82rem;
+}
+
+.checkout-kurir-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.checkout-kurir-link {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    column-gap: 1rem;
+    row-gap: 0.2rem;
+    padding: 0.85rem 1rem;
+    background: #fafaf9;
+    border: 2px solid var(--abu-tepi);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--teks-utama);
+    transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.checkout-kurir-link:hover {
+    background: #fff;
+    border-color: var(--oranye-cta);
+}
+
+.checkout-kurir-item--aktif .checkout-kurir-link {
+    border-color: var(--oranye-cta);
+    background: rgba(168, 144, 95, 0.07);
+    box-shadow: 0 0 0 3px var(--fokus-ring);
+}
+
+.checkout-kurir-nama {
+    font-weight: 800;
+    font-size: 0.92rem;
+}
+
+.checkout-kurir-meta {
+    font-size: 0.8rem;
+    color: var(--teks-redup);
+}
+
+.checkout-kurir-harga {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    align-self: center;
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+/* Ringkasan kanan */
+.checkout-ringkas {
+    position: sticky;
+    top: 4.5rem;
+}
+
+.checkout-ringkas-baris {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.45rem 0;
+    font-size: 0.92rem;
+}
+
+.checkout-ringkas-baris strong {
+    color: var(--teks-utama);
+}
+
+.checkout-ringkas-redup {
+    color: var(--teks-redup);
+    font-size: 0.85rem;
+}
+
+.checkout-ringkas-kurir {
+    margin: -0.2rem 0 0.4rem;
+    font-size: 0.78rem;
+    color: var(--teks-redup);
+    text-align: right;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+}
+
+.checkout-ringkas-baris--total {
+    margin-top: 0.55rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--abu-tepi);
+    font-size: 1.05rem;
+}
+
+.checkout-ringkas-baris--total strong {
+    font-size: 1.2rem;
+    font-weight: 900;
+}
+
+.checkout-tombol-konfirmasi {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.85rem;
+    font-size: 1rem;
+}
+
+.checkout-catatan-bayar {
+    margin: 0.55rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--teks-redup);
+    text-align: center;
+}
+
+@media (max-width: 960px) {
+    .checkout-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .checkout-ringkas {
+        position: static;
+    }
+}
+
+@media (max-width: 640px) {
+    .checkout-produk-baris {
+        grid-template-columns: 64px minmax(0, 1fr);
+    }
+
+    .checkout-produk-gambar {
+        width: 64px;
+        height: 64px;
+    }
+
+    .checkout-produk-harga {
+        grid-column: 1 / -1;
+        text-align: right;
+    }
+}
