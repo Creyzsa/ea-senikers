@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/supabase_auth.php';
-require_once __DIR__ . '/../../includes/database.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/auth_db/supabase_auth.php';
+require_once __DIR__ . '/../../includes/auth_db/database.php';
 
 // URL lama ?daftar=cek_email → alihkan ke URL bersih (pesan lewat flash session)
 if (isset($_GET['daftar']) && $_GET['daftar'] === 'cek_email') {
@@ -137,7 +137,7 @@ $pesan_konfirmasi_gagal = isset($_GET['konfirmasi']) && $_GET['konfirmasi'] === 
 <body class="halaman-masuk">
 
     <div class="bungkus-halaman-login">
-        <?php include __DIR__ . '/../../includes/deskripsi_merek_login.php'; ?>
+        <?php include __DIR__ . '/../../includes/konfigurasi/deskripsi_merek_login.php'; ?>
 
         <main class="kartu-masuk" aria-labelledby="judul-masuk">
         <header class="merek">

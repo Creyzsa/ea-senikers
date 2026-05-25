@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/admin_produk_repositori.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/repositori/admin_produk_repositori.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
@@ -28,6 +28,7 @@ $form = [
     'kategori' => 'Sneakers',
     'kondisi' => 'Baru',
     'harga' => '',
+    'berat_gram' => '1000',
     'deskripsi' => '',
 ];
 $stokForm = [];
@@ -38,7 +39,7 @@ foreach (admin_daftar_ukuran_default() as $uk) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $token = (string) ($_POST['csrf'] ?? '');
     if (!hash_equals($csrf, $token)) {
-        $errors[] = 'Sesi form tidak valid. Muat ulang halaman lalu coba lagi.';
+        $errors[] = 'Mohon muat ulang halaman.';
     }
 
     $aksi = (string) ($_POST['aksi'] ?? '');
@@ -77,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'kategori' => trim((string) ($_POST['kategori'] ?? '')),
             'kondisi' => trim((string) ($_POST['kondisi'] ?? '')),
             'harga' => trim((string) ($_POST['harga'] ?? '')),
+            'berat_gram' => trim((string) ($_POST['berat_gram'] ?? '')),
             'deskripsi' => trim((string) ($_POST['deskripsi'] ?? '')),
         ];
         $stokForm = admin_normalisasi_stok_ukuran((array) ($_POST['stok'] ?? []));
@@ -96,10 +98,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!ctype_digit($form['harga']) || (int) $form['harga'] < 0) {
             $errors[] = 'Harga harus berupa angka non-negatif.';
         }
+        if (!ctype_digit($form['berat_gram']) || (int) $form['berat_gram'] <= 0 || (int) $form['berat_gram'] > 50000) {
+            $errors[] = 'Berat (gram) wajib diisi, antara 1 sampai 50.000 gram.';
+        }
 
         if ($errors === []) {
             $payload = $form;
             $payload['harga'] = (int) $form['harga'];
+            $payload['berat_gram'] = (int) $form['berat_gram'];
 
             try {
                 if ($idProdukPost !== '') {
@@ -130,6 +136,7 @@ if ($editId !== '' && $errors === []) {
             'kategori' => (string) ($detail['kategori'] ?? ''),
             'kondisi' => (string) ($detail['kondisi'] ?? 'Baru'),
             'harga' => (string) ((int) ($detail['harga'] ?? 0)),
+            'berat_gram' => (string) ((int) ($detail['berat_gram'] ?? 1000)),
             'deskripsi' => (string) ($detail['deskripsi'] ?? ''),
         ];
         $stokForm = admin_normalisasi_stok_ukuran([]);
@@ -145,7 +152,19 @@ if ($editId !== '' && $errors === []) {
 }
 
 $q = trim((string) ($_GET['q'] ?? ''));
-$daftarProduk = admin_produk_ambil_semua($q);
+
+$daftar_utuh = admin_produk_ambil_semua('');
+$daftarProduk = $q === '' ? $daftar_utuh : admin_produk_ambil_semua($q);
+
+$total_sku = count($daftar_utuh);
+$siap_hit = 0;
+
+foreach ($daftar_utuh as $__sku) {
+    if (!empty($__sku['siap_jual'])) {
+        ++$siap_hit;
+    }
+}
+
 $namaAdmin = htmlspecialchars((string) ($_SESSION['nama_pengguna'] ?? ''), ENT_QUOTES, 'UTF-8');
 $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF-8');
 $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
@@ -198,7 +217,7 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                 Pengaturan
             </a>
         </nav>
-        <p class="admin-sisi__kaki">Kelola katalog produk, stok ukuran, dan galeri gambar.</p>
+        <p class="admin-sisi__kaki">© EA SENIKERS</p>
     </aside>
 
     <div class="admin-utama">
@@ -221,7 +240,13 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
 
         <main class="admin-isi admin-isi-produk">
             <h1 class="admin-judul-besar">Manajemen Produk</h1>
-            <p class="admin-salam">Kelola katalog profesional: info produk, harga, kondisi, stok ukuran 36-45, dan galeri gambar.</p>
+            <p class="admin-salam">Tambahkan produk, atur stok ukuran (36–45), dan unggah foto.</p>
+
+            <div class="admin-pil-strip" role="presentation" aria-label="Ringkasan katalog">
+                <span class="admin-pil-dat"><strong><?php echo (int) $total_sku; ?></strong> item</span>
+                <span class="admin-pil-dat"><strong><?php echo (int) $siap_hit; ?></strong> ready</span>
+                <span class="admin-pil-dat"><strong><?php echo max(0, $total_sku - $siap_hit); ?></strong> habis stok</span>
+            </div>
 
             <?php if (is_array($flash)): ?>
                 <div class="admin-alert admin-alert--<?php echo htmlspecialchars((string) ($flash['jenis'] ?? 'info'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -282,9 +307,14 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                             <input type="number" name="harga" value="<?php echo htmlspecialchars($form['harga'], ENT_QUOTES, 'UTF-8'); ?>" min="0" step="1" required>
                         </label>
                         <label class="admin-field">
+                            <span>Berat (gram)</span>
+                            <input type="number" name="berat_gram" value="<?php echo htmlspecialchars($form['berat_gram'], ENT_QUOTES, 'UTF-8'); ?>" min="1" max="50000" step="1" required>
+                            <small>Berat satu pasang sepatu beserta kemasan, untuk hitung ongkir. Contoh: 1000 = 1 kg.</small>
+                        </label>
+                        <label class="admin-field">
                             <span>Upload foto produk</span>
-                            <input type="file" name="gambar_baru[]" multiple accept=".jpg,.jpeg,.png,.webp,.svg">
-                            <small>Maks. 3MB/file. Format: JPG, PNG, WEBP, SVG.</small>
+                            <input type="file" name="gambar[]" multiple accept=".jpg,.jpeg,.png,.webp">
+                            <small>Maks. 3MB/file. Format: JPG, PNG, WEBP.</small>
                         </label>
                     </div>
 

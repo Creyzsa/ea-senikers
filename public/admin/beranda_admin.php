@@ -1,5 +1,7 @@
 <?php
-require_once __DIR__ . '/../../includes/sesi.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
+require_once __DIR__ . '/../../includes/repositori/admin_dashboard_repositori.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
@@ -9,6 +11,58 @@ if (ambil_peran() !== 'admin') {
 }
 
 $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
+
+$stat = admin_dashboard_stat_kartu();
+$delta_pendapatan = admin_dashboard_delta_persen((float) $stat['pendapatan_30'], (float) $stat['pendapatan_30_sebelumnya']);
+
+$grafik_minggu = admin_dashboard_grafik_mingguan();
+$aktivitas = admin_dashboard_aktivitas_terbaru(10);
+
+$d30 = number_format((int) round($stat['pendapatan_30']), 0, ',', '.');
+$d30_prev = number_format((int) round($stat['pendapatan_30_sebelumnya']), 0, ',', '.');
+
+$tren_pendapatan = '';
+if ($delta_pendapatan !== null) {
+    $abs = round(abs($delta_pendapatan), 1);
+    if ($delta_pendapatan > 0.5) {
+        $tren_pendapatan = '↑ ' . $abs . '% vs 30 hari sebelumnya (Rp ' . $d30_prev . ')';
+    } elseif ($delta_pendapatan < -0.5) {
+        $tren_pendapatan = '↓ ' . $abs . '% vs 30 hari sebelumnya (Rp ' . $d30_prev . ')';
+    } else {
+        $tren_pendapatan = 'Stabil dibanding periode sebelumnya (Rp ' . $d30_prev . ')';
+    }
+} else {
+    $tren_pendapatan = ($stat['pendapatan_30'] <= 0 && $stat['pendapatan_30_sebelumnya'] <= 0)
+        ? 'Belum ada pendapatan tercatat periode ini.'
+        : 'Periode sebelumnya: Rp ' . $d30_prev;
+}
+
+$total_pesan_teks = number_format((int) $stat['pesanan_total'], 0, ',', '.');
+$tren_pesan = '';
+if ((int) $stat['pesanan_pending'] > 0) {
+    $tren_pesan = (int) $stat['pesanan_pending'] . ' menunggu pembayaran · ' . number_format((int) $stat['pesanan_bulan_ini'], 0, ',', '.') . ' pesanan bulan ini';
+} else {
+    $tren_pesan = number_format((int) $stat['pesanan_bulan_ini'], 0, ',', '.') . ' pesanan bulan ini · total ' . $total_pesan_teks;
+}
+
+$tren_produk = ((int) $stat['produk_total'] <= 0)
+    ? 'Tambahkan produk lewat menu Produk.'
+    : (string) ($stat['produk_ready'] ?? 0) . ' ready · ' . (string) ($stat['produk_total'] ?? 0) . ' total';
+
+$tren_pengguna = number_format((int) $stat['pengguna'], 0, ',', '.') . ' pengguna terdaftar';
+
+$grafik_nilai_terbesar = 0;
+foreach ($grafik_minggu as $__b) {
+    $grafik_nilai_terbesar = max($grafik_nilai_terbesar, (int) round($__b['nilai'] ?? 0));
+}
+$grafik_aria_nilai = 'Rp ' . number_format((int) $grafik_nilai_terbesar, 0, ',', '.');
+
+$tren_pend_cls = 'admin-stat__tren';
+if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
+    $tren_pend_cls .= ' admin-stat__tren--netral';
+} elseif ((float) $delta_pendapatan < -0.5) {
+    $tren_pend_cls .= ' admin-stat__tren--turun';
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -59,7 +113,7 @@ $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
                     Pengaturan
                 </a>
             </nav>
-            <p class="admin-sisi__kaki">Versi panel 1.0 · Data contoh untuk tampilan</p>
+            <p class="admin-sisi__kaki">© EA SENIKERS</p>
         </aside>
 
         <div class="admin-utama">
@@ -82,7 +136,7 @@ $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
 
             <main class="admin-isi" id="utama">
                 <h1 class="admin-judul-besar">Dashboard</h1>
-                <p class="admin-salam">Halo <strong><?php echo $nama; ?></strong> — ringkasan performa toko dan aktivitas terbaru. Angka di bawah adalah contoh hingga backend terhubung.</p>
+                <p class="admin-salam">Halo, <strong><?php echo $nama; ?></strong>. Ringkasan toko untuk <strong><?php echo htmlspecialchars(date('d/m/Y H:i'), ENT_QUOTES, 'UTF-8'); ?></strong></p>
 
                 <div class="admin-grid-stat" role="region" aria-label="Ringkasan statistik">
                     <article class="admin-stat admin-stat--biru">
@@ -94,8 +148,8 @@ $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
                                 </svg>
                             </span>
                         </div>
-                        <p class="admin-stat__nilai">Rp 12,4 jt</p>
-                        <p class="admin-stat__tren">↑ 12% vs bulan lalu</p>
+                        <p class="admin-stat__nilai">Rp <?php echo htmlspecialchars($d30, ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p class="<?php echo htmlspecialchars($tren_pend_cls, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($tren_pendapatan, ENT_QUOTES, 'UTF-8'); ?></p>
                     </article>
                     <article class="admin-stat admin-stat--hijau">
                         <div class="admin-stat__label">
@@ -106,8 +160,8 @@ $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
                                 </svg>
                             </span>
                         </div>
-                        <p class="admin-stat__nilai">48</p>
-                        <p class="admin-stat__tren">↑ 8 pesanan baru</p>
+                        <p class="admin-stat__nilai"><?php echo htmlspecialchars($total_pesan_teks, ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p class="admin-stat__tren admin-stat__tren--netral"><?php echo htmlspecialchars($tren_pesan, ENT_QUOTES, 'UTF-8'); ?></p>
                     </article>
                     <article class="admin-stat admin-stat--kuning">
                         <div class="admin-stat__label">
@@ -118,8 +172,8 @@ $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
                                 </svg>
                             </span>
                         </div>
-                        <p class="admin-stat__nilai">12</p>
-                        <p class="admin-stat__tren admin-stat__tren--netral">Stabil</p>
+                        <p class="admin-stat__nilai"><?php echo htmlspecialchars(number_format((int) $stat['produk_total'], 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p class="admin-stat__tren admin-stat__tren--netral"><?php echo htmlspecialchars($tren_produk, ENT_QUOTES, 'UTF-8'); ?></p>
                     </article>
                     <article class="admin-stat admin-stat--ungu">
                         <div class="admin-stat__label">
@@ -130,89 +184,73 @@ $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
                                 </svg>
                             </span>
                         </div>
-                        <p class="admin-stat__nilai">156</p>
-                        <p class="admin-stat__tren">↑ 3 pendaftar minggu ini</p>
+                        <p class="admin-stat__nilai"><?php echo htmlspecialchars(number_format((int) $stat['pengguna'], 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p class="admin-stat__tren admin-stat__tren--netral"><?php echo htmlspecialchars($tren_pengguna, ENT_QUOTES, 'UTF-8'); ?></p>
                     </article>
                 </div>
 
                 <div class="admin-baris-dua">
                     <section class="admin-panel" aria-labelledby="judul-grafik">
-                        <h2 id="judul-grafik" class="admin-panel__judul">Pendapatan mingguan</h2>
-                        <div class="admin-grafik" role="img" aria-label="Diagram batang contoh tujuh hari terakhir">
-                            <div class="admin-grafik__batang" style="height: 45%"></div>
-                            <div class="admin-grafik__batang" style="height: 62%"></div>
-                            <div class="admin-grafik__batang" style="height: 38%"></div>
-                            <div class="admin-grafik__batang" style="height: 78%"></div>
-                            <div class="admin-grafik__batang" style="height: 55%"></div>
-                            <div class="admin-grafik__batang" style="height: 92%"></div>
-                            <div class="admin-grafik__batang" style="height: 68%"></div>
+                        <h2 id="judul-grafik" class="admin-panel__judul">Pendapatan 7 hari</h2>
+                        <p class="admin-grafik__sub">Pendapatan tercatat per hari (maksimum minggu ini: Rp <?php echo htmlspecialchars(number_format((int) $grafik_nilai_terbesar, 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?>).</p>
+                        <div class="admin-grafik" role="img" aria-label="Pendapatan tujuh hari terakhir, maksimum <?php echo htmlspecialchars($grafik_aria_nilai, ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php foreach ($grafik_minggu as $batang): ?>
+                                <?php $h_pct = round((float) ($batang['height_pct'] ?? 0), 2); ?>
+                                <?php $nil_rp = number_format((int) round($batang['nilai'] ?? 0), 0, ',', '.'); ?>
+                                <div class="admin-grafik__batang-wrap" tabindex="0" role="presentation" title="Rp <?php echo htmlspecialchars($nil_rp, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php $h_show_pct = max(14, min(100, (int) round((float) $h_pct))); ?>
+                                    <span class="admin-grafik__nilai-mini" aria-hidden="true"><?php echo $h_pct <= 12 ? '' : htmlspecialchars($nil_rp, ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <div class="admin-grafik__batang" style="height: <?php echo (string) $h_show_pct; ?>%;"></div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                         <div class="admin-grafik__kaki">
-                            <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span>
+                            <?php foreach ($grafik_minggu as $batang): ?>
+                                <span><?php echo htmlspecialchars((string) ($batang['label'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
+                            <?php endforeach; ?>
                         </div>
                     </section>
 
                     <section class="admin-panel" aria-labelledby="judul-aktivitas">
                         <h2 id="judul-aktivitas" class="admin-panel__judul">Aktivitas terbaru</h2>
                         <ul class="admin-aktivitas">
-                            <li>
-                                <span class="admin-aktivitas__titik admin-aktivitas__titik--biru" aria-hidden="true"></span>
-                                <span class="admin-aktivitas__teks">Pesanan <strong>#1042</strong> lunas — Sneakers Street Runner</span>
-                                <span class="admin-aktivitas__waktu">12 mnt</span>
-                            </li>
-                            <li>
-                                <span class="admin-aktivitas__titik admin-aktivitas__titik--hijau" aria-hidden="true"></span>
-                                <span class="admin-aktivitas__teks">Produk baru ditambahkan — <strong>Sport Active Lite</strong></span>
-                                <span class="admin-aktivitas__waktu">2 jam</span>
-                            </li>
-                            <li>
-                                <span class="admin-aktivitas__titik admin-aktivitas__titik--kuning" aria-hidden="true"></span>
-                                <span class="admin-aktivitas__teks">Stok diperbarui untuk 3 SKU</span>
-                                <span class="admin-aktivitas__waktu">Kemarin</span>
-                            </li>
+                            <?php if ($aktivitas === []): ?>
+                                <li>
+                                    <span class="admin-aktivitas__titik admin-aktivitas__titik--kuning" aria-hidden="true"></span>
+                                    <span class="admin-aktivitas__teks">Belum ada aktivitas terbaru.</span>
+                                    <span class="admin-aktivitas__waktu">—</span>
+                                </li>
+                            <?php else: ?>
+                                <?php foreach ($aktivitas as $ev): ?>
+                                    <?php
+                                    $titik_kelas = [
+                                        'biru' => 'admin-aktivitas__titik--biru',
+                                        'hijau' => 'admin-aktivitas__titik--hijau',
+                                        'kuning' => 'admin-aktivitas__titik--kuning',
+                                        'ungu' => 'admin-aktivitas__titik--ungu',
+                                        'merah' => 'admin-aktivitas__titik--merah',
+                                    ];
+                                    $wk = (string) ($ev['warna'] ?? 'biru');
+                                    $kelas_titik = $titik_kelas[$wk] ?? $titik_kelas['biru'];
+                                    $url_ev = $ev['url'] ?? null;
+                                    ?>
+                                    <li>
+                                        <span class="admin-aktivitas__titik <?php echo htmlspecialchars($kelas_titik, ENT_QUOTES, 'UTF-8'); ?>" aria-hidden="true"></span>
+                                        <span class="admin-aktivitas__teks">
+                                            <?php if (is_string($url_ev) && $url_ev !== ''): ?>
+                                                <a href="<?php echo htmlspecialchars($url_ev, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars((string) ($ev['teks'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></a>
+                                            <?php else: ?>
+                                                <?php echo htmlspecialchars((string) ($ev['teks'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                                            <?php endif; ?>
+                                        </span>
+                                        <span class="admin-aktivitas__waktu"><?php echo htmlspecialchars((string) ($ev['waktu'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </ul>
                     </section>
                 </div>
 
-                <section class="admin-bagian-tabel" aria-labelledby="judul-tabel">
-                    <h2 id="judul-tabel" class="admin-panel__judul">Pesanan terbaru</h2>
-                    <div class="admin-tabel-wrap">
-                        <table class="admin-tabel">
-                            <thead>
-                                <tr>
-                                    <th scope="col">ID</th>
-                                    <th scope="col">Pelanggan</th>
-                                    <th scope="col">Produk</th>
-                                    <th scope="col">Total</th>
-                                    <th scope="col">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>#1042</strong></td>
-                                    <td>andi_trader</td>
-                                    <td>Sneakers Street Runner</td>
-                                    <td>Rp 1.750.000</td>
-                                    <td><span class="admin-lencana admin-lencana--sukses">Lunas</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>#1041</strong></td>
-                                    <td>budi_fx</td>
-                                    <td>Kasual Daily Comfort</td>
-                                    <td>Rp 2.100.000</td>
-                                    <td><span class="admin-lencana admin-lencana--tunda">Menunggu</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>#1040</strong></td>
-                                    <td>citra_ea</td>
-                                    <td>Classic Leather Series</td>
-                                    <td>Rp 980.000</td>
-                                    <td><span class="admin-lencana admin-lencana--sukses">Lunas</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
             </main>
         </div>
     </div>

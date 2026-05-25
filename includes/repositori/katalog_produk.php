@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * Katalog produk — data dari Supabase PostgREST.
  */
-require_once __DIR__ . '/supabase_rest.php';
-require_once __DIR__ . '/url_bantu.php';
+require_once __DIR__ . '/../auth_db/supabase_rest.php';
+require_once __DIR__ . '/../url_bantu.php';
 
 /** Path relatif folder gambar produk di bawah URL_APLIKASI (public). */
 const KATALOG_FOLDER_GAMBAR = 'assets/images/produk';
@@ -37,6 +37,21 @@ function katalog_format_rupiah(int $harga): string
 }
 
 /**
+ * Label kondisi untuk ditampilkan ke pembeli.
+ * Data internal memakai 'Baru' / 'Second' (untuk admin form),
+ * tetapi pembeli melihatnya sebagai 'Baru' / 'Preloved' agar selaras
+ * dengan terminologi marketing di seluruh situs.
+ */
+function kondisi_label_pembeli(string $kondisi): string
+{
+    $kondisi_bersih = trim($kondisi);
+    if (strcasecmp($kondisi_bersih, 'Second') === 0) {
+        return 'Preloved';
+    }
+    return $kondisi_bersih;
+}
+
+/**
  * @return list<array<string, mixed>>
  */
 function katalog_ambil_semua_produk(): array
@@ -53,9 +68,38 @@ function katalog_ambil_semua_produk(): array
         return [];
     }
     if (isset($rows['id_produk'])) {
+        katalog_isi_ringkasan_stok($rows);
         return [$rows];
     }
+    foreach ($rows as &$__row) {
+        if (is_array($__row)) {
+            katalog_isi_ringkasan_stok($__row);
+        }
+    }
+    unset($__row);
     return $rows;
+}
+
+/**
+ * Isi field turunan `total_stok` dan `siap_jual` pada array produk
+ * berdasarkan daftar `produk_ukuran`. Field ini bukan kolom database,
+ * dihitung di PHP setiap kali baca produk.
+ *
+ * @param array<string, mixed> $produk
+ */
+function katalog_isi_ringkasan_stok(array &$produk): void
+{
+    $ukuran_list = $produk['produk_ukuran'] ?? [];
+    $total = 0;
+    if (is_array($ukuran_list)) {
+        foreach ($ukuran_list as $u) {
+            if (is_array($u)) {
+                $total += max(0, (int) ($u['stok'] ?? 0));
+            }
+        }
+    }
+    $produk['total_stok'] = $total;
+    $produk['siap_jual'] = $total > 0;
 }
 
 /**
@@ -82,9 +126,14 @@ function katalog_ambil_produk_ber_id(string $id_produk): ?array
         return null;
     }
     if (isset($rows['id_produk'])) {
+        katalog_isi_ringkasan_stok($rows);
         return $rows;
     }
-    return is_array($rows[0] ?? null) ? $rows[0] : null;
+    $satu = is_array($rows[0] ?? null) ? $rows[0] : null;
+    if ($satu !== null) {
+        katalog_isi_ringkasan_stok($satu);
+    }
+    return $satu;
 }
 
 /** URL gambar utama (pertama menurut urutan) atau placeholder. */

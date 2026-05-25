@@ -1,5 +1,9 @@
 <?php
-require_once __DIR__ . '/../../includes/sesi.php';
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/repositori/admin_pengguna_repositori.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
@@ -10,6 +14,10 @@ if (ambil_peran() !== 'admin') {
 
 $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
 $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF-8');
+
+$q_nilai = trim((string) ($_GET['q'] ?? ''));
+
+$rows = admin_pengguna_ambil_daftar($q_nilai === '' ? null : $q_nilai);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -60,7 +68,7 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                     Pengaturan
                 </a>
             </nav>
-            <p class="admin-sisi__kaki">Daftar akun pembeli &amp; admin — konten contoh hingga backend pengguna aktif.</p>
+            <p class="admin-sisi__kaki">© EA SENIKERS</p>
         </aside>
 
         <div class="admin-utama">
@@ -83,12 +91,18 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
 
             <main class="admin-isi">
                 <h1 class="admin-judul-besar">Pengguna</h1>
-                <p class="admin-salam">Ringkasan akun terdaftar. Tombol aksi mengikuti saat modul kelola pengguna tersambung ke basis data.</p>
+                <p class="admin-salam">Daftar nama, email, dan peran pembeli yang terhubung dengan akun toko.</p>
 
                 <section class="admin-kartu" aria-labelledby="judul-pengguna">
                     <div class="admin-kartu__header">
                         <h2 id="judul-pengguna">Daftar pengguna</h2>
-                        <button type="button" class="admin-btn admin-btn--utama" disabled title="Segera hadir">Tambah pengguna</button>
+                        <form method="get" class="admin-cari" action="">
+                            <input type="search" name="q" value="<?php echo htmlspecialchars($q_nilai, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Filter nama atau email..." aria-label="Cari pengguna">
+                            <button type="submit" class="admin-btn admin-btn--sekunder">Cari</button>
+                            <?php if ($q_nilai !== ''): ?>
+                                <a href="pengguna_admin.php" class="admin-btn admin-btn--sekunder">Reset</a>
+                            <?php endif; ?>
+                        </form>
                     </div>
                     <div class="admin-tabel-wrap">
                         <table class="admin-tabel">
@@ -99,49 +113,29 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                                     <th scope="col">Email</th>
                                     <th scope="col">Peran</th>
                                     <th scope="col">Status</th>
-                                    <th scope="col">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td><strong>Admin Utama</strong></td>
-                                    <td>admin@easenikers.com</td>
-                                    <td>Admin</td>
-                                    <td><span class="status status--aktif">Aktif</span></td>
-                                    <td>
-                                        <div class="admin-aksi-sel">
-                                            <button type="button" class="admin-btn admin-btn--mini admin-btn--sekunder" disabled>Edit</button>
-                                            <button type="button" class="admin-btn admin-btn--mini admin-btn--bahaya" disabled>Hapus</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td><strong>John Doe</strong></td>
-                                    <td>john@example.com</td>
-                                    <td>Pembeli</td>
-                                    <td><span class="status status--aktif">Aktif</span></td>
-                                    <td>
-                                        <div class="admin-aksi-sel">
-                                            <button type="button" class="admin-btn admin-btn--mini admin-btn--sekunder" disabled>Edit</button>
-                                            <button type="button" class="admin-btn admin-btn--mini admin-btn--bahaya" disabled>Hapus</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td><strong>Jane Smith</strong></td>
-                                    <td>jane@example.com</td>
-                                    <td>Pembeli</td>
-                                    <td><span class="status status--nonaktif">Nonaktif</span></td>
-                                    <td>
-                                        <div class="admin-aksi-sel">
-                                            <button type="button" class="admin-btn admin-btn--mini admin-btn--sekunder" disabled>Edit</button>
-                                            <button type="button" class="admin-btn admin-btn--mini admin-btn--bahaya" disabled>Hapus</button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <?php if ($rows === []): ?>
+                                    <tr class="admin-tr-kosong">
+                                        <td colspan="5">Tidak ada baris atau pencarian tidak cocok dengan data aktual.</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($rows as $__u): ?>
+                                        <?php
+                                        $role = strtolower((string) ($__u['role'] ?? 'pembeli'));
+                                        $lencana = $role === 'admin' ? 'role-lencana role-lencana--admin' : 'role-lencana';
+                                        $peran_txt = $role === 'admin' ? 'Admin' : 'Pembeli';
+                                        ?>
+                                        <tr>
+                                            <td><strong>#<?php echo htmlspecialchars((string) ($__u['id'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></strong></td>
+                                            <td><?php echo htmlspecialchars((string) ($__u['username'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td><?php echo htmlspecialchars((string) ($__u['email'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td><span class="<?php echo htmlspecialchars($lencana, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($peran_txt, ENT_QUOTES, 'UTF-8'); ?></span></td>
+                                            <td><span class="status status--aktif">Aktif</span></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>

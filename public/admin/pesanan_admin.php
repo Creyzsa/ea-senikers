@@ -1,6 +1,9 @@
 <?php
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/pesanan_repositori.php';
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
@@ -9,37 +12,65 @@ if (ambil_peran() !== 'admin') {
     exit;
 }
 
+if (!isset($_SESSION['csrf_admin_pesanan']) || !is_string($_SESSION['csrf_admin_pesanan'])) {
+    $_SESSION['csrf_admin_pesanan'] = bin2hex(random_bytes(24));
+}
+$csrf = $_SESSION['csrf_admin_pesanan'];
+
 $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
 
-// Handle aksi batalkan
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['aksi'] === 'batalkan') {
-    $order_id = (int) ($_POST['order_id'] ?? 0);
-    if ($order_id > 0 && pesanan_admin_batalkan($order_id)) {
-        $_SESSION['flash_pesanan'] = 'Pesanan berhasil dibatalkan.';
+    $token = (string) ($_POST['csrf'] ?? '');
+    if (!hash_equals($csrf, $token)) {
+        $_SESSION['flash_pesanan_error'] = 'Mohon muat ulang halaman.';
     } else {
-        $_SESSION['flash_pesanan_error'] = 'Gagal membatalkan pesanan.';
+        $order_id = (int) ($_POST['order_id'] ?? 0);
+        if ($order_id > 0 && pesanan_admin_batalkan($order_id)) {
+            $_SESSION['flash_pesanan'] = 'Pesanan berhasil dibatalkan.';
+        } else {
+            $_SESSION['flash_pesanan_error'] = 'Gagal membatalkan pesanan.';
+        }
     }
     header('Location: ' . $_SERVER['REQUEST_URI']);
     exit;
 }
 
-// Handle pencarian
-$query = trim($_GET['q'] ?? '');
-if ($query !== '') {
-    $pesanan = pesanan_admin_cari($query);
-} else {
-    $pesanan = pesanan_admin_ambil_semua();
+$query = trim((string) ($_GET['q'] ?? ''));
+$filter_raw = strtolower(trim((string) ($_GET['status'] ?? '')));
+$filter_status_kunci = '';
+
+if ($filter_raw !== '' && $filter_raw !== 'all' && $filter_raw !== 'semua') {
+    $label_semua_status = pesanan_status_label_id();
+    if (array_key_exists($filter_raw, $label_semua_status)) {
+        $filter_status_kunci = $filter_raw;
+    }
 }
 
-// Flash messages
+$pesanan = pesanan_admin_daftar_berfilter($filter_status_kunci !== '' ? $filter_status_kunci : null, $query);
+
 $flash = $_SESSION['flash_pesanan'] ?? null;
 $flash_error = $_SESSION['flash_pesanan_error'] ?? null;
 unset($_SESSION['flash_pesanan'], $_SESSION['flash_pesanan_error']);
 
-// Status labels & kelas badge
 $status_labels = pesanan_status_label_id();
 $badge_kelas = pesanan_status_kelas_badge();
 $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF-8');
+
+$hit_status = pesanan_admin_hitung_per_status();
+$total_semua = array_sum($hit_status);
+
+$qs_simpan_q = [];
+if ($query !== '') {
+    $qs_simpan_q['q'] = $query;
+}
+$url_semua_filter = aplikasi_url('admin/pesanan_admin.php'
+    . ($qs_simpan_q !== [] ? '?' . http_build_query($qs_simpan_q) : ''));
+
+$url_chip = function (string $status) use ($qs_simpan_q): string {
+    $gab = ['status' => $status] + $qs_simpan_q;
+
+    return aplikasi_url('admin/pesanan_admin.php?' . http_build_query($gab));
+};
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -90,7 +121,7 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                     Pengaturan
                 </a>
             </nav>
-            <p class="admin-sisi__kaki">Status &amp; daftar pesanan masuk toko.</p>
+            <p class="admin-sisi__kaki">© EA SENIKERS</p>
         </aside>
 
         <div class="admin-utama">
@@ -113,24 +144,41 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
 
             <main class="admin-isi">
                 <h1 class="admin-judul-besar">Pesanan</h1>
-                <p class="admin-salam">Pantau semua pesanan, cari berdasarkan nama atau email pembeli, dan kelola pembatalan.</p>
+                <p class="admin-salam">Saring pesanan menurut status atau cari nama / email pembeli.</p>
 
                 <?php if ($flash): ?>
-                    <div class="admin-alert admin-alert--sukses"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div class="admin-alert admin-alert--sukses"><?php echo htmlspecialchars((string) $flash, ENT_QUOTES, 'UTF-8'); ?></div>
                 <?php endif; ?>
 
                 <?php if ($flash_error): ?>
-                    <div class="admin-alert admin-alert--error"><?php echo htmlspecialchars($flash_error, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div class="admin-alert admin-alert--error"><?php echo htmlspecialchars((string) $flash_error, ENT_QUOTES, 'UTF-8'); ?></div>
                 <?php endif; ?>
+
+                <div class="admin-chip-bar" aria-label="Filter status">
+                    <?php $chip_aktif_semua = $filter_status_kunci === ''; ?>
+                    <a class="admin-chip<?php echo $chip_aktif_semua ? ' admin-chip--aktif' : ''; ?>" href="<?php echo htmlspecialchars($url_semua_filter, ENT_QUOTES, 'UTF-8'); ?>">
+                        Semua<span><?php echo htmlspecialchars((string) $total_semua, ENT_QUOTES, 'UTF-8'); ?></span>
+                    </a>
+                    <?php foreach ($status_labels as $ket => $nama_status): ?>
+                        <?php $jumlah = (int) ($hit_status[$ket] ?? 0); ?>
+                        <?php $aktif = $filter_status_kunci === $ket; ?>
+                        <a class="admin-chip<?php echo $aktif ? ' admin-chip--aktif' : ''; ?>" href="<?php echo htmlspecialchars($url_chip((string) $ket), ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php echo htmlspecialchars($nama_status, ENT_QUOTES, 'UTF-8'); ?><span><?php echo htmlspecialchars((string) $jumlah, ENT_QUOTES, 'UTF-8'); ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
 
                 <section class="admin-kartu" aria-labelledby="judul-daftar-pesanan">
                     <div class="admin-kartu__header">
                         <h2 id="judul-daftar-pesanan">Daftar pesanan</h2>
                         <form method="get" class="admin-cari">
-                            <input type="search" name="q" value="<?php echo htmlspecialchars($query, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari nama atau email…" aria-label="Cari pesanan">
+                            <?php if ($filter_status_kunci !== ''): ?>
+                                <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status_kunci, ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php endif; ?>
+                            <input type="search" name="q" value="<?php echo htmlspecialchars($query, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari nama, email, atau nomor pesanan…" aria-label="Cari pesanan">
                             <button type="submit" class="admin-btn admin-btn--sekunder">Cari</button>
-                            <?php if ($query !== ''): ?>
-                                <a href="pesanan_admin.php" class="admin-btn admin-btn--sekunder">Reset</a>
+                            <?php if ($query !== '' || $filter_status_kunci !== ''): ?>
+                                <a href="<?php echo htmlspecialchars(aplikasi_url('admin/pesanan_admin.php'), ENT_QUOTES, 'UTF-8'); ?>" class="admin-btn admin-btn--sekunder">Reset</a>
                             <?php endif; ?>
                         </form>
                     </div>
@@ -147,9 +195,9 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (empty($pesanan)): ?>
+                                <?php if ($pesanan === []): ?>
                                     <tr class="admin-tr-kosong">
-                                        <td colspan="6">Tidak ada pesanan yang cocok.</td>
+                                        <td colspan="6">Tidak ada pesanan yang cocok dengan filter atau pencarian.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($pesanan as $p): ?>
@@ -160,10 +208,10 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                                         <tr>
                                             <td><strong>#<?php echo htmlspecialchars((string) $p['id'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
                                             <td>
-                                                <strong><?php echo htmlspecialchars($p['nama_pengguna'] ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></strong><br>
-                                                <span class="admin-meta"><?php echo htmlspecialchars($p['email'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
+                                                <strong><?php echo htmlspecialchars((string) ($p['nama_pengguna'] ?? 'N/A'), ENT_QUOTES, 'UTF-8'); ?></strong><br>
+                                                <span class="admin-meta"><?php echo htmlspecialchars((string) ($p['email'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
                                             </td>
-                                            <td><?php echo htmlspecialchars(date('d/m/Y', strtotime((string) ($p['created_at'] ?? 'now'))), ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime((string) ($p['created_at'] ?? 'now'))), ENT_QUOTES, 'UTF-8'); ?></td>
                                             <td>Rp <?php echo htmlspecialchars(number_format((float) ($p['total_price'] ?? 0), 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?></td>
                                             <td>
                                                 <span class="<?php echo htmlspecialchars($badgeClass, ENT_QUOTES, 'UTF-8'); ?>">
@@ -175,6 +223,7 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                                                     <a href="detail_pesanan_admin.php?id=<?php echo (int) $p['id']; ?>" class="admin-btn admin-btn--mini admin-btn--sekunder">Detail</a>
                                                     <?php if (!in_array($st, ['shipped', 'completed', 'cancelled'], true)): ?>
                                                         <form method="post" onsubmit="return confirm('Yakin ingin membatalkan pesanan ini?');">
+                                                            <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
                                                             <input type="hidden" name="aksi" value="batalkan">
                                                             <input type="hidden" name="order_id" value="<?php echo (int) $p['id']; ?>">
                                                             <button type="submit" class="admin-btn admin-btn--mini admin-btn--bahaya">Batalkan</button>

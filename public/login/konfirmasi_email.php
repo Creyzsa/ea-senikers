@@ -142,7 +142,7 @@ $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
                 kotak.innerHTML = '<p style="margin:0 0 0.5rem 0;"><strong>Penyebab umum:</strong> (1) Gmail/Outlook memeriksa tautan otomatis sebelum Anda klik. (2) Anda menunggu layar &quot;Memverifikasi&quot; lalu <strong>mengklik tautan yang sama lagi</strong> — klik pertama sebenarnya sudah memakai token; klik kedua pasti gagal.</p>' +
                     '<p style="margin:0 0 0.5rem 0;"><strong>Yang bisa dilakukan:</strong></p><ul style="margin:0;padding-left:1.2rem;">' +
                     '<li>Minta tautan <strong>baru</strong> sekali, buka dari browser (gmail.com), lalu <strong>tunggu</strong> sampai halaman ganti sandi terbuka (bisa 30–90 detik di WiFi) tanpa klik ulang tautan email.</li>' +
-                    '<li>Lebih aman: ubah template email Supabase ke tautan <code>token_hash</code> — lihat komentar di <code>includes/supabase_auth.php</code> pada fungsi <code>supabase_auth_verifikasi_token_hash</code>.</li></ul>';
+                    '<li>Lebih aman: ubah template email Supabase ke tautan <code>token_hash</code> — lihat komentar di <code>includes/auth_db/supabase_auth.php</code> pada fungsi <code>supabase_auth_verifikasi_token_hash</code>.</li></ul>';
                 otpErrEl.appendChild(kotak);
             }
 
@@ -209,7 +209,7 @@ $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
                 statusEl.appendChild(e1);
                 var e2 = document.createElement('div');
                 e2.style.cssText = 'font-size:0.88rem;margin-top:0.6rem;text-align:left;';
-                e2.innerHTML = 'Periksa WiFi / pastikan Laragon menyala. Lalu <strong>muat ulang halaman ini</strong> (tombol segar di browser) — <strong>jangan</strong> klik tautan dari email lagi; kalau perlu minta tautan reset baru.';
+                e2.innerHTML = 'Periksa sambungan internet lalu muat ulang halaman ini. Jika masalah tetap ada, kirim ulang tautan dari email atau hubungi dukungan.';
                 statusEl.appendChild(e2);
             });
             return;

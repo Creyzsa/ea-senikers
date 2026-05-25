@@ -4,7 +4,7 @@
  * Bagian teknis (PDO, dsn) tetap bahasa Inggris karena nama resmi fitur PHP.
  */
 
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../config.php';
 
 function koneksi_database(): PDO
 {

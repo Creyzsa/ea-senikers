@@ -2,8 +2,8 @@
 /**
  * Terima access_token dari tautan reset sandi (hash di konfirmasi_email.php), simpan sementara di sesi, lalu ke form setel sandi.
  */
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/supabase_auth.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/auth_db/supabase_auth.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

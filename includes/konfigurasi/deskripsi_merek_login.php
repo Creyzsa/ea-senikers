@@ -17,7 +17,7 @@ $merek_ringkas = require __DIR__ . '/merek_ringkas.php';
         </h2>
 
         <p class="panel-tentang__teks">
-            Destinasi belanja sepatu dengan <strong>berbagai merek</strong> — sneakers baru hingga koleksi <strong>seken (preloved)</strong> pilihan. Kualitas terjaga, harga transparan, stok selalu diperbarui.
+            Destinasi belanja sepatu dengan <strong>berbagai merek</strong> — sneakers baru hingga koleksi <strong>preloved</strong> pilihan. Kualitas terjaga dan harga transparan.
         </p>
 
         <ul class="panel-tentang__fitur" role="list">

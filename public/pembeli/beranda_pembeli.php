@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . '/../../includes/sesi.php';
-require_once __DIR__ . '/../../includes/katalog_produk.php';
-require_once __DIR__ . '/../../includes/pesanan_repositori.php';
+require_once __DIR__ . '/../../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
+require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {
@@ -14,12 +14,27 @@ $nama_sapa = trim((string) ($_SESSION['nama_pengguna'] ?? ''));
 if ($nama_sapa === '') {
     $nama_sapa = 'Pembeli';
 }
+
 $bilah_pembeli_aktif = 'beranda';
 $tautan_produk = aplikasi_url('pembeli/produk.php');
 $logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
-$merek_ringkas = require __DIR__ . '/../../includes/merek_ringkas.php';
-$kontak_toko = require __DIR__ . '/../../includes/kontak_toko.php';
+$merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
+$kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
+
+$whatsapp_ada = false;
+foreach ((array) ($kontak_toko['wa'] ?? []) as $__wa) {
+    if (trim((string) ($__wa['e164'] ?? '')) !== '') {
+        $whatsapp_ada = true;
+        break;
+    }
+}
+
+$semua_produk = katalog_ambil_semua_produk();
 $produk_terlaris = pesanan_produk_terlaris_gabung_katalog(4);
+if ($produk_terlaris === [] && $semua_produk !== []) {
+    $produk_terlaris = array_slice($semua_produk, 0, 4);
+}
+
 $u_ig = 'https://www.instagram.com/' . rawurlencode((string) ($kontak_toko['sosial']['instagram'] ?? 'easenikers')) . '/';
 $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial']['tiktok'] ?? 'easenikers'));
 ?>
@@ -28,7 +43,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Beranda — EA SENIKERS</title>
+    <title>Beranda - EA SENIKERS</title>
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
 </head>
 <body class="halaman-toko">
@@ -43,7 +58,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                 </p>
                 <p class="hero-toko__meta"><?php echo htmlspecialchars($merek_ringkas['hero_meta_satu_baris'], ENT_QUOTES, 'UTF-8'); ?></p>
                 <h1 id="hero-judul" class="hero-toko__judul"><?php echo htmlspecialchars($merek_ringkas['hero_judul'], ENT_QUOTES, 'UTF-8'); ?></h1>
-                <p class="hero-toko__sapa">Halo, <span class="hero-toko__nama"><?php echo htmlspecialchars($nama_sapa, ENT_QUOTES, 'UTF-8'); ?></span> · <span class="hero-toko__nama-merek">EA SENIKERS</span></p>
+                <p class="hero-toko__sapa">Halo, <span class="hero-toko__nama"><?php echo htmlspecialchars($nama_sapa, ENT_QUOTES, 'UTF-8'); ?></span> - <span class="hero-toko__nama-merek">EA SENIKERS</span></p>
                 <p class="hero-toko__sub"><?php echo htmlspecialchars($merek_ringkas['hero_sub_bullet'], ENT_QUOTES, 'UTF-8'); ?></p>
                 <div class="hero-toko__aksi">
                     <a class="tombol-oranye-besar hero-toko__cta" href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($merek_ringkas['hero_teks_tombol'], ENT_QUOTES, 'UTF-8'); ?></a>
@@ -55,14 +70,17 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
     <main class="kontainer-toko" id="utama">
         <section class="blok-terlaris" aria-labelledby="judul-terlaris">
             <div class="blok-terlaris__header">
-                <h2 id="judul-terlaris" class="blok-terlaris__judul">Produk Terlaris 🔥</h2>
-                <a class="blok-terlaris__lihat" href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>">Lihat Semua →</a>
+                <div>
+                    <p class="section-eyebrow">Produk pilihan</p>
+                    <h2 id="judul-terlaris" class="blok-terlaris__judul">Rekomendasi untuk Anda</h2>
+                </div>
+                <a class="blok-terlaris__lihat" href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>">Lihat semua &rarr;</a>
             </div>
 
             <div class="susunan-produk-fitur">
                 <div class="grid-produk-terlaris">
                     <?php if ($produk_terlaris === []): ?>
-                    <p class="beranda-terlaris-kosong" style="grid-column:1/-1;margin:0;padding:1rem 0;color:#6b7280;font-size:0.95rem;">Belum ada produk di katalog atau koneksi gagal. Cek <code>config.php</code> dan tabel katalog di Supabase.</p>
+                    <p class="beranda-terlaris-kosong">Katalog akan tampil di sini ketika sudah ada produk.</p>
                     <?php else: ?>
                     <?php foreach ($produk_terlaris as $p):
                         $id = (string) ($p['id_produk'] ?? '');
@@ -104,8 +122,8 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                             </svg>
                         </span>
                         <div class="kotak-fitur__teks">
-                            <strong>Produk Berkualitas</strong>
-                            <span>Sepatu baru &amp; second dengan kualitas terpilih dan layak pakai</span>
+                            <strong>Produk berkualitas</strong>
+                            <span>Sepatu baru dan preloved dengan kualitas terpilih.</span>
                         </div>
                     </div>
                     <div class="kotak-fitur__baris">
@@ -116,8 +134,8 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                             </svg>
                         </span>
                         <div class="kotak-fitur__teks">
-                            <strong>Kondisi Transparan</strong>
-                            <span>Detail kondisi produk dijelaskan secara jujur (real pict &amp; deskripsi)</span>
+                            <strong>Kondisi transparan</strong>
+                            <span>Detail produk dibuat jelas sebelum Anda checkout.</span>
                         </div>
                     </div>
                     <div class="kotak-fitur__baris">
@@ -127,8 +145,8 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                             </svg>
                         </span>
                         <div class="kotak-fitur__teks">
-                            <strong>Harga Kompetitif</strong>
-                            <span>Harga bersaing sesuai kondisi dan kualitas produk</span>
+                            <strong>Harga terbuka</strong>
+                            <span>Harga katalog tampil jelas sesuai kondisi produk.</span>
                         </div>
                     </div>
                 </aside>
@@ -140,7 +158,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
         <div class="beranda-toko__footer-isi">
             <div class="beranda-toko__footer-merek">
                 <img class="beranda-toko__footer-logo" src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" width="220" height="42" alt="" role="presentation" loading="lazy" decoding="async">
-                <p class="beranda-toko__footer-tagline">Belanja online · Kunjungi toko kami</p>
+                <p class="beranda-toko__footer-tagline">Belanja sepatu nyaman dan terpercaya.</p>
             </div>
             <div class="beranda-toko__footer-kolom">
                 <h2 class="beranda-toko__footer-judul">Lokasi toko (offline)</h2>
@@ -151,6 +169,9 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
             </div>
             <div class="beranda-toko__footer-kolom">
                 <h2 class="beranda-toko__footer-judul">WhatsApp</h2>
+                <?php if (!$whatsapp_ada): ?>
+                    <p class="beranda-toko__footer-keterangan">Nomor layanan akan ditampilkan melalui pengaturan toko.</p>
+                <?php endif; ?>
                 <ul class="beranda-toko__footer-list">
                     <?php foreach ((array) ($kontak_toko['wa'] ?? []) as $w):
                         $e = preg_replace('/\D+/', '', (string) ($w['e164'] ?? ''));
@@ -178,7 +199,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                 </ul>
             </div>
         </div>
-        <p class="beranda-toko__footer-hakcipta">© <?php echo date('Y'); ?> EA SENIKERS. Hak cipta dilindungi undang-undang.</p>
+        <p class="beranda-toko__footer-hakcipta">&copy; <?php echo date('Y'); ?> EA SENIKERS. Hak cipta dilindungi undang-undang.</p>
     </footer>
 
 </body>
