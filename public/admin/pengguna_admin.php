@@ -101,14 +101,15 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('admin/pengguna_admin.php'), $q_nila
                 <section class="admin-kartu" aria-labelledby="judul-pengguna">
                     <div class="admin-kartu__header">
                         <h2 id="judul-pengguna">Daftar pengguna</h2>
-                        <form method="get" class="admin-cari" action="">
-                            <input type="search" name="q" value="<?php echo htmlspecialchars($q_nilai, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Filter nama atau email..." aria-label="Cari pengguna">
+                        <form method="get" class="admin-cari" action="" data-live data-target="#hasil-pengguna">
+                            <input type="search" name="q" value="<?php echo htmlspecialchars($q_nilai, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Filter nama atau email..." aria-label="Cari pengguna" autocomplete="off">
                             <button type="submit" class="admin-btn admin-btn--sekunder">Cari</button>
                             <?php if ($q_nilai !== ''): ?>
                                 <a href="pengguna_admin.php" class="admin-btn admin-btn--sekunder">Reset</a>
                             <?php endif; ?>
                         </form>
                     </div>
+                    <div id="hasil-pengguna">
                     <div class="admin-tabel-wrap">
                         <table class="admin-tabel">
                             <thead>
@@ -145,10 +146,11 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('admin/pengguna_admin.php'), $q_nila
                         </table>
                     </div>
                     <?php echo paginasi_render($pg, $pg_url); ?>
+                    </div>
                 </section>
             </main>
         </div>
     </div>
-
+<script src="../assets/js/pencarian-langsung.js" defer></script>
 </body>
 </html>

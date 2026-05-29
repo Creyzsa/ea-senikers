@@ -183,17 +183,18 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
                 <section class="admin-kartu" aria-labelledby="judul-daftar-pesanan">
                     <div class="admin-kartu__header">
                         <h2 id="judul-daftar-pesanan">Daftar pesanan</h2>
-                        <form method="get" class="admin-cari">
+                        <form method="get" class="admin-cari" data-live data-target="#hasil-pesanan-admin">
                             <?php if ($filter_status_kunci !== ''): ?>
                                 <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status_kunci, ENT_QUOTES, 'UTF-8'); ?>">
                             <?php endif; ?>
-                            <input type="search" name="q" value="<?php echo htmlspecialchars($query, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari nama, email, atau nomor pesanan…" aria-label="Cari pesanan">
+                            <input type="search" name="q" value="<?php echo htmlspecialchars($query, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari nama, email, atau nomor pesanan…" aria-label="Cari pesanan" autocomplete="off">
                             <button type="submit" class="admin-btn admin-btn--sekunder">Cari</button>
                             <?php if ($query !== '' || $filter_status_kunci !== ''): ?>
                                 <a href="<?php echo htmlspecialchars(aplikasi_url('admin/pesanan_admin.php'), ENT_QUOTES, 'UTF-8'); ?>" class="admin-btn admin-btn--sekunder">Reset</a>
                             <?php endif; ?>
                         </form>
                     </div>
+                    <div id="hasil-pesanan-admin">
                     <div class="admin-tabel-wrap">
                         <table class="admin-tabel">
                             <thead>
@@ -250,10 +251,11 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
                         </table>
                     </div>
                     <?php echo paginasi_render($pg, $pg_url); ?>
+                    </div>
                 </section>
             </main>
         </div>
     </div>
-
+<script src="../assets/js/pencarian-langsung.js" defer></script>
 </body>
 </html>

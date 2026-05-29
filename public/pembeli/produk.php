@@ -142,10 +142,10 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/produk.php'), $pg_params, '
             </div>
         </section>
 
-        <form class="katalog-filter" method="get" action="<?php echo htmlspecialchars(aplikasi_url('pembeli/produk.php'), ENT_QUOTES, 'UTF-8'); ?>">
+        <form class="katalog-filter" method="get" action="<?php echo htmlspecialchars(aplikasi_url('pembeli/produk.php'), ENT_QUOTES, 'UTF-8'); ?>" data-live data-target="#hasil-katalog">
             <label class="katalog-filter__cari">
                 <span>Cari produk</span>
-                <input type="search" name="q" value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Nike, Vans, Air Max...">
+                <input type="search" name="q" value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Nike, Vans, Air Max..." autocomplete="off">
             </label>
             <label>
                 <span>Merek</span>
@@ -180,6 +180,7 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/produk.php'), $pg_params, '
             </div>
         </form>
 
+        <div id="hasil-katalog">
         <?php if ($daftar_produk === []): ?>
             <div class="katalog-kosong">
                 <strong>Katalog kosong atau tidak dapat dimuat.</strong>
@@ -240,12 +241,13 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/produk.php'), $pg_params, '
             </div>
             <?php echo paginasi_render($pg, $pg_url); ?>
         <?php endif; ?>
+        </div>
 
         <p class="katalog-kembali">
             <a href="<?php echo htmlspecialchars($u_beranda, ENT_QUOTES, 'UTF-8'); ?>">&larr; Beranda</a>
         </p>
     </div>
 </div>
-
+<script src="../assets/js/pencarian-langsung.js" defer></script>
 </body>
 </html>

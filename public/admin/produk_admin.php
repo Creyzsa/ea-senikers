@@ -382,12 +382,13 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
             <section class="admin-bagian-tabel" aria-labelledby="judul-daftar-produk">
                 <div class="admin-panel-produk__judul">
                     <h2 id="judul-daftar-produk" class="admin-panel__judul">Daftar produk</h2>
-                    <form class="admin-cari" method="get">
-                        <input type="search" name="q" placeholder="Cari nama / brand / kategori..." value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>">
+                    <form class="admin-cari" method="get" data-live data-target="#hasil-produk-admin">
+                        <input type="search" name="q" placeholder="Cari nama / brand / kategori..." value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
                         <button type="submit" class="admin-btn admin-btn--sekunder">Cari</button>
                     </form>
                 </div>
 
+                <div id="hasil-produk-admin">
                 <div class="admin-tabel-wrap">
                     <table class="admin-tabel">
                         <thead>
@@ -436,9 +437,11 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                     </table>
                 </div>
                 <?php echo paginasi_render($pg, $pg_url); ?>
+                </div>
             </section>
         </main>
     </div>
 </div>
+<script src="../assets/js/pencarian-langsung.js" defer></script>
 </body>
 </html>
