@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
+require_once __DIR__ . '/../../includes/paginasi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
@@ -47,6 +48,17 @@ if ($filter_raw !== '' && $filter_raw !== 'all' && $filter_raw !== 'semua') {
 }
 
 $pesanan = pesanan_admin_daftar_berfilter($filter_status_kunci !== '' ? $filter_status_kunci : null, $query);
+
+$pg_params = [];
+if ($query !== '') {
+    $pg_params['q'] = $query;
+}
+if ($filter_status_kunci !== '') {
+    $pg_params['status'] = $filter_status_kunci;
+}
+$pg = paginasi_hitung(count($pesanan), paginasi_halaman_dari_query('hal'), 10);
+$pesananHal = paginasi_potong($pesanan, $pg);
+$pg_url = paginasi_pembuat_url(aplikasi_url('admin/pesanan_admin.php'), $pg_params, 'hal');
 
 $flash = $_SESSION['flash_pesanan'] ?? null;
 $flash_error = $_SESSION['flash_pesanan_error'] ?? null;
@@ -200,7 +212,7 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
                                         <td colspan="6">Tidak ada pesanan yang cocok dengan filter atau pencarian.</td>
                                     </tr>
                                 <?php else: ?>
-                                    <?php foreach ($pesanan as $p): ?>
+                                    <?php foreach ($pesananHal as $p): ?>
                                         <?php
                                         $st = (string) ($p['status'] ?? '');
                                         $badgeClass = $badge_kelas[$st] ?? 'pesanan-badge pesanan-badge--kuning';
@@ -237,6 +249,7 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
                             </tbody>
                         </table>
                     </div>
+                    <?php echo paginasi_render($pg, $pg_url); ?>
                 </section>
             </main>
         </div>

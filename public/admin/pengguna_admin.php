@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/admin_pengguna_repositori.php';
+require_once __DIR__ . '/../../includes/paginasi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
@@ -18,6 +19,10 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
 $q_nilai = trim((string) ($_GET['q'] ?? ''));
 
 $rows = admin_pengguna_ambil_daftar($q_nilai === '' ? null : $q_nilai);
+
+$pg = paginasi_hitung(count($rows), paginasi_halaman_dari_query('hal'), 10);
+$rowsHal = paginasi_potong($rows, $pg);
+$pg_url = paginasi_pembuat_url(aplikasi_url('admin/pengguna_admin.php'), $q_nilai !== '' ? ['q' => $q_nilai] : [], 'hal');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -121,7 +126,7 @@ $rows = admin_pengguna_ambil_daftar($q_nilai === '' ? null : $q_nilai);
                                         <td colspan="5">Tidak ada baris atau pencarian tidak cocok dengan data aktual.</td>
                                     </tr>
                                 <?php else: ?>
-                                    <?php foreach ($rows as $__u): ?>
+                                    <?php foreach ($rowsHal as $__u): ?>
                                         <?php
                                         $role = strtolower((string) ($__u['role'] ?? 'pembeli'));
                                         $lencana = $role === 'admin' ? 'role-lencana role-lencana--admin' : 'role-lencana';
@@ -139,6 +144,7 @@ $rows = admin_pengguna_ambil_daftar($q_nilai === '' ? null : $q_nilai);
                             </tbody>
                         </table>
                     </div>
+                    <?php echo paginasi_render($pg, $pg_url); ?>
                 </section>
             </main>
         </div>

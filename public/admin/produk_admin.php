@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/admin_produk_repositori.php';
+require_once __DIR__ . '/../../includes/paginasi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
@@ -155,6 +156,10 @@ $q = trim((string) ($_GET['q'] ?? ''));
 
 $daftar_utuh = admin_produk_ambil_semua('');
 $daftarProduk = $q === '' ? $daftar_utuh : admin_produk_ambil_semua($q);
+
+$pg = paginasi_hitung(count($daftarProduk), paginasi_halaman_dari_query('hal'), 8);
+$daftarProdukHal = paginasi_potong($daftarProduk, $pg);
+$pg_url = paginasi_pembuat_url(aplikasi_url('admin/produk_admin.php'), $q !== '' ? ['q' => $q] : [], 'hal');
 
 $total_sku = count($daftar_utuh);
 $siap_hit = 0;
@@ -402,7 +407,7 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                                 <td colspan="7">Belum ada produk atau hasil pencarian kosong.</td>
                             </tr>
                         <?php else: ?>
-                            <?php foreach ($daftarProduk as $p): ?>
+                            <?php foreach ($daftarProdukHal as $p): ?>
                                 <?php
                                 $id = (string) ($p['id_produk'] ?? '');
                                 $nama = (string) ($p['nama_produk'] ?? '');
@@ -430,6 +435,7 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                         </tbody>
                     </table>
                 </div>
+                <?php echo paginasi_render($pg, $pg_url); ?>
             </section>
         </main>
     </div>

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
+require_once __DIR__ . '/../../includes/paginasi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {
@@ -93,6 +94,16 @@ function produk_url_filter(array $params): string
 $total_produk = count($daftar_produk);
 $total_tersaring = count($daftar_tersaring);
 $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($kondisi_filter !== '' ? 1 : 0);
+
+$pg_params = [];
+foreach (['q' => $q, 'brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'sort' => $sort] as $pg_k => $pg_v) {
+    if (trim((string) $pg_v) !== '') {
+        $pg_params[$pg_k] = $pg_v;
+    }
+}
+$pg = paginasi_hitung($total_tersaring, paginasi_halaman_dari_query('hal'), 12);
+$daftar_tersaring_hal = paginasi_potong($daftar_tersaring, $pg);
+$pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/produk.php'), $pg_params, 'hal');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -185,7 +196,7 @@ $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($
             </div>
         <?php else: ?>
             <div class="katalog-hasil-bar">
-                <p>Menampilkan <strong><?php echo (string) $total_tersaring; ?></strong> dari <?php echo (string) $total_produk; ?> produk.</p>
+                <p>Menampilkan <strong><?php echo (string) $pg['dari']; ?>&ndash;<?php echo (string) $pg['sampai']; ?></strong> dari <?php echo (string) $total_tersaring; ?> produk.</p>
                 <div class="katalog-chip-row" aria-label="Filter aktif">
                     <?php if ($q !== ''): ?>
                         <a href="<?php echo htmlspecialchars(produk_url_filter(['brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Cari: <?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?></a>
@@ -199,7 +210,7 @@ $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($
                 </div>
             </div>
             <div class="katalog-grid">
-                <?php foreach ($daftar_tersaring as $p):
+                <?php foreach ($daftar_tersaring_hal as $p):
                     $id = (string) ($p['id_produk'] ?? '');
                     $nama = (string) ($p['nama_produk'] ?? '');
                     $brand = (string) ($p['brand'] ?? '');
@@ -227,6 +238,7 @@ $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($
                 </a>
                 <?php endforeach; ?>
             </div>
+            <?php echo paginasi_render($pg, $pg_url); ?>
         <?php endif; ?>
 
         <p class="katalog-kembali">
