@@ -44,14 +44,16 @@ function admin_produk_ambil_detail(string $id_produk): ?array
 function admin_produk_ambil_semua(string $query = ''): array
 {
     $produk = katalog_ambil_semua_produk();
+    $query = trim($query);
     if ($query === '') {
         return $produk;
     }
     $hasil = [];
-    $query_lower = strtolower($query);
     foreach ($produk as $p) {
-        if (str_contains(strtolower((string) ($p['nama_produk'] ?? '')), $query_lower) ||
-            str_contains(strtolower((string) ($p['brand'] ?? '')), $query_lower)) {
+        $teks = ((string) ($p['nama_produk'] ?? '')) . ' '
+            . ((string) ($p['brand'] ?? '')) . ' '
+            . ((string) ($p['kategori'] ?? ''));
+        if (katalog_teks_cocok($teks, $query)) {
             $hasil[] = $p;
         }
     }

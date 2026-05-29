@@ -42,11 +42,6 @@ natcasesort($opsi_kondisi);
 $opsi_brand = array_values($opsi_brand);
 $opsi_kondisi = array_values($opsi_kondisi);
 
-function produk_teks_kecil(string $teks): string
-{
-    return function_exists('mb_strtolower') ? mb_strtolower($teks, 'UTF-8') : strtolower($teks);
-}
-
 $daftar_tersaring = array_values(array_filter($daftar_produk, static function (array $produk) use ($q, $brand_filter, $kondisi_filter): bool {
     $nama = (string) ($produk['nama_produk'] ?? '');
     $brand = (string) ($produk['brand'] ?? '');
@@ -58,12 +53,8 @@ $daftar_tersaring = array_values(array_filter($daftar_produk, static function (a
     if ($kondisi_filter !== '' && strcasecmp($kondisi, $kondisi_filter) !== 0) {
         return false;
     }
-    if ($q !== '') {
-        $haystack = produk_teks_kecil($nama . ' ' . $brand . ' ' . $kondisi);
-        $needle = produk_teks_kecil($q);
-        if (strpos($haystack, $needle) === false) {
-            return false;
-        }
+    if ($q !== '' && !katalog_teks_cocok($nama . ' ' . $brand . ' ' . $kondisi, $q)) {
+        return false;
     }
 
     return true;

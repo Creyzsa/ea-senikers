@@ -37,6 +37,24 @@ function katalog_format_rupiah(int $harga): string
 }
 
 /**
+ * Pencocokan teks untuk pencarian: TIDAK peduli huruf besar/kecil dan aman
+ * untuk karakter multibyte (UTF-8). Mengembalikan true bila kata kunci
+ * $needle terdapat di dalam $haystack.
+ */
+function katalog_teks_cocok(string $haystack, string $needle): bool
+{
+    $needle = trim($needle);
+    if ($needle === '') {
+        return true;
+    }
+    if (function_exists('mb_stripos')) {
+        return mb_stripos($haystack, $needle) !== false;
+    }
+
+    return stripos($haystack, $needle) !== false;
+}
+
+/**
  * Label kondisi untuk ditampilkan ke pembeli.
  * Data internal memakai 'Baru' / 'Second' (untuk admin form),
  * tetapi pembeli melihatnya sebagai 'Baru' / 'Preloved' agar selaras
