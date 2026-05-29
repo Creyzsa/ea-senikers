@@ -16,6 +16,8 @@ $u_pesanan = aplikasi_url('pembeli/pesanan_pembeli.php');
 $u_keranjang = aplikasi_url('pembeli/keranjang_pembeli.php');
 $u_keluar = aplikasi_url('login/keluar.php');
 $u_akun = aplikasi_url('pembeli/akun_pembeli.php');
+$u_bantuan = aplikasi_url('pembeli/bantuan_pembeli.php');
+$u_lapor = aplikasi_url('pembeli/lapor_masalah.php');
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
 if (!isset($_SESSION['csrf_akun_pembeli']) || !is_string($_SESSION['csrf_akun_pembeli'])) {
@@ -134,6 +136,43 @@ foreach (['no_hp', 'nama_penerima', 'provinsi', 'kota', 'kecamatan', 'alamat_det
             </article>
         </section>
 
+        <section class="akun-section" aria-labelledby="judul-akses">
+            <div class="section-heading">
+                <div>
+                    <p class="section-eyebrow">Menu akun</p>
+                    <h2 id="judul-akses">Apa yang ingin Anda lakukan?</h2>
+                </div>
+            </div>
+            <div class="akun-action-grid">
+                <a href="<?php echo htmlspecialchars($u_pesanan, ENT_QUOTES, 'UTF-8'); ?>">
+                    <strong>Pesanan saya</strong>
+                    <span>Pantau pembayaran dan pengiriman.</span>
+                </a>
+                <a href="<?php echo htmlspecialchars($u_bantuan, ENT_QUOTES, 'UTF-8'); ?>">
+                    <strong>Bantuan &amp; Hubungi Kami</strong>
+                    <span>FAQ, WhatsApp, email, cara retur &amp; lacak pesanan.</span>
+                </a>
+                <a href="<?php echo htmlspecialchars($u_lapor, ENT_QUOTES, 'UTF-8'); ?>">
+                    <strong>Laporkan Masalah</strong>
+                    <span>Kendala checkout, pembayaran, atau bug? Beri tahu kami.</span>
+                </a>
+                <a href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">
+                    <strong>Katalog produk</strong>
+                    <span>Cari sepatu baru atau preloved.</span>
+                </a>
+                <a href="<?php echo htmlspecialchars($u_keranjang, ENT_QUOTES, 'UTF-8'); ?>">
+                    <strong>Keranjang</strong>
+                    <span>Lihat produk yang sudah disimpan.</span>
+                </a>
+                <?php if ($wa_utama !== ''): ?>
+                    <a href="<?php echo htmlspecialchars($wa_utama, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">
+                        <strong>Layanan pelanggan</strong>
+                        <span>Tanyakan ukuran, kondisi, atau ketersediaan.</span>
+                    </a>
+                <?php endif; ?>
+            </div>
+        </section>
+
         <section class="akun-section" id="profil-pengiriman" aria-labelledby="judul-profil-pengiriman">
             <div class="section-heading">
                 <div>
@@ -236,35 +275,6 @@ foreach (['no_hp', 'nama_penerima', 'provinsi', 'kota', 'kecamatan', 'alamat_det
                     <button type="submit" class="tombol-page-utama">Simpan profil pengiriman</button>
                 </div>
             </form>
-        </section>
-
-        <section class="akun-section" aria-labelledby="judul-akses">
-            <div class="section-heading">
-                <div>
-                    <p class="section-eyebrow">Akses cepat</p>
-                    <h2 id="judul-akses">Lanjutkan aktivitas belanja</h2>
-                </div>
-            </div>
-            <div class="akun-action-grid">
-                <a href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">
-                    <strong>Katalog produk</strong>
-                    <span>Cari sepatu baru atau preloved.</span>
-                </a>
-                <a href="<?php echo htmlspecialchars($u_keranjang, ENT_QUOTES, 'UTF-8'); ?>">
-                    <strong>Keranjang</strong>
-                    <span>Lihat produk yang sudah disimpan.</span>
-                </a>
-                <a href="<?php echo htmlspecialchars($u_pesanan, ENT_QUOTES, 'UTF-8'); ?>">
-                    <strong>Pesanan saya</strong>
-                    <span>Pantau pembayaran dan pengiriman.</span>
-                </a>
-                <?php if ($wa_utama !== ''): ?>
-                    <a href="<?php echo htmlspecialchars($wa_utama, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">
-                        <strong>Layanan pelanggan</strong>
-                        <span>Tanyakan ukuran, kondisi, atau ketersediaan.</span>
-                    </a>
-                <?php endif; ?>
-            </div>
         </section>
 
         <p class="akun-kembali">

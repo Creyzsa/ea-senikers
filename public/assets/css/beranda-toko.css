@@ -1739,3 +1739,316 @@ body.halaman-toko {
         text-align: left;
     }
 }
+
+/* ——— Halaman Bantuan & Hubungi Kami ——— */
+.bantuan-wrap {
+    max-width: 920px;
+}
+
+.bantuan-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin: 0.5rem 0 1.75rem;
+    padding: 1.75rem 1.6rem;
+    background: linear-gradient(135deg, var(--biru-hero), var(--biru-hero-akhir));
+    border-radius: 16px;
+    color: #f8fafc;
+}
+
+.bantuan-hero__teks {
+    min-width: 0;
+}
+
+.bantuan-hero .artikel-judul {
+    color: #fff;
+    margin-bottom: 0.4rem;
+}
+
+.bantuan-hero__sub {
+    margin: 0;
+    max-width: 46ch;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: rgba(248, 250, 252, 0.82);
+}
+
+.bantuan-hero__ikon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.75rem;
+    height: 4.75rem;
+    background: rgba(168, 144, 95, 0.2);
+    color: var(--oranye-cta);
+    border-radius: 16px;
+}
+
+.bantuan-seksi {
+    margin-bottom: 2rem;
+}
+
+.bantuan-judul {
+    margin: 0 0 1rem;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.bantuan-kontak-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.85rem;
+}
+
+.bantuan-kontak-card {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1.1rem 1.2rem;
+    background: #fff;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 12px;
+    box-shadow: var(--bayangan-kartu);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.bantuan-kontak-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+}
+
+.bantuan-kontak-card__ikon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 12px;
+    background: var(--aksen-emas-lembut);
+    color: var(--oranye-cta-hover);
+}
+
+.bantuan-kontak-card--wa .bantuan-kontak-card__ikon {
+    background: var(--hijau-sukses-lembut);
+    color: var(--hijau-sukses);
+}
+
+.bantuan-kontak-card__isi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.bantuan-kontak-card__label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--teks-redup);
+}
+
+.bantuan-kontak-card__isi strong {
+    font-size: 0.95rem;
+    color: var(--teks-utama);
+    word-break: break-word;
+}
+
+.bantuan-kontak-card__aksi {
+    margin-top: 0.2rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--oranye-cta-hover);
+}
+
+.bantuan-faq {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.bantuan-faq__item {
+    border: 1px solid var(--abu-tepi);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: var(--bayangan-kartu);
+    overflow: hidden;
+}
+
+.bantuan-faq__item summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.95rem 1.15rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--teks-utama);
+    cursor: pointer;
+    list-style: none;
+}
+
+.bantuan-faq__item summary::-webkit-details-marker {
+    display: none;
+}
+
+.bantuan-faq__item summary::after {
+    content: "+";
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--oranye-cta-hover);
+    transition: transform 0.2s ease;
+}
+
+.bantuan-faq__item[open] summary::after {
+    transform: rotate(45deg);
+}
+
+.bantuan-faq__isi {
+    padding: 0 1.15rem 1.05rem;
+}
+
+.bantuan-faq__isi p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--teks-redup);
+}
+
+.bantuan-dua-kolom {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.bantuan-judul--penuh {
+    grid-column: 1 / -1;
+}
+
+.bantuan-panduan {
+    padding: 1.2rem 1.3rem;
+    background: #fff;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 12px;
+    box-shadow: var(--bayangan-kartu);
+}
+
+.bantuan-panduan h3 {
+    margin: 0 0 0.85rem;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.bantuan-langkah {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+    counter-reset: bantuan-step;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.bantuan-langkah li {
+    counter-increment: bantuan-step;
+    position: relative;
+    padding-left: 2.4rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--teks-redup);
+}
+
+.bantuan-langkah li::before {
+    content: counter(bantuan-step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1.65rem;
+    height: 1.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--biru-tombol);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 800;
+    border-radius: 50%;
+}
+
+.bantuan-langkah a {
+    color: var(--oranye-cta-hover);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.bantuan-langkah a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+    .bantuan-hero {
+        flex-direction: column-reverse;
+        align-items: flex-start;
+    }
+
+    .bantuan-dua-kolom {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ——— Form Laporkan Masalah ——— */
+.lapor-fieldset {
+    margin: 0 0 1.1rem;
+    padding: 0;
+    border: none;
+}
+
+.lapor-fieldset legend {
+    padding: 0;
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--teks-redup);
+}
+
+.lapor-kategori {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.lapor-kategori__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.88rem;
+    background: #fff;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.lapor-kategori__item input {
+    accent-color: var(--oranye-cta);
+}
+
+.lapor-kategori__item:hover {
+    border-color: var(--oranye-cta);
+}
+
+.lapor-kategori__item:has(input:checked) {
+    border-color: var(--oranye-cta);
+    background: var(--aksen-emas-lembut);
+    color: var(--oranye-cta-hover);
+    font-weight: 700;
+}
