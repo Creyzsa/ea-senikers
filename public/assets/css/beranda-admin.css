@@ -1363,3 +1363,28 @@ body.halaman-admin {
     color: var(--hijau-sukses);
     font-weight: 800;
 }
+
+/* ——— Laporan masalah (admin) ——— */
+.admin-laporan-status {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.admin-laporan-status select {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.8rem;
+    border: 1px solid var(--abu-tepi);
+    border-radius: var(--radius);
+    background: #fff;
+}
+
+.admin-laporan-bukti {
+    color: var(--oranye-cta-hover);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.admin-laporan-bukti:hover {
+    text-decoration: underline;
+}
