@@ -213,9 +213,21 @@ body.halaman-admin {
 /* ——— Stat cards (kartu putih seperti produk toko) ——— */
 .admin-grid-stat {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
     margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .admin-grid-stat {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 520px) {
+    .admin-grid-stat {
+        grid-template-columns: 1fr;
+    }
 }
 
 .admin-stat {
@@ -304,8 +316,10 @@ body.halaman-admin {
 
 .admin-stat__tren {
     margin: 0.4rem 0 0;
+    min-height: 2.4em;
     font-size: 0.75rem;
     font-weight: 600;
+    line-height: 1.4;
     color: var(--hijau-sukses);
 }
 
