@@ -20,7 +20,9 @@ const EASENIKERS_SESI_RESET_SANDI = 'easenikers_reset_sandi_sb';
 
 function easenikers_konfirmasi_https(): bool
 {
+    // Support for proxies like Vercel, Cloudflare, etc.
     return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
         || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
 }
 
