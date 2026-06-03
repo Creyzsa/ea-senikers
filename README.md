@@ -278,8 +278,12 @@ Kami sudah menambahkan:
 
 1. Buka [vercel.com](https://vercel.com), login dengan GitHub.
 2. **Add New Project** → Import Git Repository → pilih repo `ea-senikers` (branch `main`).
-3. Vercel akan detect. Biarkan default.
-4. Klik **Deploy**.
+3. **Application presets / Framework Preset**: 
+   - **Leave default** (atau pilih **"Other"**).
+   - **JANGAN** pilih Next.js, Vite, Create React App, atau framework JS lainnya.
+   - Karena kita pakai `vercel.json` dengan `"framework": null` dan PHP runtime, "Other" / default adalah yang benar.
+4. Biarkan Build Command dan Output Directory kosong/default.
+5. Klik **Deploy**.
 
 Setelah deploy pertama berhasil (mungkin butuh beberapa menit untuk build PHP runtime):
 
