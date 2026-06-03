@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/admin_produk_repositori.php';
+require_once __DIR__ . '/../../includes/paginasi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
@@ -156,6 +157,10 @@ $q = trim((string) ($_GET['q'] ?? ''));
 $daftar_utuh = admin_produk_ambil_semua('');
 $daftarProduk = $q === '' ? $daftar_utuh : admin_produk_ambil_semua($q);
 
+$pg = paginasi_hitung(count($daftarProduk), paginasi_halaman_dari_query('hal'), 8);
+$daftarProdukHal = paginasi_potong($daftarProduk, $pg);
+$pg_url = paginasi_pembuat_url(aplikasi_url('admin/produk_admin.php'), $q !== '' ? ['q' => $q] : [], 'hal');
+
 $total_sku = count($daftar_utuh);
 $siap_hit = 0;
 
@@ -208,6 +213,12 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
                 Pengguna
+            </a>
+            <a class="admin-nav__tautan" href="laporan_admin.php">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                </svg>
+                Laporan
             </a>
             <a class="admin-nav__tautan" href="pengaturan_admin.php">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
@@ -377,12 +388,13 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
             <section class="admin-bagian-tabel" aria-labelledby="judul-daftar-produk">
                 <div class="admin-panel-produk__judul">
                     <h2 id="judul-daftar-produk" class="admin-panel__judul">Daftar produk</h2>
-                    <form class="admin-cari" method="get">
-                        <input type="search" name="q" placeholder="Cari nama / brand / kategori..." value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>">
+                    <form class="admin-cari" method="get" data-live data-target="#hasil-produk-admin">
+                        <input type="search" name="q" placeholder="Cari nama / brand / kategori..." value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
                         <button type="submit" class="admin-btn admin-btn--sekunder">Cari</button>
                     </form>
                 </div>
 
+                <div id="hasil-produk-admin">
                 <div class="admin-tabel-wrap">
                     <table class="admin-tabel">
                         <thead>
@@ -402,7 +414,7 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                                 <td colspan="7">Belum ada produk atau hasil pencarian kosong.</td>
                             </tr>
                         <?php else: ?>
-                            <?php foreach ($daftarProduk as $p): ?>
+                            <?php foreach ($daftarProdukHal as $p): ?>
                                 <?php
                                 $id = (string) ($p['id_produk'] ?? '');
                                 $nama = (string) ($p['nama_produk'] ?? '');
@@ -430,9 +442,12 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                         </tbody>
                     </table>
                 </div>
+                <?php echo paginasi_render($pg, $pg_url); ?>
+                </div>
             </section>
         </main>
     </div>
 </div>
+<script src="../assets/js/pencarian-langsung.js" defer></script>
 </body>
 </html>

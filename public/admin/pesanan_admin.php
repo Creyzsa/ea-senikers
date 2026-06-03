@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
+require_once __DIR__ . '/../../includes/paginasi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
@@ -47,6 +48,17 @@ if ($filter_raw !== '' && $filter_raw !== 'all' && $filter_raw !== 'semua') {
 }
 
 $pesanan = pesanan_admin_daftar_berfilter($filter_status_kunci !== '' ? $filter_status_kunci : null, $query);
+
+$pg_params = [];
+if ($query !== '') {
+    $pg_params['q'] = $query;
+}
+if ($filter_status_kunci !== '') {
+    $pg_params['status'] = $filter_status_kunci;
+}
+$pg = paginasi_hitung(count($pesanan), paginasi_halaman_dari_query('hal'), 10);
+$pesananHal = paginasi_potong($pesanan, $pg);
+$pg_url = paginasi_pembuat_url(aplikasi_url('admin/pesanan_admin.php'), $pg_params, 'hal');
 
 $flash = $_SESSION['flash_pesanan'] ?? null;
 $flash_error = $_SESSION['flash_pesanan_error'] ?? null;
@@ -113,6 +125,12 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
                     </svg>
                     Pengguna
                 </a>
+                <a class="admin-nav__tautan" href="laporan_admin.php">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                    </svg>
+                    Laporan
+                </a>
                 <a class="admin-nav__tautan" href="pengaturan_admin.php">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -171,17 +189,18 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
                 <section class="admin-kartu" aria-labelledby="judul-daftar-pesanan">
                     <div class="admin-kartu__header">
                         <h2 id="judul-daftar-pesanan">Daftar pesanan</h2>
-                        <form method="get" class="admin-cari">
+                        <form method="get" class="admin-cari" data-live data-target="#hasil-pesanan-admin">
                             <?php if ($filter_status_kunci !== ''): ?>
                                 <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status_kunci, ENT_QUOTES, 'UTF-8'); ?>">
                             <?php endif; ?>
-                            <input type="search" name="q" value="<?php echo htmlspecialchars($query, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari nama, email, atau nomor pesanan…" aria-label="Cari pesanan">
+                            <input type="search" name="q" value="<?php echo htmlspecialchars($query, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari nama, email, atau nomor pesanan…" aria-label="Cari pesanan" autocomplete="off">
                             <button type="submit" class="admin-btn admin-btn--sekunder">Cari</button>
                             <?php if ($query !== '' || $filter_status_kunci !== ''): ?>
                                 <a href="<?php echo htmlspecialchars(aplikasi_url('admin/pesanan_admin.php'), ENT_QUOTES, 'UTF-8'); ?>" class="admin-btn admin-btn--sekunder">Reset</a>
                             <?php endif; ?>
                         </form>
                     </div>
+                    <div id="hasil-pesanan-admin">
                     <div class="admin-tabel-wrap">
                         <table class="admin-tabel">
                             <thead>
@@ -200,7 +219,7 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
                                         <td colspan="6">Tidak ada pesanan yang cocok dengan filter atau pencarian.</td>
                                     </tr>
                                 <?php else: ?>
-                                    <?php foreach ($pesanan as $p): ?>
+                                    <?php foreach ($pesananHal as $p): ?>
                                         <?php
                                         $st = (string) ($p['status'] ?? '');
                                         $badgeClass = $badge_kelas[$st] ?? 'pesanan-badge pesanan-badge--kuning';
@@ -237,10 +256,12 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
                             </tbody>
                         </table>
                     </div>
+                    <?php echo paginasi_render($pg, $pg_url); ?>
+                    </div>
                 </section>
             </main>
         </div>
     </div>
-
+<script src="../assets/js/pencarian-langsung.js" defer></script>
 </body>
 </html>

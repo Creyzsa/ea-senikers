@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/admin_pengguna_repositori.php';
+require_once __DIR__ . '/../../includes/paginasi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'admin') {
@@ -18,6 +19,10 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
 $q_nilai = trim((string) ($_GET['q'] ?? ''));
 
 $rows = admin_pengguna_ambil_daftar($q_nilai === '' ? null : $q_nilai);
+
+$pg = paginasi_hitung(count($rows), paginasi_halaman_dari_query('hal'), 10);
+$rowsHal = paginasi_potong($rows, $pg);
+$pg_url = paginasi_pembuat_url(aplikasi_url('admin/pengguna_admin.php'), $q_nilai !== '' ? ['q' => $q_nilai] : [], 'hal');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -60,6 +65,12 @@ $rows = admin_pengguna_ambil_daftar($q_nilai === '' ? null : $q_nilai);
                     </svg>
                     Pengguna
                 </a>
+                <a class="admin-nav__tautan" href="laporan_admin.php">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                    </svg>
+                    Laporan
+                </a>
                 <a class="admin-nav__tautan" href="pengaturan_admin.php">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -96,14 +107,15 @@ $rows = admin_pengguna_ambil_daftar($q_nilai === '' ? null : $q_nilai);
                 <section class="admin-kartu" aria-labelledby="judul-pengguna">
                     <div class="admin-kartu__header">
                         <h2 id="judul-pengguna">Daftar pengguna</h2>
-                        <form method="get" class="admin-cari" action="">
-                            <input type="search" name="q" value="<?php echo htmlspecialchars($q_nilai, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Filter nama atau email..." aria-label="Cari pengguna">
+                        <form method="get" class="admin-cari" action="" data-live data-target="#hasil-pengguna">
+                            <input type="search" name="q" value="<?php echo htmlspecialchars($q_nilai, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Filter nama atau email..." aria-label="Cari pengguna" autocomplete="off">
                             <button type="submit" class="admin-btn admin-btn--sekunder">Cari</button>
                             <?php if ($q_nilai !== ''): ?>
                                 <a href="pengguna_admin.php" class="admin-btn admin-btn--sekunder">Reset</a>
                             <?php endif; ?>
                         </form>
                     </div>
+                    <div id="hasil-pengguna">
                     <div class="admin-tabel-wrap">
                         <table class="admin-tabel">
                             <thead>
@@ -121,7 +133,7 @@ $rows = admin_pengguna_ambil_daftar($q_nilai === '' ? null : $q_nilai);
                                         <td colspan="5">Tidak ada baris atau pencarian tidak cocok dengan data aktual.</td>
                                     </tr>
                                 <?php else: ?>
-                                    <?php foreach ($rows as $__u): ?>
+                                    <?php foreach ($rowsHal as $__u): ?>
                                         <?php
                                         $role = strtolower((string) ($__u['role'] ?? 'pembeli'));
                                         $lencana = $role === 'admin' ? 'role-lencana role-lencana--admin' : 'role-lencana';
@@ -139,10 +151,12 @@ $rows = admin_pengguna_ambil_daftar($q_nilai === '' ? null : $q_nilai);
                             </tbody>
                         </table>
                     </div>
+                    <?php echo paginasi_render($pg, $pg_url); ?>
+                    </div>
                 </section>
             </main>
         </div>
     </div>
-
+<script src="../assets/js/pencarian-langsung.js" defer></script>
 </body>
 </html>

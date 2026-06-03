@@ -79,3 +79,60 @@
     --adm-sidebar-w: 260px;
     --adm-trans: 0.2s ease;
 }
+
+/* Paginasi — komponen daftar bersama (admin & toko) */
+.paginasi {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    margin: 1.25rem 0 0.25rem;
+}
+
+.paginasi__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    padding: 0 0.6rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--teks-utama);
+    text-decoration: none;
+    background: #fff;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 8px;
+    transition: var(--transisi-cepat);
+}
+
+.paginasi__item:hover {
+    border-color: var(--oranye-cta);
+    color: var(--oranye-cta-hover);
+}
+
+.paginasi__item--aktif,
+.paginasi__item--aktif:hover {
+    background: var(--biru-tombol);
+    border-color: var(--biru-tombol);
+    color: #fff;
+    cursor: default;
+}
+
+.paginasi__item--mati {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.paginasi__elipsis {
+    padding: 0 0.25rem;
+    color: var(--teks-redup);
+}
+
+/* Indikator memuat saat pencarian langsung mengganti isi daftar */
+[aria-busy="true"] {
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity var(--transisi-cepat);
+}

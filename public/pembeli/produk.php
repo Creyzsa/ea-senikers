@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
+require_once __DIR__ . '/../../includes/paginasi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {
@@ -41,11 +42,6 @@ natcasesort($opsi_kondisi);
 $opsi_brand = array_values($opsi_brand);
 $opsi_kondisi = array_values($opsi_kondisi);
 
-function produk_teks_kecil(string $teks): string
-{
-    return function_exists('mb_strtolower') ? mb_strtolower($teks, 'UTF-8') : strtolower($teks);
-}
-
 $daftar_tersaring = array_values(array_filter($daftar_produk, static function (array $produk) use ($q, $brand_filter, $kondisi_filter): bool {
     $nama = (string) ($produk['nama_produk'] ?? '');
     $brand = (string) ($produk['brand'] ?? '');
@@ -57,12 +53,8 @@ $daftar_tersaring = array_values(array_filter($daftar_produk, static function (a
     if ($kondisi_filter !== '' && strcasecmp($kondisi, $kondisi_filter) !== 0) {
         return false;
     }
-    if ($q !== '') {
-        $haystack = produk_teks_kecil($nama . ' ' . $brand . ' ' . $kondisi);
-        $needle = produk_teks_kecil($q);
-        if (strpos($haystack, $needle) === false) {
-            return false;
-        }
+    if ($q !== '' && !katalog_teks_cocok($nama . ' ' . $brand . ' ' . $kondisi, $q)) {
+        return false;
     }
 
     return true;
@@ -93,6 +85,16 @@ function produk_url_filter(array $params): string
 $total_produk = count($daftar_produk);
 $total_tersaring = count($daftar_tersaring);
 $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($kondisi_filter !== '' ? 1 : 0);
+
+$pg_params = [];
+foreach (['q' => $q, 'brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'sort' => $sort] as $pg_k => $pg_v) {
+    if (trim((string) $pg_v) !== '') {
+        $pg_params[$pg_k] = $pg_v;
+    }
+}
+$pg = paginasi_hitung($total_tersaring, paginasi_halaman_dari_query('hal'), 12);
+$daftar_tersaring_hal = paginasi_potong($daftar_tersaring, $pg);
+$pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/produk.php'), $pg_params, 'hal');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -131,10 +133,10 @@ $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($
             </div>
         </section>
 
-        <form class="katalog-filter" method="get" action="<?php echo htmlspecialchars(aplikasi_url('pembeli/produk.php'), ENT_QUOTES, 'UTF-8'); ?>">
+        <form class="katalog-filter" method="get" action="<?php echo htmlspecialchars(aplikasi_url('pembeli/produk.php'), ENT_QUOTES, 'UTF-8'); ?>" data-live data-target="#hasil-katalog">
             <label class="katalog-filter__cari">
                 <span>Cari produk</span>
-                <input type="search" name="q" value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Nike, Vans, Air Max...">
+                <input type="search" name="q" value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Nike, Vans, Air Max..." autocomplete="off">
             </label>
             <label>
                 <span>Merek</span>
@@ -169,6 +171,7 @@ $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($
             </div>
         </form>
 
+        <div id="hasil-katalog">
         <?php if ($daftar_produk === []): ?>
             <div class="katalog-kosong">
                 <strong>Katalog kosong atau tidak dapat dimuat.</strong>
@@ -185,7 +188,7 @@ $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($
             </div>
         <?php else: ?>
             <div class="katalog-hasil-bar">
-                <p>Menampilkan <strong><?php echo (string) $total_tersaring; ?></strong> dari <?php echo (string) $total_produk; ?> produk.</p>
+                <p>Menampilkan <strong><?php echo (string) $pg['dari']; ?>&ndash;<?php echo (string) $pg['sampai']; ?></strong> dari <?php echo (string) $total_tersaring; ?> produk.</p>
                 <div class="katalog-chip-row" aria-label="Filter aktif">
                     <?php if ($q !== ''): ?>
                         <a href="<?php echo htmlspecialchars(produk_url_filter(['brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Cari: <?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?></a>
@@ -199,7 +202,7 @@ $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($
                 </div>
             </div>
             <div class="katalog-grid">
-                <?php foreach ($daftar_tersaring as $p):
+                <?php foreach ($daftar_tersaring_hal as $p):
                     $id = (string) ($p['id_produk'] ?? '');
                     $nama = (string) ($p['nama_produk'] ?? '');
                     $brand = (string) ($p['brand'] ?? '');
@@ -227,13 +230,15 @@ $jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($
                 </a>
                 <?php endforeach; ?>
             </div>
+            <?php echo paginasi_render($pg, $pg_url); ?>
         <?php endif; ?>
+        </div>
 
         <p class="katalog-kembali">
             <a href="<?php echo htmlspecialchars($u_beranda, ENT_QUOTES, 'UTF-8'); ?>">&larr; Beranda</a>
         </p>
     </div>
 </div>
-
+<script src="../assets/js/pencarian-langsung.js" defer></script>
 </body>
 </html>

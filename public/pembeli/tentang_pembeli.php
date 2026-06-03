@@ -74,47 +74,6 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
             </div>
         </section>
 
-        <section class="tentang-section" aria-labelledby="judul-tips">
-            <div class="section-heading">
-                <div>
-                    <p class="section-eyebrow">Panduan</p>
-                    <h2 id="judul-tips">Tips merawat sneakers agar awet</h2>
-                </div>
-            </div>
-            <div class="tentang-tips-grid">
-                <article class="tentang-tips-card">
-                    <span class="tentang-tips-card__nomor">01</span>
-                    <h3>Kenali bahan sepatu</h3>
-                    <p>Kanvas, kulit sintetis, suede, dan mesh butuh perawatan berbeda. Kenali bahannya dulu sebelum membersihkan agar tidak salah cara.</p>
-                </article>
-                <article class="tentang-tips-card">
-                    <span class="tentang-tips-card__nomor">02</span>
-                    <h3>Bersihkan langsung saat kena noda</h3>
-                    <p>Pakai kain microfiber lembap untuk noda baru — jangan tunggu mengering. Noda yang dibiarkan semalam jadi jauh lebih sulit hilang.</p>
-                </article>
-                <article class="tentang-tips-card">
-                    <span class="tentang-tips-card__nomor">03</span>
-                    <h3>Lepas tali sebelum dicuci</h3>
-                    <p>Tali sepatu biasanya beda bahan dari upper, jadi pisahkan saat mencuci. Sikat kering dulu kotoran kasarnya, baru cuci bagian sepatu.</p>
-                </article>
-                <article class="tentang-tips-card">
-                    <span class="tentang-tips-card__nomor">04</span>
-                    <h3>Hindari mesin cuci</h3>
-                    <p>Putaran mesin cuci bisa merusak bentuk sol dan melepas lem perekat. Cuci manual dengan sikat halus jauh lebih aman untuk struktur sepatu.</p>
-                </article>
-                <article class="tentang-tips-card">
-                    <span class="tentang-tips-card__nomor">05</span>
-                    <h3>Jangan jemur langsung di matahari</h3>
-                    <p>Sinar UV bikin warna pudar dan bahan jadi getas. Angin-anginkan di tempat teduh dengan sirkulasi udara baik.</p>
-                </article>
-                <article class="tentang-tips-card">
-                    <span class="tentang-tips-card__nomor">06</span>
-                    <h3>Simpan di tempat sejuk &amp; kering</h3>
-                    <p>Hindari menumpuk sepatu. Pakai rak khusus, tambahkan silica gel di dalamnya untuk mencegah jamur saat musim hujan.</p>
-                </article>
-            </div>
-        </section>
-
         <section class="tentang-section tentang-dua-kolom" aria-labelledby="judul-sosial">
             <div class="tentang-panel">
                 <p class="section-eyebrow">Sosial media</p>

@@ -17,6 +17,7 @@ if ($nama_sapa === '') {
 
 $bilah_pembeli_aktif = 'beranda';
 $tautan_produk = aplikasi_url('pembeli/produk.php');
+$u_artikel_rawat = aplikasi_url('pembeli/cara_membersihkan_sepatu.php');
 $logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
 $merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
@@ -161,6 +162,20 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                 <p class="beranda-toko__footer-tagline">Belanja sepatu nyaman dan terpercaya.</p>
             </div>
             <div class="beranda-toko__footer-kolom">
+                <h2 class="beranda-toko__footer-judul">Tips &amp; Panduan</h2>
+                <ul class="beranda-toko__footer-list beranda-toko__footer-list--ikon">
+                    <li>
+                        <a href="<?php echo htmlspecialchars($u_artikel_rawat, ENT_QUOTES, 'UTF-8'); ?>">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                            </svg>
+                            Cara membersihkan sepatu
+                        </a>
+                    </li>
+                </ul>
+                <p class="beranda-toko__footer-keterangan">Rawat sneakers biar awet &amp; tetap kinclong.</p>
+            </div>
+            <div class="beranda-toko__footer-kolom">
                 <h2 class="beranda-toko__footer-judul">Lokasi toko (offline)</h2>
                 <a class="beranda-toko__tautan-cta" href="<?php echo htmlspecialchars((string) $kontak_toko['url_peta'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">
                     Buka di Google Maps
@@ -186,9 +201,8 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                     </li>
                     <?php endforeach; ?>
                 </ul>
-            </div>
-            <div class="beranda-toko__footer-kolom">
-                <h2 class="beranda-toko__footer-judul">Sosial media</h2>
+
+                <h2 class="beranda-toko__footer-judul beranda-toko__footer-judul--lanjut">Sosial media</h2>
                 <ul class="beranda-toko__footer-list">
                     <li>
                         <a href="<?php echo htmlspecialchars($u_ig, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">Instagram @<?php echo htmlspecialchars((string) ($kontak_toko['sosial']['instagram'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></a>

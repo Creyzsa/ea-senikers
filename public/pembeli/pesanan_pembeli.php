@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
 require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
+require_once __DIR__ . '/../../includes/paginasi.php';
 
 wajib_sudah_masuk();
 if (ambil_peran() !== 'pembeli') {
@@ -37,6 +38,10 @@ $jumlah_pesanan = count($daftar);
 $daftar_tampil = $filter_status === ''
     ? $daftar
     : array_values(array_filter($daftar, static fn (array $order): bool => (string) ($order['status'] ?? 'pending') === $filter_status));
+
+$pg = paginasi_hitung(count($daftar_tampil), paginasi_halaman_dari_query('hal'), 8);
+$daftar_tampil_hal = paginasi_potong($daftar_tampil, $pg);
+$pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/pesanan_pembeli.php'), $filter_status !== '' ? ['status' => $filter_status] : [], 'hal');
 
 function pesanan_format_tanggal(?string $iso): string
 {
@@ -120,7 +125,7 @@ $u_produk = aplikasi_url('pembeli/produk.php');
         </div>
     <?php elseif ($tabel_ada && $id_pengguna > 0): ?>
         <div class="pesanan-grid">
-            <?php foreach ($daftar_tampil as $order): ?>
+            <?php foreach ($daftar_tampil_hal as $order): ?>
                 <?php
                 $items = $order['items'] ?? [];
                 $first = is_array($items) && $items !== [] ? $items[0] : null;
@@ -157,6 +162,7 @@ $u_produk = aplikasi_url('pembeli/produk.php');
                 </article>
             <?php endforeach; ?>
         </div>
+        <?php echo paginasi_render($pg, $pg_url); ?>
     <?php endif; ?>
 </main>
 
