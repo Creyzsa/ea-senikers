@@ -263,3 +263,63 @@ Integrasi pengiriman & pembayaran:
 ## Lisensi
 
 Project tugas perkuliahan. Tidak untuk distribusi komersial tanpa izin tim pengembang.
+
+---
+
+## Deployment ke Vercel (Serverless PHP)
+
+**Catatan penting:** Vercel adalah platform serverless yang bagus untuk frontend. Untuk aplikasi PHP tradisional seperti ini, dukungannya terbatas dan **membutuhkan penyesuaian**.
+
+Kami sudah menambahkan:
+- `vercel.json` — konfigurasi dengan PHP runtime (`vercel-php`).
+- `api/index.php` — front controller sederhana yang mencoba merutekan request ke file-file di `public/`.
+
+### Langkah Deploy ke Vercel
+
+1. Buka [vercel.com](https://vercel.com), login dengan GitHub.
+2. **Add New Project** → Import Git Repository → pilih repo `ea-senikers` (branch `main`).
+3. Vercel akan detect. Biarkan default.
+4. Klik **Deploy**.
+
+Setelah deploy pertama berhasil (mungkin butuh beberapa menit untuk build PHP runtime):
+
+5. Buka project di Vercel Dashboard → **Settings** → **Domains**.
+6. Tambahkan `easenikers.shop`.
+7. Vercel akan kasih instruksi DNS yang harus ditambahkan di Hostinger DNS.
+
+### Langkah DNS di Hostinger (https://hpanel.hostinger.com/domain/easenikers.shop/dns)
+
+**Pertama, bersihkan GitHub:**
+- Hapus 4 record **A**:
+  - 185.199.108.153
+  - 185.199.109.153
+  - 185.199.110.153
+  - 185.199.111.153
+- Hapus CNAME yang mengarah ke GitHub jika ada.
+
+**Kemudian tambahkan record dari Vercel** (biasanya):
+- Untuk apex domain (`easenikers.shop`): tambahkan A records ke IP Vercel (Vercel akan kasih).
+- Untuk `www`: CNAME ke `cname.vercel-dns.com` atau sesuai instruksi.
+
+Atau gunakan nameservers Vercel jika Hostinger mendukung (lebih mudah untuk apex).
+
+Tunggu propagasi DNS.
+
+### Keterbatasan & Penyesuaian yang Mungkin Dibutuhkan
+
+- **File Upload (gambar produk, laporan)**: Tidak bisa simpan permanen di disk Vercel (serverless). 
+  Solusi: Ubah kode upload agar pakai **Supabase Storage** (bukan local folder `assets/images/`).
+- **Path & Includes**: Front controller `api/index.php` mencoba emulate, tapi beberapa halaman mungkin butuh fix path (`__DIR__`, relative assets).
+- **Session & State**: Harusnya kerja, tapi test login, keranjang, dll.
+- **Static Assets**: Sudah di-route di vercel.json untuk css/js/gambar.
+
+Jika banyak error setelah deploy:
+- Cek Logs di Vercel dashboard.
+- Mungkin perlu edit `api/index.php` atau beberapa file PHP untuk menyesuaikan `$_SERVER['DOCUMENT_ROOT']` dan path.
+- Untuk production yang lebih stabil, pertimbangkan Hostinger, Railway, atau Render daripada Vercel untuk app PHP full ini.
+
+Setelah domain terhubung dan DNS propagate, buka https://easenikers.shop — harusnya tidak lagi menampilkan README GitHub.
+
+Test fitur utama (login, katalog, admin jika sudah setup user admin di Supabase).
+
+Jika butuh bantuan lebih lanjut untuk fix path atau upload, kasih tau error yang muncul di Vercel logs.
