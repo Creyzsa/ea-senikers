@@ -4,13 +4,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 
-wajib_sudah_masuk();
-if (ambil_peran() !== 'pembeli') {
-    header('HTTP/1.1 403 Forbidden');
-    echo 'Halaman ini khusus pembeli.';
-    exit;
-}
-
 $bilah_pembeli_aktif = 'kategori';
 $u_produk = aplikasi_url('pembeli/produk.php');
 $daftar_produk = katalog_ambil_semua_produk();

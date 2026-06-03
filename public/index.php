@@ -1,12 +1,12 @@
 <?php
 require_once __DIR__ . '/../includes/auth_db/sesi.php';
 
-if (sudah_masuk()) {
-    if (ambil_peran() === 'admin') {
-        header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
-    } else {
-        header('Location: ' . aplikasi_url('pembeli/beranda_pembeli.php'));
-    }
+/**
+ * Default homepage sekarang adalah beranda pembeli (bisa dilihat tanpa login).
+ * Login hanya diperlukan saat mau beli (keranjang/checkout) atau akses akun/pesanan.
+ */
+if (sudah_masuk() && ambil_peran() === 'admin') {
+    header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
     exit;
 }
 
@@ -18,7 +18,7 @@ if (sudah_masuk()) {
  * redirect_to hanya ke .../public jika URL callback penuh belum ada di Redirect URLs).
  */
 $tujuan_konfirmasi = aplikasi_url('login/konfirmasi_email.php');
-$tujuan_masuk = aplikasi_url('login/masuk.php');
+$tujuan_beranda = aplikasi_url('pembeli/beranda_pembeli.php');
 header('Content-Type: text/html; charset=UTF-8');
 ?>
 <!DOCTYPE html>
@@ -29,7 +29,7 @@ header('Content-Type: text/html; charset=UTF-8');
     <title>Mengalihkan…</title>
 </head>
 <body style="font-family:system-ui,sans-serif;margin:2rem;text-align:center;color:#333">
-    <p>Mengalihkan…</p>
+    <p>Mengalihkan ke beranda…</p>
     <script>
     (function () {
         var h = window.location.hash || '';
@@ -40,11 +40,11 @@ header('Content-Type: text/html; charset=UTF-8');
             window.location.replace(<?php echo json_encode($tujuan_konfirmasi, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?> + s + h);
             return;
         }
-        window.location.replace(<?php echo json_encode($tujuan_masuk, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?>);
+        window.location.replace(<?php echo json_encode($tujuan_beranda, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?>);
     })();
     </script>
     <noscript>
-        <p>Aktifkan JavaScript, atau buka <a href="<?php echo htmlspecialchars($tujuan_masuk, ENT_QUOTES, 'UTF-8'); ?>">halaman masuk</a>
+        <p>Aktifkan JavaScript, atau buka <a href="<?php echo htmlspecialchars($tujuan_beranda, ENT_QUOTES, 'UTF-8'); ?>">beranda pembeli</a>
         <?php if ($tujuan_konfirmasi !== ''): ?> / <a href="<?php echo htmlspecialchars($tujuan_konfirmasi, ENT_QUOTES, 'UTF-8'); ?>">konfirmasi email</a><?php endif; ?>.</p>
     </noscript>
 </body>

@@ -7,12 +7,15 @@
  */
 require_once __DIR__ . '/url_bantu.php';
 require_once __DIR__ . '/keranjang_sesi.php';
+require_once __DIR__ . '/auth_db/sesi.php';
 
 $bp_aktif = isset($bilah_pembeli_aktif) ? (string) $bilah_pembeli_aktif : 'beranda';
 $bp_kj = isset($bilah_keranjang_jumlah) ? (int) $bilah_keranjang_jumlah : keranjang_hitung_jumlah_item();
 if ($bp_kj < 0) {
     $bp_kj = 0;
 }
+
+$sudah_login = sudah_masuk();
 
 $u_logo = aplikasi_url('assets/images/logo-easenikers.svg');
 $u_beranda = aplikasi_url('pembeli/beranda_pembeli.php');
@@ -22,6 +25,7 @@ $u_pesanan = aplikasi_url('pembeli/pesanan_pembeli.php');
 $u_tentang = aplikasi_url('pembeli/tentang_pembeli.php');
 $u_keranjang = aplikasi_url('pembeli/keranjang_pembeli.php');
 $u_akun = aplikasi_url('pembeli/akun_pembeli.php');
+$u_masuk = aplikasi_url('login/masuk.php');
 $u_keluar = aplikasi_url('login/keluar.php');
 ?>
     <header class="bilah-toko">
@@ -44,20 +48,24 @@ $u_keluar = aplikasi_url('login/keluar.php');
             <?php else: ?>
                 <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_kategori, ENT_QUOTES, 'UTF-8'); ?>">Kategori</a>
             <?php endif; ?>
-            <?php if ($bp_aktif === 'pesanan'): ?>
-                <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Pesanan</span>
-            <?php else: ?>
-                <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_pesanan, ENT_QUOTES, 'UTF-8'); ?>">Pesanan</a>
+            <?php if ($sudah_login): ?>
+                <?php if ($bp_aktif === 'pesanan'): ?>
+                    <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Pesanan</span>
+                <?php else: ?>
+                    <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_pesanan, ENT_QUOTES, 'UTF-8'); ?>">Pesanan</a>
+                <?php endif; ?>
             <?php endif; ?>
             <?php if ($bp_aktif === 'tentang'): ?>
                 <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Tentang</span>
             <?php else: ?>
                 <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_tentang, ENT_QUOTES, 'UTF-8'); ?>">Tentang</a>
             <?php endif; ?>
-            <?php if ($bp_aktif === 'akun'): ?>
-                <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Akun</span>
-            <?php else: ?>
-                <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_akun, ENT_QUOTES, 'UTF-8'); ?>">Akun</a>
+            <?php if ($sudah_login): ?>
+                <?php if ($bp_aktif === 'akun'): ?>
+                    <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Akun</span>
+                <?php else: ?>
+                    <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_akun, ENT_QUOTES, 'UTF-8'); ?>">Akun</a>
+                <?php endif; ?>
             <?php endif; ?>
         </nav>
         <div class="bilah-toko__aksi">
@@ -68,6 +76,10 @@ $u_keluar = aplikasi_url('login/keluar.php');
                 </svg>
                 Keranjang (<?php echo $bp_kj > 99 ? '99+' : (string) (int) $bp_kj; ?>)
             </a>
-            <a class="tautan-keluar-kecil" href="<?php echo htmlspecialchars($u_keluar, ENT_QUOTES, 'UTF-8'); ?>">Keluar</a>
+            <?php if ($sudah_login): ?>
+                <a class="tautan-keluar-kecil" href="<?php echo htmlspecialchars($u_keluar, ENT_QUOTES, 'UTF-8'); ?>">Keluar</a>
+            <?php else: ?>
+                <a class="tautan-keluar-kecil" href="<?php echo htmlspecialchars($u_masuk, ENT_QUOTES, 'UTF-8'); ?>">Masuk</a>
+            <?php endif; ?>
         </div>
     </header>

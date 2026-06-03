@@ -2,13 +2,6 @@
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 
-wajib_sudah_masuk();
-if (ambil_peran() !== 'pembeli') {
-    header('HTTP/1.1 403 Forbidden');
-    echo 'Halaman ini khusus pembeli.';
-    exit;
-}
-
 $flash_keranjang_error = $_SESSION['flash_keranjang_error'] ?? null;
 if ($flash_keranjang_error !== null) {
     unset($_SESSION['flash_keranjang_error']);

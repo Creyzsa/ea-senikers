@@ -3,16 +3,10 @@ require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
 
-wajib_sudah_masuk();
-if (ambil_peran() !== 'pembeli') {
-    header('HTTP/1.1 403 Forbidden');
-    echo 'Halaman ini khusus pembeli.';
-    exit;
-}
-
 $nama_sapa = trim((string) ($_SESSION['nama_pengguna'] ?? ''));
+$sudah_login_untuk_sapa = sudah_masuk();
 if ($nama_sapa === '') {
-    $nama_sapa = 'Pembeli';
+    $nama_sapa = 'Pengunjung';
 }
 
 $bilah_pembeli_aktif = 'beranda';
@@ -59,7 +53,11 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                 </p>
                 <p class="hero-toko__meta"><?php echo htmlspecialchars($merek_ringkas['hero_meta_satu_baris'], ENT_QUOTES, 'UTF-8'); ?></p>
                 <h1 id="hero-judul" class="hero-toko__judul"><?php echo htmlspecialchars($merek_ringkas['hero_judul'], ENT_QUOTES, 'UTF-8'); ?></h1>
+                <?php if ($sudah_login_untuk_sapa): ?>
                 <p class="hero-toko__sapa">Halo, <span class="hero-toko__nama"><?php echo htmlspecialchars($nama_sapa, ENT_QUOTES, 'UTF-8'); ?></span> - <span class="hero-toko__nama-merek">EA SENIKERS</span></p>
+                <?php else: ?>
+                <p class="hero-toko__sapa">Selamat datang di <span class="hero-toko__nama-merek">EA SENIKERS</span></p>
+                <?php endif; ?>
                 <p class="hero-toko__sub"><?php echo htmlspecialchars($merek_ringkas['hero_sub_bullet'], ENT_QUOTES, 'UTF-8'); ?></p>
                 <div class="hero-toko__aksi">
                     <a class="tombol-oranye-besar hero-toko__cta" href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($merek_ringkas['hero_teks_tombol'], ENT_QUOTES, 'UTF-8'); ?></a>
