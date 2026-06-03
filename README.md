@@ -282,14 +282,18 @@ Kami sudah menambahkan:
    - **Leave default** (atau pilih **"Other"**).
    - **JANGAN** pilih Next.js, Vite, Create React App, atau framework JS lainnya.
    - Karena kita pakai `vercel.json` dengan `"framework": null` dan PHP runtime, "Other" / default adalah yang benar.
-4. Biarkan Build Command dan Output Directory kosong/default.
-5. Klik **Deploy**.
+4. **Root Directory** (folder root project):
+   - **Leave as default** (kosong / `.` / repo root).
+   - **JANGAN** ubah ke `public`.
+   - Alasan: `vercel.json` dan `api/` ada di root repo, bukan di dalam `public/`.
+5. Biarkan Build Command dan Output Directory kosong/default.
+6. Klik **Deploy**.
 
 Setelah deploy pertama berhasil (mungkin butuh beberapa menit untuk build PHP runtime):
 
-5. Buka project di Vercel Dashboard → **Settings** → **Domains**.
-6. Tambahkan `easenikers.shop`.
-7. Vercel akan kasih instruksi DNS yang harus ditambahkan di Hostinger DNS.
+7. Buka project di Vercel Dashboard → **Settings** → **Domains**.
+8. Tambahkan `easenikers.shop`.
+9. Vercel akan kasih instruksi DNS yang harus ditambahkan di Hostinger DNS.
 
 ### Langkah DNS di Hostinger (https://hpanel.hostinger.com/domain/easenikers.shop/dns)
 
