@@ -120,7 +120,7 @@ function rajaongkir_request(string $metode, string $path, array $body = []): arr
     $raw = curl_exec($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $err_curl = (string) curl_error($ch);
-    curl_close($ch);
+    // curl_close() removed: deprecated and no-op since PHP 8.0 (handles are auto-closed)
 
     $raw_str = is_string($raw) ? $raw : '';
 

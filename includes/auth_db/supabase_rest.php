@@ -87,7 +87,7 @@ function supabase_rest_request(string $metode, string $path_rel, array $query = 
     $curl_errno = (int) curl_errno($ch);
     $curl_error = (string) curl_error($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    // curl_close() removed: deprecated and no-op since PHP 8.0 (handles are auto-closed)
 
     $raw = is_string($eksekusi) ? $eksekusi : '';
     $data = null;

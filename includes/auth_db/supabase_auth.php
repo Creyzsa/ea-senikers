@@ -86,7 +86,7 @@ function supabase_auth_request(
     $curl_errno = (int) curl_errno($ch);
     $curl_error = (string) curl_error($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    // curl_close() removed: deprecated and no-op since PHP 8.0 (handles are auto-closed)
 
     $raw = is_string($eksekusi) ? $eksekusi : '';
     $data = null;
@@ -419,7 +419,7 @@ function supabase_auth_ambil_user_dengan_token(string $access_token_pengguna): ?
     curl_setopt_array($ch, $opsi);
     $raw = curl_exec($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    // curl_close() removed: deprecated and no-op since PHP 8.0 (handles are auto-closed)
 
     if ($http !== 200 || !is_string($raw) || $raw === '') {
         return null;
@@ -470,7 +470,7 @@ function supabase_auth_perbarui_kata_sandi(string $access_token_pengguna, string
     curl_setopt_array($ch, $opsi);
     $raw = curl_exec($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    // curl_close() removed: deprecated and no-op since PHP 8.0 (handles are auto-closed)
 
     $data = null;
     if (is_string($raw) && $raw !== '') {
