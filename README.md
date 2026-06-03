@@ -287,7 +287,21 @@ Kami sudah menambahkan:
    - **JANGAN** ubah ke `public`.
    - Alasan: `vercel.json` dan `api/` ada di root repo, bukan di dalam `public/`.
 5. Biarkan Build Command dan Output Directory kosong/default.
-6. Klik **Deploy**.
+6. **IMPORTANT for secrets (config):** 
+   - Do NOT commit real config.php (it's gitignored).
+   - Before or after first deploy, go to Vercel Project → **Settings** → **Environment Variables**
+   - Add these (copy values from your local config.php or config.example.php):
+     - DB_HOST
+     - DB_PORT=5432
+     - DB_NAME=postgres
+     - DB_USER
+     - DB_PASS
+     - SUPABASE_URL
+     - SUPABASE_ANON_KEY
+     - URL_APLIKASI=https://your-vercel-domain.vercel.app   (or your custom domain later)
+     - (optional) PAYMENT_CALLBACK_SECRET, EMAIL_DRIVER, EMAIL_PENGIRIM
+   - Redeploy after adding env vars.
+7. Klik **Deploy**.
 
 Setelah deploy pertama berhasil (mungkin butuh beberapa menit untuk build PHP runtime):
 

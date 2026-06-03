@@ -4,7 +4,7 @@
  * Dokumentasi: https://supabase.com/docs/reference/api
  */
 
-require_once __DIR__ . '/../../config.php';
+require_once __DIR__ . '/../config_loader.php';
 
 /**
  * Ambil URL dasar project (tanpa slash di akhir).
