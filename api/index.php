@@ -51,15 +51,16 @@ if ($realTarget === false || strpos($realTarget, $realPublic) !== 0) {
 }
 
 if (file_exists($fullPath)) {
-    // Change working directory so relative includes in the included file work as if public/ is root
+    // Change working directory so relative includes and __DIR__ in the included files work as if public/ is the document root
     chdir($publicRoot);
     
-    // Set some server vars as if public/ is document root
+    // Emulate traditional web server environment variables
     $_SERVER['DOCUMENT_ROOT'] = $publicRoot;
-    $_SERVER['SCRIPT_NAME'] = '/' . $path;
+    $_SERVER['SCRIPT_NAME'] = '/' . ltrim($path, '/');
     $_SERVER['SCRIPT_FILENAME'] = $fullPath;
+    $_SERVER['PHP_SELF'] = '/' . ltrim($path, '/');
     
-    // Include the PHP file (it will output directly)
+    // Include the target PHP file — it will run as if accessed directly from public/
     include $fullPath;
 } else {
     // Try to serve static files if they exist (css, js, images in public/assets etc.)
