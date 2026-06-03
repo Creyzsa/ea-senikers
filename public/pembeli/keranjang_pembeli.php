@@ -118,6 +118,13 @@ $u_produk = aplikasi_url('pembeli/produk.php');
             <div class="keranjang-ringkas">
                 <p class="keranjang-total">Subtotal produk: <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong></p>
                 <p class="keranjang-catatan">Ongkos kirim ditambahkan saat checkout, mengikuti pilihan kurir dan alamat tujuan Anda.</p>
+                <?php if (sudah_masuk()): ?>
+                <p class="keranjang-lanjut">
+                    <a class="tombol-oranye-besar" href="<?php echo htmlspecialchars(aplikasi_url('pembeli/checkout_pembeli.php'), ENT_QUOTES, 'UTF-8'); ?>">Lanjut ke Checkout →</a>
+                </p>
+                <?php else: ?>
+                <p class="keranjang-catatan">Untuk melanjutkan ke checkout, silakan <a href="<?php echo htmlspecialchars(aplikasi_url('login/masuk.php'), ENT_QUOTES, 'UTF-8'); ?>">masuk</a> terlebih dahulu.</p>
+                <?php endif; ?>
                 <p class="keranjang-lanjut">
                     <a class="tautan-balik" href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">← Lanjut belanja</a>
                 </p>
