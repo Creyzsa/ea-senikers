@@ -29,7 +29,12 @@ if (!defined('DB_HOST')) {
         define('SUPABASE_URL', getenv('SUPABASE_URL') ?: '');
         define('SUPABASE_ANON_KEY', getenv('SUPABASE_ANON_KEY') ?: '');
 
-        define('URL_APLIKASI', getenv('URL_APLIKASI') ?: '');
+        $url = getenv('URL_APLIKASI') ?: '';
+        if (empty($url) || strpos($url, 'http://') === 0) {
+            // Always prefer https for this production domain
+            $url = 'https://www.easenikers.shop';
+        }
+        define('URL_APLIKASI', $url);
 
         define('PAYMENT_CALLBACK_SECRET', getenv('PAYMENT_CALLBACK_SECRET') ?: '');
 
