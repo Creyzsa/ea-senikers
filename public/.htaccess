@@ -1,0 +1,53 @@
+# =============================================
+# .htaccess untuk EA SENIKERS di Hostinger
+# Letakkan file ini di dalam folder public/
+# (karena Document Root diarahkan ke public/)
+# =============================================
+
+# Pastikan PHP berjalan dengan baik
+<IfModule mod_php.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 60
+</IfModule>
+
+# Keamanan dasar
+Options -Indexes
+ServerSignature Off
+
+# Blokir akses langsung ke file sensitif (jika ada)
+<FilesMatch "\.(env|log|sql|md|ini)$">
+    Require all denied
+</FilesMatch>
+
+# Blokir akses ke folder includes/ dan database/ dari web (meski seharusnya di luar document root)
+# Ini sebagai lapisan tambahan jika salah atur document root
+RewriteEngine On
+RewriteRule ^(includes|database|config\.php)/ - [F,L]
+
+# Redirect dari www ke non-www (opsional, sesuaikan)
+# RewriteCond %{HTTP_HOST} ^www\.easenikers\.shop [NC]
+# RewriteRule ^(.*)$ https://easenikers.shop/$1 [L,R=301]
+
+# Force HTTPS (Hostinger biasanya sudah handle, tapi aman)
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Caching untuk aset statis (CSS, JS, gambar)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
+# Gzip compression jika tersedia
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript
+</IfModule>
+
+# Custom error pages (opsional)
+# ErrorDocument 404 /404.php

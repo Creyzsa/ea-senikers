@@ -72,7 +72,7 @@ Website e-commerce penjualan sneakers (baru & preloved) berbasis PHP Native dan 
 
 ---
 
-## Cara Menjalankan
+## Cara Menjalankan (Lokal)
 
 ### 1. Clone Repository
 
@@ -84,6 +84,130 @@ cd ea-senikers
 ### 2. Pasang di Laragon / XAMPP
 
 Letakkan folder `ea-senikers` di direktori `www` Laragon (mis. `D:\laragon\www\EASENIKERS`) atau `htdocs` XAMPP. Pastikan Apache & PHP aktif.
+
+---
+
+## Deployment ke Production (Hostinger) — Paling Penting
+
+**JANGAN pakai GitHub Pages** untuk project ini (GitHub Pages tidak bisa jalanin PHP).
+
+### Langkah 1: Siapkan Repo (sudah dilakukan di branch main)
+
+- File `CNAME` sudah dihapus dari repo (supaya GitHub Pages tidak klaim domain).
+- Ada file `config.example.php` sebagai template.
+- Ada `.htaccess` di dalam folder `public/`.
+
+### Langkah 2: Download Kode
+
+1. Di GitHub repo → klik **Code** → **Download ZIP** (pastikan branch **main**).
+2. Extract ZIP.
+
+### Langkah 3: Buat `config.php`
+
+1. Copy `config.example.php` → rename menjadi `config.php`.
+2. Buka `config.php` dan isi dengan data asli dari Supabase kamu.
+3. Ubah baris ini untuk production:
+
+```php
+define('URL_APLIKASI', 'https://easenikers.shop');
+```
+
+**JANGAN upload config.php ke GitHub.**
+
+### Langkah 4: Upload ke Hostinger via File Manager
+
+1. Login hPanel Hostinger.
+2. Buka **File Manager**.
+3. Masuk ke `public_html`.
+4. Buat folder baru: `easenikers` (atau nama lain).
+5. Upload seluruh folder hasil extract ke dalam `public_html/easenikers`.
+6. Extract ZIP tersebut di sana.
+
+Struktur yang benar setelah upload:
+
+```
+public_html/
+└── easenikers/
+    ├── public/               ← ini jadi Document Root
+    │   ├── .htaccess
+    │   ├── index.php
+    │   ├── admin/
+    │   ├── pembeli/
+    │   └── assets/
+    ├── includes/
+    ├── database/
+    ├── config.php            ← file rahasia yang kamu buat
+    └── ...
+```
+
+### Langkah 5: Atur Document Root (SANGAT PENTING)
+
+1. Di hPanel, buka **Hosting** → pilih paket hosting kamu.
+2. Klik **Manage** pada website / domain `easenikers.shop`.
+3. Cari **Document Root** atau **Root Directory**.
+4. Ubah menjadi:
+   ```
+   public_html/easenikers/public
+   ```
+5. Save.
+
+Tunggu 30-60 detik, lalu test buka https://easenikers.shop
+
+### Langkah 6: Atur DNS di Hostinger (https://hpanel.hostinger.com/domain/easenikers.shop/dns)
+
+Karena sebelumnya pakai GitHub Pages, kemungkinan besar DNS masih pakai A record GitHub.
+
+**Yang harus kamu lakukan di tab DNS Records:**
+
+- Hapus / Edit semua record **A** yang nilainya:
+  - 185.199.108.153
+  - 185.199.109.153
+  - 185.199.110.153
+  - 185.199.111.153
+
+- Hapus record **CNAME** yang mengarah ke `*.github.io` (jika ada).
+
+Setelah dihapus:
+
+- Hostinger biasanya otomatis menambahkan record yang benar untuk hosting mereka.
+- Atau kamu bisa klik **"Reset to default"** / **"Default records"** jika tersedia.
+- Pastikan ada record **A** atau **CNAME** yang mengarah ke IP hosting Hostinger kamu (bisa dilihat di detail hosting).
+
+Jika domain belum terhubung ke hosting:
+- Pergi ke **Hosting** → **Websites** → tambahkan / hubungkan domain `easenikers.shop` ke paket hosting.
+
+**Catatan TTL:** Perubahan DNS bisa butuh 5 menit sampai 4 jam untuk propagate.
+
+### Langkah 7: Jalankan Migration SQL
+
+Buka Supabase → SQL Editor, jalankan semua file di `database/migrations/` (termasuk `tahap3_laporan_masalah.sql`).
+
+### Langkah 8: Supabase Auth Configuration (WAJIB)
+
+Pergi ke Supabase Dashboard → **Authentication** → **URL Configuration**:
+
+- **Site URL**: `https://easenikers.shop`
+- **Redirect URLs**: tambahkan
+  ```
+  https://easenikers.shop/**
+  ```
+
+### Langkah 9: Test & Buat Admin
+
+- Buka https://easenikers.shop
+- Daftar akun baru.
+- Di Supabase Table Editor → tabel `users`, ubah kolom `role` user tersebut menjadi `admin`.
+
+### Troubleshooting Umum di Hostinger
+
+- Masih muncul README → berarti Document Root belum diarahkan ke `/public` atau DNS masih ke GitHub.
+- 500 Internal Server Error → cek `config.php` sudah benar, dan PHP version minimal 8.1.
+- Tidak bisa upload gambar → pastikan folder `public/assets/images/produk` dan `public/assets/images/laporan` permissionnya 755 atau 775.
+- Halaman kosong → pastikan `config.php` sudah di-upload di root project (satu level di atas `public/`).
+
+---
+
+**Selesai.** Setelah semua langkah di atas, domain kamu akan menjalankan aplikasi PHP dengan benar.
 
 ### 3. Buat Project Supabase
 
