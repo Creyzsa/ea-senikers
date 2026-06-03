@@ -17,7 +17,6 @@
       "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot))",
       "dest": "/public/$1"
     },
-    // Redirect old long paths to clean simple URLs (for SEO/backcompat)
     { "src": "/pembeli/produk.php", "dest": "/produk", "status": 301 },
     { "src": "/pembeli/kategori_pembeli.php", "dest": "/kategori", "status": 301 },
     { "src": "/pembeli/tentang_pembeli.php", "dest": "/tentang", "status": 301 },
