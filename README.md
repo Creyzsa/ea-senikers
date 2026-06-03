@@ -215,28 +215,11 @@ Pergi ke Supabase Dashboard → **Authentication** → **URL Configuration**:
 2. Buat project baru, pilih region terdekat (mis. Singapore).
 3. Catat: **Project URL**, **anon key**, dan kredensial koneksi PostgreSQL (Host, Port, Database, User, Password) — terlihat di Project Settings → Database.
 
-### 4. Konfigurasi `config.php`
+### 4. Konfigurasi `config.php` (Lokal)
 
-Salin `config.example.php` (bila tersedia) atau buat `config.php` baru di root project dengan isi seperti berikut:
+Salin `config.example.php` menjadi `config.php`, lalu isi dengan kredensial Supabase lokal kamu.
 
-```php
-<?php
-// Database PostgreSQL Supabase
-define('DB_HOST', 'aws-0-...supabase.com');
-define('DB_PORT', '5432');
-define('DB_NAME', 'postgres');
-define('DB_USER', 'postgres');
-define('DB_PASS', 'password-anda');
-
-// Supabase REST + Auth
-define('SUPABASE_URL', 'https://xxxxxxxx.supabase.co');
-define('SUPABASE_ANON_KEY', 'eyJhbGciOi...');
-
-// URL dasar aplikasi (sesuaikan path)
-define('URL_APLIKASI', 'http://localhost/EASENIKERS/public/');
-```
-
-> **Catatan:** `config.php` sudah di-`.gitignore` agar kredensial tidak ikut ter-push ke GitHub.
+> **Catatan:** `config.php` sudah di-`.gitignore` agar kredensial tidak ikut ter-push ke GitHub. Lihat bagian **Deployment ke Hostinger** di bawah untuk panduan production.
 
 ### 5. Jalankan SQL Migration
 
