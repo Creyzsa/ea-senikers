@@ -23,6 +23,7 @@
     }
   ],
   "env": {
-    "APP_ENV": "production"
+    "APP_ENV": "production",
+    "URL_APLIKASI": "https://www.easenikers.shop"
   }
 }
