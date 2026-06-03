@@ -140,18 +140,31 @@ public_html/
     └── ...
 ```
 
-### Langkah 5: Atur Document Root (SANGAT PENTING)
+### Langkah 5: Upload Struktur + Atur Redirect (Hostinger Shared Hosting)
 
-1. Di hPanel, buka **Hosting** → pilih paket hosting kamu.
-2. Klik **Manage** pada website / domain `easenikers.shop`.
-3. Cari **Document Root** atau **Root Directory**.
-4. Ubah menjadi:
-   ```
-   public_html/easenikers/public
-   ```
-5. Save.
+**PENTING:** Pada kebanyakan paket Web/Cloud Hosting Hostinger, kamu **tidak bisa** ganti Document Root secara bebas (dibatasi control panel).
 
-Tunggu 30-60 detik, lalu test buka https://easenikers.shop
+Solusi yang paling bersih:
+
+1. Upload seluruh project ke folder `public_html/easenikers/` (seperti Langkah 4).
+2. Buat / edit file `.htaccess` di **root domain** yaitu `public_html/.htaccess` dengan isi berikut:
+
+```apache
+RewriteEngine On
+
+# Arahkan semua request ke dalam public/ folder project
+RewriteCond %{HTTP_HOST} ^(www\.)?easenikers\.shop$ [NC]
+RewriteCond %{REQUEST_URI} !^/easenikers/public/ [NC]
+RewriteRule ^(.*)$ /easenikers/public/$1 [L,QSA]
+
+# Opsional: paksa HTTPS
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+```
+
+3. Pastikan file `.htaccess` yang sudah saya siapkan di dalam `public/` juga ada (untuk caching, security, dll).
+
+Dengan cara ini, ketika orang buka https://easenikers.shop, server akan "melihat" isi dari folder `public/` seolah-olah itu document root, tapi struktur project tetap rapi dan aman.
 
 ### Langkah 6: Atur DNS di Hostinger (https://hpanel.hostinger.com/domain/easenikers.shop/dns)
 

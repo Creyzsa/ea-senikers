@@ -1,0 +1,24 @@
+# =====================================================
+# .htaccess untuk ROOT domain di Hostinger (public_html/.htaccess)
+# 
+# Copy isi file ini ke public_html/.htaccess
+# (bukan ke dalam folder easenikers)
+#
+# Ini membuat domain easenikers.shop "melihat" isi dari
+# easenikers/public/ tanpa harus ubah Document Root.
+# =====================================================
+
+RewriteEngine On
+
+# Arahkan semua request ke folder public project
+RewriteCond %{HTTP_HOST} ^(www\.)?easenikers\.shop$ [NC]
+RewriteCond %{REQUEST_URI} !^/easenikers/public/ [NC]
+RewriteRule ^(.*)$ /easenikers/public/$1 [L,QSA]
+
+# Force HTTPS (aman untuk production)
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Bonus: kalau mau nonaktifkan www
+# RewriteCond %{HTTP_HOST} ^www\.easenikers\.shop [NC]
+# RewriteRule ^(.*)$ https://easenikers.shop/$1 [L,R=301]
