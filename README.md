@@ -298,7 +298,7 @@ Kami sudah menambahkan:
      - DB_PASS
      - SUPABASE_URL
      - SUPABASE_ANON_KEY
-     - URL_APLIKASI=https://your-vercel-domain.vercel.app   (or your custom domain later)
+     - URL_APLIKASI=https://www.easenikers.shop   (use your full custom domain with https)
      - (optional) PAYMENT_CALLBACK_SECRET, EMAIL_DRIVER, EMAIL_PENGIRIM
    - Redeploy after adding env vars.
 7. Klik **Deploy**.

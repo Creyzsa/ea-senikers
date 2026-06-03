@@ -30,7 +30,7 @@ define('DB_PASS', 'your-db-password');
 define('SUPABASE_URL', 'https://your-project-ref.supabase.co');
 define('SUPABASE_ANON_KEY', 'your-anon-key-here');
 
-define('URL_APLIKASI', 'https://your-domain.com');  // no trailing slash
+define('URL_APLIKASI', 'https://www.your-domain.com');  // no trailing slash, use https for production
 
 define('PAYMENT_CALLBACK_SECRET', '');
 
