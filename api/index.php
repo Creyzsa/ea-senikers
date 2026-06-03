@@ -22,9 +22,12 @@ $path = parse_url($requestUri, PHP_URL_PATH) ?: '/';
 // Remove leading slash
 $path = ltrim($path, '/');
 
-// If empty or ends with /, use index.php
+// If empty or ends with /, serve the buyer homepage at root (clean URL)
 if ($path === '' || str_ends_with($path, '/')) {
-    $path = rtrim($path, '/') . '/index.php';
+    $path = 'pembeli/beranda_pembeli.php';
+} else if ($path === 'index.php') {
+    // legacy root index.php now also serves beranda content
+    $path = 'pembeli/beranda_pembeli.php';
 }
 
 // If the path doesn't have extension and is not a directory request, try adding .php or look for index

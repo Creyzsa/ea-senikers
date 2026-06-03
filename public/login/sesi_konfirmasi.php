@@ -33,6 +33,6 @@ if ($peran === null) {
 if ($peran === 'admin') {
     header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
 } else {
-    header('Location: ' . aplikasi_url('pembeli/beranda_pembeli.php'));
+    header('Location: ' . aplikasi_url('')); // clean root homepage after confirmation
 }
 exit;

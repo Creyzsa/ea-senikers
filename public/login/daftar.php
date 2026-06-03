@@ -22,7 +22,7 @@ if (sudah_masuk()) {
     if (ambil_peran() === 'admin') {
         header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
     } else {
-        header('Location: ' . aplikasi_url('pembeli/beranda_pembeli.php'));
+        header('Location: ' . aplikasi_url('')); // clean root homepage after register
     }
     exit;
 }
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'refresh_token' => $refresh_token,
                 ];
                 sesi_setelah_login_supabase($data_sesi, $ingat_saya);
-                header('Location: ' . aplikasi_url('pembeli/beranda_pembeli.php'));
+                header('Location: ' . aplikasi_url('')); // clean root homepage after register
                 exit;
             }
 

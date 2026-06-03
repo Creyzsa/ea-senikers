@@ -10,7 +10,7 @@ if (ambil_peran() !== 'pembeli') {
 }
 
 $bilah_pembeli_aktif = 'akun';
-$u_beranda = aplikasi_url('pembeli/beranda_pembeli.php');
+$u_beranda = aplikasi_url(''); // clean root homepage
 $u_produk = aplikasi_url('pembeli/produk.php');
 $u_pesanan = aplikasi_url('pembeli/pesanan_pembeli.php');
 $u_keranjang = aplikasi_url('pembeli/keranjang_pembeli.php');

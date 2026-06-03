@@ -28,7 +28,7 @@ if ($flash_ok_tambah) {
 $baris = keranjang_ambil_baris();
 $total = keranjang_total_rupiah();
 $bilah_pembeli_aktif = 'keranjang';
-$u_beranda = aplikasi_url('pembeli/beranda_pembeli.php');
+$u_beranda = aplikasi_url(''); // clean root homepage
 $u_produk = aplikasi_url('pembeli/produk.php');
 ?>
 <!DOCTYPE html>

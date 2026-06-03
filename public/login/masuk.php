@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($peran === 'admin') {
                 header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
             } else {
-                header('Location: ' . aplikasi_url('pembeli/beranda_pembeli.php'));
+                header('Location: ' . aplikasi_url('')); // go to clean homepage root after login
             }
             exit;
         }

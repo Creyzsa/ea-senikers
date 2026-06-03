@@ -40,6 +40,19 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Beranda - EA SENIKERS</title>
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
+    <script>
+    // Handle Supabase email confirmation tokens in hash (common case) or query
+    (function () {
+        var h = window.location.hash || '';
+        var s = window.location.search || '';
+        var keKonfirmasi = h.indexOf('access_token=') !== -1 || h.indexOf('error=') !== -1
+            || s.indexOf('access_token=') !== -1 || s.indexOf('code=') !== -1 || s.indexOf('error=') !== -1;
+        if (keKonfirmasi) {
+            var tujuan = <?php echo json_encode(aplikasi_url('login/konfirmasi_email.php'), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?>;
+            window.location.replace(tujuan + s + h);
+        }
+    })();
+    </script>
 </head>
 <body class="halaman-toko">
 

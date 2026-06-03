@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 require_once __DIR__ . '/../../includes/paginasi.php';
 
 $bilah_pembeli_aktif = 'produk';
-$u_beranda = aplikasi_url('pembeli/beranda_pembeli.php');
+$u_beranda = aplikasi_url(''); // clean root homepage
 $daftar_produk = katalog_ambil_semua_produk();
 
 $q = trim(is_string($_GET['q'] ?? null) ? (string) $_GET['q'] : '');

@@ -5,7 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 
 $bilah_pembeli_aktif = 'akun';
-$u_beranda = aplikasi_url('pembeli/beranda_pembeli.php');
+$u_beranda = aplikasi_url(''); // clean root homepage
 $u_akun = aplikasi_url('pembeli/akun_pembeli.php');
 $u_pesanan = aplikasi_url('pembeli/pesanan_pembeli.php');
 $u_lapor = aplikasi_url('pembeli/lapor_masalah.php');
