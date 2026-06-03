@@ -12,9 +12,9 @@ $produk = $id !== '' ? katalog_ambil_produk_ber_id($id) : null;
 $urls_gambar = [];
 
 $bilah_pembeli_aktif = 'produk';
-$u_katalog = aplikasi_url('pembeli/produk.php');
-$u_keranjang_tambah = aplikasi_url('pembeli/keranjang_tambah.php');
-$u_checkout = aplikasi_url('pembeli/checkout_pembeli.php');
+$u_katalog = aplikasi_url('produk');
+$u_keranjang_tambah = aplikasi_url('keranjang-tambah');
+$u_checkout = aplikasi_url('checkout');
 ?>
 <!DOCTYPE html>
 <html lang="id">

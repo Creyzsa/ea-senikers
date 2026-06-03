@@ -19,12 +19,12 @@ $sudah_login = sudah_masuk();
 
 $u_logo = aplikasi_url('assets/images/logo-easenikers.svg');
 $u_beranda = aplikasi_url(''); // homepage at root for clean URL
-$u_produk = aplikasi_url('pembeli/produk.php');
-$u_kategori = aplikasi_url('pembeli/kategori_pembeli.php');
-$u_pesanan = aplikasi_url('pembeli/pesanan_pembeli.php');
-$u_tentang = aplikasi_url('pembeli/tentang_pembeli.php');
-$u_keranjang = aplikasi_url('pembeli/keranjang_pembeli.php');
-$u_akun = aplikasi_url('pembeli/akun_pembeli.php');
+$u_produk = aplikasi_url('produk');
+$u_kategori = aplikasi_url('kategori');
+$u_pesanan = aplikasi_url('pesanan');
+$u_tentang = aplikasi_url('tentang');
+$u_keranjang = aplikasi_url('keranjang');
+$u_akun = aplikasi_url('akun');
 $u_masuk = aplikasi_url('login/masuk.php');
 $u_keluar = aplikasi_url('login/keluar.php');
 ?>

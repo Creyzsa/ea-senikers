@@ -12,7 +12,7 @@ if (isset($_GET['hapus'])) {
         keranjang_hapus_kunci($hapus);
         $_SESSION['flash_keranjang_info'] = 'Item dihapus dari keranjang.';
     }
-    header('Location: ' . aplikasi_url('pembeli/keranjang_pembeli.php'));
+    header('Location: ' . aplikasi_url('keranjang'));
     exit;
 }
 
@@ -29,7 +29,7 @@ $baris = keranjang_ambil_baris();
 $total = keranjang_total_rupiah();
 $bilah_pembeli_aktif = 'keranjang';
 $u_beranda = aplikasi_url(''); // clean root homepage
-$u_produk = aplikasi_url('pembeli/produk.php');
+$u_produk = aplikasi_url('produk');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -87,7 +87,7 @@ $u_produk = aplikasi_url('pembeli/produk.php');
                             $nf = (string) ($r['nama_file'] ?? '');
                             $thumb = $nf !== '' ? katalog_url_gambar_produk($nf) : katalog_url_gambar_placeholder();
                             $kunci = (string) ($r['kunci'] ?? '');
-                            $u_hapus = aplikasi_url('pembeli/keranjang_pembeli.php?hapus=' . rawurlencode($kunci));
+                            $u_hapus = aplikasi_url('keranjang?hapus=' . rawurlencode($kunci));
                             $h = (int) ($r['harga'] ?? 0);
                             $q = (int) ($r['qty'] ?? 0);
                             $sub = $h * $q;
@@ -120,7 +120,7 @@ $u_produk = aplikasi_url('pembeli/produk.php');
                 <p class="keranjang-catatan">Ongkos kirim ditambahkan saat checkout, mengikuti pilihan kurir dan alamat tujuan Anda.</p>
                 <?php if (sudah_masuk()): ?>
                 <p class="keranjang-lanjut">
-                    <a class="tombol-oranye-besar" href="<?php echo htmlspecialchars(aplikasi_url('pembeli/checkout_pembeli.php'), ENT_QUOTES, 'UTF-8'); ?>">Lanjut ke Checkout →</a>
+                    <a class="tombol-oranye-besar" href="<?php echo htmlspecialchars(aplikasi_url('checkout'), ENT_QUOTES, 'UTF-8'); ?>">Lanjut ke Checkout →</a>
                 </p>
                 <?php else: ?>
                 <p class="keranjang-catatan">Untuk melanjutkan ke checkout, silakan <a href="<?php echo htmlspecialchars(aplikasi_url('login/masuk.php'), ENT_QUOTES, 'UTF-8'); ?>">masuk</a> terlebih dahulu.</p>

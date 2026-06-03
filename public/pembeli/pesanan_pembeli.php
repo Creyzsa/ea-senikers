@@ -41,7 +41,7 @@ $daftar_tampil = $filter_status === ''
 
 $pg = paginasi_hitung(count($daftar_tampil), paginasi_halaman_dari_query('hal'), 8);
 $daftar_tampil_hal = paginasi_potong($daftar_tampil, $pg);
-$pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/pesanan_pembeli.php'), $filter_status !== '' ? ['status' => $filter_status] : [], 'hal');
+$pg_url = paginasi_pembuat_url(aplikasi_url('pesanan'), $filter_status !== '' ? ['status' => $filter_status] : [], 'hal');
 
 function pesanan_format_tanggal(?string $iso): string
 {
@@ -59,12 +59,12 @@ function pesanan_format_tanggal(?string $iso): string
 
 function pesanan_url_filter_status(string $status): string
 {
-    $url = aplikasi_url('pembeli/pesanan_pembeli.php');
+    $url = aplikasi_url('pesanan');
     return $status === '' ? $url : $url . '?status=' . rawurlencode($status);
 }
 
-$u_detail_base = aplikasi_url('pembeli/detail_pesanan_pembeli.php');
-$u_produk = aplikasi_url('pembeli/produk.php');
+$u_detail_base = aplikasi_url('detail-pesanan');
+$u_produk = aplikasi_url('produk');
 ?>
 <!DOCTYPE html>
 <html lang="id">

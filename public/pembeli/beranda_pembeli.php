@@ -10,8 +10,8 @@ if ($nama_sapa === '') {
 }
 
 $bilah_pembeli_aktif = 'beranda';
-$tautan_produk = aplikasi_url('pembeli/produk.php');
-$u_artikel_rawat = aplikasi_url('pembeli/cara_membersihkan_sepatu.php');
+$tautan_produk = aplikasi_url('produk');
+$u_artikel_rawat = aplikasi_url('cara-membersihkan');
 $logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
 $merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
@@ -99,7 +99,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                         $nama = (string) ($p['nama_produk'] ?? '');
                         $brand = (string) ($p['brand'] ?? '');
                         $harga = (int) ($p['harga'] ?? 0);
-                        $u_detail = aplikasi_url('pembeli/detail_produk.php?id=' . rawurlencode($id));
+                        $u_detail = aplikasi_url('detail-produk?id=' . rawurlencode($id));
                         $u_gambar = katalog_url_gambar_utama($p);
                     ?>
                     <article class="kartu-produk">

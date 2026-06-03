@@ -7,13 +7,13 @@ require_once __DIR__ . '/../../includes/keranjang_sesi.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . aplikasi_url('pembeli/produk.php'));
+    header('Location: ' . aplikasi_url('produk'));
     exit;
 }
 
 $id = trim((string) ($_POST['id_produk'] ?? ''));
 $ukuran = trim((string) ($_POST['ukuran'] ?? ''));
-$detail_url = aplikasi_url('pembeli/detail_produk.php?id=' . rawurlencode($id));
+$detail_url = aplikasi_url('detail-produk?id=' . rawurlencode($id));
 
 if ($id === '' || $ukuran === '') {
     $_SESSION['flash_keranjang_error'] = 'Pilih ukuran terlebih dahulu.';
@@ -24,7 +24,7 @@ if ($id === '' || $ukuran === '') {
 $produk = katalog_ambil_produk_ber_id($id);
 if ($produk === null) {
     $_SESSION['flash_keranjang_error'] = 'Produk tidak ditemukan.';
-    header('Location: ' . aplikasi_url('pembeli/produk.php'));
+    header('Location: ' . aplikasi_url('produk'));
     exit;
 }
 
@@ -65,5 +65,5 @@ keranjang_tambah_atau_update([
 ]);
 
 $_SESSION['flash_keranjang_ok'] = true;
-header('Location: ' . aplikasi_url('pembeli/keranjang_pembeli.php'));
+header('Location: ' . aplikasi_url('keranjang'));
 exit;

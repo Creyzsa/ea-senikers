@@ -37,9 +37,9 @@ if (!isset($_SESSION['csrf_checkout']) || !is_string($_SESSION['csrf_checkout'])
 $csrf = $_SESSION['csrf_checkout'];
 
 $id_pengguna = ambil_id_pengguna_efektif();
-$u_self = aplikasi_url('pembeli/checkout_pembeli.php');
-$u_katalog = aplikasi_url('pembeli/produk.php');
-$u_akun = aplikasi_url('pembeli/akun_pembeli.php');
+$u_self = aplikasi_url('checkout');
+$u_katalog = aplikasi_url('produk');
+$u_akun = aplikasi_url('akun');
 $u_pengaturan_toko = aplikasi_url('admin/pengaturan_admin.php');
 
 // =========================================================================
@@ -151,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
     if (!$stok_ok) {
         $_SESSION['flash_checkout_error'] = 'Stok ukuran yang dipilih sudah habis.';
         unset($_SESSION['checkout_pesanan']);
-        header('Location: ' . aplikasi_url('pembeli/detail_produk.php?id=' . rawurlencode((string) $sesi['id_produk'])));
+        header('Location: ' . aplikasi_url('detail-produk?id=' . rawurlencode((string) $sesi['id_produk'])));
         exit;
     }
 
@@ -218,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
 
     unset($_SESSION['checkout_pesanan'], $_SESSION['checkout_destinasi'], $_SESSION['checkout_kurir']);
     $_SESSION['flash_pesanan_baru'] = 'Pesanan #' . $order_id . ' berhasil dibuat. Selanjutnya menunggu pembayaran.';
-    header('Location: ' . aplikasi_url('pembeli/detail_pesanan_pembeli.php?id=' . $order_id));
+    header('Location: ' . aplikasi_url('detail-pesanan?id=' . $order_id));
     exit;
 }
 

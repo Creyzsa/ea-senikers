@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 
 $bilah_pembeli_aktif = 'kategori';
-$u_produk = aplikasi_url('pembeli/produk.php');
+$u_produk = aplikasi_url('produk');
 $daftar_produk = katalog_ambil_semua_produk();
 
 $brand_map = [];
@@ -52,13 +52,13 @@ $koleksi_utama = [
     [
         'judul' => 'Produk baru',
         'sub' => (string) ($kondisi_map[$kondisi_baru]['jumlah'] ?? 0) . ' produk',
-        'url' => aplikasi_url('pembeli/produk.php?kondisi=' . rawurlencode($kondisi_baru)),
+        'url' => aplikasi_url('produk?kondisi=' . rawurlencode($kondisi_baru)),
         'gambar' => (string) ($kondisi_map[$kondisi_baru]['gambar'] ?? katalog_url_gambar_placeholder()),
     ],
     [
         'judul' => 'Preloved terkurasi',
         'sub' => 'Kondisi dijelaskan transparan',
-        'url' => aplikasi_url('pembeli/produk.php?kondisi=' . rawurlencode($kondisi_preloved)),
+        'url' => aplikasi_url('produk?kondisi=' . rawurlencode($kondisi_preloved)),
         'gambar' => (string) ($kondisi_map[$kondisi_preloved]['gambar'] ?? katalog_url_gambar_placeholder()),
     ],
 ];
@@ -120,7 +120,7 @@ $koleksi_utama = [
             <?php else: ?>
                 <div class="kategori-grid">
                     <?php foreach ($brand_map as $brand => $meta): ?>
-                        <a class="kategori-card" href="<?php echo htmlspecialchars(aplikasi_url('pembeli/produk.php?brand=' . rawurlencode((string) $brand)), ENT_QUOTES, 'UTF-8'); ?>">
+                        <a class="kategori-card" href="<?php echo htmlspecialchars(aplikasi_url('produk?brand=' . rawurlencode((string) $brand)), ENT_QUOTES, 'UTF-8'); ?>">
                             <img class="kategori-card__gambar" src="<?php echo htmlspecialchars((string) $meta['gambar'], ENT_QUOTES, 'UTF-8'); ?>" alt="" width="160" height="160" loading="lazy">
                             <span class="kategori-card__meta"><?php echo (int) $meta['jumlah']; ?> produk</span>
                             <strong><?php echo htmlspecialchars((string) $brand, ENT_QUOTES, 'UTF-8'); ?></strong>
@@ -139,7 +139,7 @@ $koleksi_utama = [
             </div>
             <div class="kategori-chip-panel">
                 <?php foreach ($kondisi_map as $kondisi => $meta): ?>
-                    <a href="<?php echo htmlspecialchars(aplikasi_url('pembeli/produk.php?kondisi=' . rawurlencode((string) $kondisi)), ENT_QUOTES, 'UTF-8'); ?>">
+                    <a href="<?php echo htmlspecialchars(aplikasi_url('produk?kondisi=' . rawurlencode((string) $kondisi)), ENT_QUOTES, 'UTF-8'); ?>">
                         <strong><?php echo htmlspecialchars(kondisi_label_pembeli((string) $kondisi), ENT_QUOTES, 'UTF-8'); ?></strong>
                         <span><?php echo (int) $meta['jumlah']; ?> produk</span>
                     </a>

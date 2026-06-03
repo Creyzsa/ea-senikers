@@ -11,13 +11,13 @@ if (ambil_peran() !== 'pembeli') {
 
 $bilah_pembeli_aktif = 'akun';
 $u_beranda = aplikasi_url(''); // clean root homepage
-$u_produk = aplikasi_url('pembeli/produk.php');
-$u_pesanan = aplikasi_url('pembeli/pesanan_pembeli.php');
-$u_keranjang = aplikasi_url('pembeli/keranjang_pembeli.php');
+$u_produk = aplikasi_url('produk');
+$u_pesanan = aplikasi_url('pesanan');
+$u_keranjang = aplikasi_url('keranjang');
 $u_keluar = aplikasi_url('login/keluar.php');
-$u_akun = aplikasi_url('pembeli/akun_pembeli.php');
-$u_bantuan = aplikasi_url('pembeli/bantuan_pembeli.php');
-$u_lapor = aplikasi_url('pembeli/lapor_masalah.php');
+$u_akun = aplikasi_url('akun');
+$u_bantuan = aplikasi_url('bantuan');
+$u_lapor = aplikasi_url('lapor-masalah');
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
 if (!isset($_SESSION['csrf_akun_pembeli']) || !is_string($_SESSION['csrf_akun_pembeli'])) {

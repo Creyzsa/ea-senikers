@@ -1,0 +1,70 @@
+# =============================================
+# .htaccess untuk EA SENIKERS
+# Untuk clean URLs sederhana: /produk , /detail-produk?id=xxx , /keranjang dll
+# Tanpa /pembeli/ prefix dan tanpa .php
+# =============================================
+
+# Pastikan PHP berjalan dengan baik
+<IfModule mod_php.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 60
+</IfModule>
+
+# Keamanan dasar
+Options -Indexes
+ServerSignature Off
+
+# Blokir akses langsung ke file sensitif
+<FilesMatch "\.(env|log|sql|md|ini)$">
+    Require all denied
+</FilesMatch>
+
+# Blokir akses ke includes/ dan database/ (jika document root salah)
+RewriteEngine On
+RewriteRule ^(includes|database|config\.php)/ - [F,L]
+
+# Force HTTPS
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Clean URL rewrite: semua ke index.php (yang handle mapping)
+# Kecuali file statis yang ada
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Redirect old long pembeli paths to clean simple ones (301)
+RewriteRule ^pembeli/beranda_pembeli\.php$ / [R=301,L]
+RewriteRule ^pembeli/produk\.php$ /produk [R=301,L,QSA]
+RewriteRule ^pembeli/kategori_pembeli\.php$ /kategori [R=301,L,QSA]
+RewriteRule ^pembeli/tentang_pembeli\.php$ /tentang [R=301,L,QSA]
+RewriteRule ^pembeli/bantuan_pembeli\.php$ /bantuan [R=301,L,QSA]
+RewriteRule ^pembeli/cara_membersihkan_sepatu\.php$ /cara-membersihkan [R=301,L,QSA]
+RewriteRule ^pembeli/detail_produk\.php$ /detail-produk [R=301,L,QSA]
+RewriteRule ^pembeli/keranjang_pembeli\.php$ /keranjang [R=301,L,QSA]
+RewriteRule ^pembeli/akun_pembeli\.php$ /akun [R=301,L,QSA]
+RewriteRule ^pembeli/pesanan_pembeli\.php$ /pesanan [R=301,L,QSA]
+RewriteRule ^pembeli/checkout_pembeli\.php$ /checkout [R=301,L,QSA]
+RewriteRule ^pembeli/lapor_masalah\.php$ /lapor-masalah [R=301,L,QSA]
+RewriteRule ^pembeli/detail_pesanan_pembeli\.php$ /detail-pesanan [R=301,L,QSA]
+RewriteRule ^pembeli/keranjang_tambah\.php$ /keranjang-tambah [R=301,L,QSA]
+
+# Caching untuk aset statis (CSS, JS, gambar)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
+# Gzip compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript
+</IfModule>
+
+# Custom error pages (opsional)
+# ErrorDocument 404 /404.php

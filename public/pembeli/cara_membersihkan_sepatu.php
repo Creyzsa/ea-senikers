@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 
 $bilah_pembeli_aktif = 'beranda';
 $u_beranda = aplikasi_url(''); // clean root homepage
-$u_produk = aplikasi_url('pembeli/produk.php');
+$u_produk = aplikasi_url('produk');
 ?>
 <!DOCTYPE html>
 <html lang="id">

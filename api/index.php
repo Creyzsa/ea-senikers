@@ -22,11 +22,30 @@ $path = parse_url($requestUri, PHP_URL_PATH) ?: '/';
 // Remove leading slash
 $path = ltrim($path, '/');
 
-// If empty or ends with /, serve the buyer homepage at root (clean URL)
-if ($path === '' || str_ends_with($path, '/')) {
-    $path = 'pembeli/beranda_pembeli.php';
-} else if ($path === 'index.php') {
-    // legacy root index.php now also serves beranda content
+// Clean simple URLs for buyer area (no /pembeli/ prefix, no .php)
+$cleanRoutes = [
+    '' => 'pembeli/beranda_pembeli.php',
+    'index.php' => 'pembeli/beranda_pembeli.php',
+    'produk' => 'pembeli/produk.php',
+    'kategori' => 'pembeli/kategori_pembeli.php',
+    'tentang' => 'pembeli/tentang_pembeli.php',
+    'bantuan' => 'pembeli/bantuan_pembeli.php',
+    'cara-membersihkan' => 'pembeli/cara_membersihkan_sepatu.php',
+    'detail-produk' => 'pembeli/detail_produk.php',
+    'keranjang' => 'pembeli/keranjang_pembeli.php',
+    'akun' => 'pembeli/akun_pembeli.php',
+    'pesanan' => 'pembeli/pesanan_pembeli.php',
+    'checkout' => 'pembeli/checkout_pembeli.php',
+    'lapor-masalah' => 'pembeli/lapor_masalah.php',
+    'detail-pesanan' => 'pembeli/detail_pesanan_pembeli.php',
+    'keranjang-tambah' => 'pembeli/keranjang_tambah.php',
+];
+
+if (array_key_exists($path, $cleanRoutes)) {
+    $path = $cleanRoutes[$path];
+} elseif (strpos($path, 'admin/') === 0) {
+    // admin paths kept as-is (e.g. /admin/beranda_admin.php)
+} elseif ($path === '' || str_ends_with($path, '/')) {
     $path = 'pembeli/beranda_pembeli.php';
 }
 

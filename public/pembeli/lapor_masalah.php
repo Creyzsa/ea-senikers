@@ -13,9 +13,9 @@ if (ambil_peran() !== 'pembeli') {
 }
 
 $bilah_pembeli_aktif = 'akun';
-$u_akun = aplikasi_url('pembeli/akun_pembeli.php');
-$u_bantuan = aplikasi_url('pembeli/bantuan_pembeli.php');
-$u_lapor = aplikasi_url('pembeli/lapor_masalah.php');
+$u_akun = aplikasi_url('akun');
+$u_bantuan = aplikasi_url('bantuan');
+$u_lapor = aplikasi_url('lapor-masalah');
 
 if (!isset($_SESSION['csrf_lapor_masalah']) || !is_string($_SESSION['csrf_lapor_masalah'])) {
     $_SESSION['csrf_lapor_masalah'] = bin2hex(random_bytes(24));

@@ -17,6 +17,21 @@
       "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot))",
       "dest": "/public/$1"
     },
+    // Redirect old long paths to clean simple URLs (for SEO/backcompat)
+    { "src": "/pembeli/produk.php", "dest": "/produk", "status": 301 },
+    { "src": "/pembeli/kategori_pembeli.php", "dest": "/kategori", "status": 301 },
+    { "src": "/pembeli/tentang_pembeli.php", "dest": "/tentang", "status": 301 },
+    { "src": "/pembeli/bantuan_pembeli.php", "dest": "/bantuan", "status": 301 },
+    { "src": "/pembeli/cara_membersihkan_sepatu.php", "dest": "/cara-membersihkan", "status": 301 },
+    { "src": "/pembeli/detail_produk.php", "dest": "/detail-produk", "status": 301 },
+    { "src": "/pembeli/keranjang_pembeli.php", "dest": "/keranjang", "status": 301 },
+    { "src": "/pembeli/akun_pembeli.php", "dest": "/akun", "status": 301 },
+    { "src": "/pembeli/pesanan_pembeli.php", "dest": "/pesanan", "status": 301 },
+    { "src": "/pembeli/checkout_pembeli.php", "dest": "/checkout", "status": 301 },
+    { "src": "/pembeli/lapor_masalah.php", "dest": "/lapor-masalah", "status": 301 },
+    { "src": "/pembeli/beranda_pembeli.php", "dest": "/", "status": 301 },
+    { "src": "/pembeli/detail_pesanan_pembeli.php", "dest": "/detail-pesanan", "status": 301 },
+    { "src": "/pembeli/keranjang_tambah.php", "dest": "/keranjang-tambah", "status": 301 },
     {
       "src": "/(.*)",
       "dest": "/api/index.php"

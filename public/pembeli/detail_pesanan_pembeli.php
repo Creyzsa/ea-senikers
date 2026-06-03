@@ -19,13 +19,13 @@ $id_pengguna = ambil_id_pengguna_efektif();
 $order_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
 if ($order_id <= 0 || !pesanan_cek_tabel_ada()) {
-    header('Location: ' . aplikasi_url('pembeli/pesanan_pembeli.php'));
+    header('Location: ' . aplikasi_url('pesanan'));
     exit;
 }
 
 $order = pesanan_ambil_detail_untuk_user($order_id, $id_pengguna);
 if ($order === null) {
-    header('Location: ' . aplikasi_url('pembeli/pesanan_pembeli.php'));
+    header('Location: ' . aplikasi_url('pesanan'));
     exit;
 }
 
@@ -63,7 +63,7 @@ $layanan = trim((string) ($order['layanan'] ?? ''));
 $ongkir = (int) ($order['ongkir'] ?? 0);
 $nomor_resi = trim((string) ($order['nomor_resi'] ?? ''));
 $subtotal_produk = max(0, $total - $ongkir);
-$u_list = aplikasi_url('pembeli/pesanan_pembeli.php');
+$u_list = aplikasi_url('pesanan');
 
 $flash_baru = $_SESSION['flash_pesanan_baru'] ?? null;
 unset($_SESSION['flash_pesanan_baru']);

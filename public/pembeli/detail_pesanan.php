@@ -8,7 +8,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../includes/url_bantu.php';
 
 $id = isset($_GET['id']) ? (string) $_GET['id'] : '';
-$tujuan = aplikasi_url('pembeli/detail_pesanan_pembeli.php');
+$tujuan = aplikasi_url('detail-pesanan');
 if ($id !== '') {
     $tujuan .= '?id=' . rawurlencode($id);
 }

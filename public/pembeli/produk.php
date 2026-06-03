@@ -71,7 +71,7 @@ function produk_url_filter(array $params): string
         }
     }
 
-    $url = aplikasi_url('pembeli/produk.php');
+    $url = aplikasi_url('produk');
     return $query === [] ? $url : $url . '?' . http_build_query($query);
 }
 
@@ -87,7 +87,7 @@ foreach (['q' => $q, 'brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'so
 }
 $pg = paginasi_hitung($total_tersaring, paginasi_halaman_dari_query('hal'), 12);
 $daftar_tersaring_hal = paginasi_potong($daftar_tersaring, $pg);
-$pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/produk.php'), $pg_params, 'hal');
+$pg_url = paginasi_pembuat_url(aplikasi_url('produk'), $pg_params, 'hal');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -126,7 +126,7 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/produk.php'), $pg_params, '
             </div>
         </section>
 
-        <form class="katalog-filter" method="get" action="<?php echo htmlspecialchars(aplikasi_url('pembeli/produk.php'), ENT_QUOTES, 'UTF-8'); ?>" data-live data-target="#hasil-katalog">
+        <form class="katalog-filter" method="get" action="<?php echo htmlspecialchars(aplikasi_url('produk'), ENT_QUOTES, 'UTF-8'); ?>" data-live data-target="#hasil-katalog">
             <label class="katalog-filter__cari">
                 <span>Cari produk</span>
                 <input type="search" name="q" value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Nike, Vans, Air Max..." autocomplete="off">
@@ -160,7 +160,7 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/produk.php'), $pg_params, '
             </label>
             <div class="katalog-filter__aksi">
                 <button type="submit" class="tombol-filter">Terapkan</button>
-                <a class="tombol-filter tombol-filter--sekunder" href="<?php echo htmlspecialchars(aplikasi_url('pembeli/produk.php'), ENT_QUOTES, 'UTF-8'); ?>">Reset</a>
+                <a class="tombol-filter tombol-filter--sekunder" href="<?php echo htmlspecialchars(aplikasi_url('produk'), ENT_QUOTES, 'UTF-8'); ?>">Reset</a>
             </div>
         </form>
 
@@ -173,7 +173,7 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/produk.php'), $pg_params, '
         <?php elseif ($daftar_tersaring === []): ?>
             <div class="katalog-hasil-bar">
                 <p>Tidak ada produk yang cocok dengan filter saat ini.</p>
-                <a href="<?php echo htmlspecialchars(aplikasi_url('pembeli/produk.php'), ENT_QUOTES, 'UTF-8'); ?>">Tampilkan semua produk</a>
+                <a href="<?php echo htmlspecialchars(aplikasi_url('produk'), ENT_QUOTES, 'UTF-8'); ?>">Tampilkan semua produk</a>
             </div>
             <div class="katalog-kosong">
                 <strong>Produk tidak ditemukan.</strong>
@@ -201,7 +201,7 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('pembeli/produk.php'), $pg_params, '
                     $brand = (string) ($p['brand'] ?? '');
                     $kondisi = (string) ($p['kondisi'] ?? '');
                     $harga = (int) ($p['harga'] ?? 0);
-                    $url_detail = aplikasi_url('pembeli/detail_produk.php?id=' . rawurlencode($id));
+                    $url_detail = aplikasi_url('detail-produk?id=' . rawurlencode($id));
                     $url_gambar = katalog_url_gambar_utama($p);
                     $kelas_kondisi = $kondisi === ''
                         ? 'kartu-katalog__badge-kondisi--netral'
