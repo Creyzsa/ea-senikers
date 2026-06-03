@@ -35,11 +35,12 @@ if (session_status() === PHP_SESSION_NONE) {
 
     $lifetime = $tetap_masuk ? EASENIKERS_SESI_INGAT_DETIK : 0;
 
+    $secure_cookie = easenikers_konfirmasi_https() || (isset($_SERVER['HTTP_HOST']) && strpos((string)$_SERVER['HTTP_HOST'], 'easenikers.shop') !== false);
     session_set_cookie_params([
         'lifetime' => $lifetime,
         'path' => '/',
         'domain' => '',
-        'secure' => easenikers_konfirmasi_https(),
+        'secure' => $secure_cookie,
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
@@ -90,7 +91,7 @@ function sesi_ganti_ke_mode_sementara(array $data): void
 {
     $path = '/';
     $domain = '';
-    $secure = easenikers_konfirmasi_https();
+    $secure = easenikers_konfirmasi_https() || (isset($_SERVER['HTTP_HOST']) && strpos((string)$_SERVER['HTTP_HOST'], 'easenikers.shop') !== false);
     $httponly = true;
     $opts_hapus = [
         'path' => $path,
