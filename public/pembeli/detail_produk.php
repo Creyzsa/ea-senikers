@@ -202,7 +202,7 @@ $u_checkout = aplikasi_url('checkout');
                         <?php endforeach; ?>
                     </div>
                     <?php if ($ada_ukuran_siap): ?>
-                        <p class="detail-stok-hint"><strong class="detail-hint-keranjang">Keranjang</strong> menambah barang ke keranjang. <strong>Beli</strong> langsung ke ringkasan checkout (alamat &amp; bayar menyusul).</p>
+                        <p class="detail-stok-hint"><strong class="detail-hint-keranjang">Keranjang</strong> untuk menambahkan produk ke keranjang belanja. <strong>Beli</strong> untuk langsung melanjutkan ke checkout dan melengkapi alamat pengiriman serta pembayaran.</p>
                     <?php else: ?>
                         <p class="detail-stok-hint">Semua ukuran sedang habis. Cek lagi nanti atau hubungi toko lewat WhatsApp.</p>
                     <?php endif; ?>
