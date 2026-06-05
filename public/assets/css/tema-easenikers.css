@@ -1,86 +1,145 @@
 /**
- * EA SENIKERS — Tema resmi (monokrom elegan + champagne + biru petrol untuk Beli)
- * Pakai variabel :root ini untuk halaman & komponen baru agar konsisten.
+ * EA SENIKERS — Brand theme (streetwear / premium sneaker store)
+ * Palet: 70% putih · 20% hitam · 10% merah (#D62828)
  */
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&family=Oswald:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap");
+
 :root {
-    /* Nav, sidebar, hero: hitam & charcoal */
-    --biru-header: #0a0a0a;
-    --biru-header-redup: #000000;
-    --biru-hero: #161616;
-    --biru-hero-akhir: #252525;
-    --biru-hero-gelap: #000000;
+    /* —— Brand tokens —— */
+    --brand-red: #D62828;
+    --brand-red-hover: #b91f1f;
+    --brand-red-press: #9a1a1a;
+    --brand-black: #111111;
+    --brand-black-pure: #000000;
+    --brand-white: #FFFFFF;
+    --brand-gray-light: #F5F5F5;
+    --brand-gray-text: #6B7280;
+    --brand-border: #E5E7EB;
+    --brand-border-input: #D1D5DB;
 
-    /* Aksi admin / grafik (tetap netral gelap) */
-    --biru-tombol: #0a0a0a;
-    --biru-tombol-hover: #262626;
+    --status-success: #16A34A;
+    --status-warning: #F59E0B;
+    --status-danger: #DC2626;
+    --status-info: #2563EB;
 
-    /* Tombol Beli (kartu produk) — biru petrol, selaras emas & monokrom */
-    --gradasi-beli: linear-gradient(165deg, #5a7a96 0%, #3d5f7c 42%, #2a4a62 100%);
-    --gradasi-beli-hover: linear-gradient(165deg, #6b8ba8 0%, #4d6f8c 45%, #33556e 100%);
-    --gradasi-beli-tekan: linear-gradient(165deg, #33556e 0%, #1e3548 100%);
-    --beli-teks: #f8fafc;
-    --beli-bayangan-3d:
-        0 3px 0 #1a3040,
-        0 10px 22px rgba(26, 48, 64, 0.38),
-        inset 0 1px 0 rgba(255, 255, 255, 0.22);
-    --beli-bayangan-hover:
-        0 4px 0 #243a4d,
-        0 14px 28px rgba(26, 48, 64, 0.42),
-        inset 0 1px 0 rgba(255, 255, 255, 0.28);
-    --beli-bayangan-aktif:
-        0 1px 0 #152a38,
-        0 4px 12px rgba(21, 42, 56, 0.45),
-        inset 0 3px 8px rgba(0, 0, 0, 0.25);
-    --ikon-placeholder-produk: #5a7190;
+    --font-heading: "Oswald", "Bebas Neue", sans-serif;
+    --font-body: "Poppins", "Inter", system-ui, -apple-system, sans-serif;
 
-    /* Aksen champagne: CTA promo, keranjang, garis dekoratif, fokus */
-    --oranye-cta: #a8905f;
-    --oranye-cta-hover: #8f7548;
-    --aksen-emas-lembut: rgba(168, 144, 95, 0.14);
-    --aksen-emas-garis: rgba(168, 144, 95, 0.35);
+    /* —— Legacy aliases (dipakai komponen lama) —— */
+    --biru-header: var(--brand-black);
+    --biru-header-redup: var(--brand-black-pure);
+    --biru-hero: var(--brand-black);
+    --biru-hero-akhir: var(--brand-black-pure);
+    --biru-hero-gelap: var(--brand-black-pure);
+    --biru-tombol: var(--brand-black);
+    --biru-tombol-hover: #2a2a2a;
 
-    --hijau-sukses: #1b4332;
-    --abu-latar: #ffffff;
-    --abu-kartu: #fafafa;
-    --abu-tepi: #e8e8e8;
-    --teks-utama: #0a0a0a;
-    --teks-redup: #6b6b6b;
-    --kotak-fitur-bg: #f7f7f6;
+    --oranye-cta: var(--brand-red);
+    --oranye-cta-hover: var(--brand-red-hover);
 
-    --radius: 10px;
-    --radius-login: 14px;
-    --bayangan-kartu: 0 4px 20px rgba(0, 0, 0, 0.06);
-    --bayangan-login: 0 4px 28px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    /* Aksen dekoratif (menggantikan emas/oranye pada teks & ikon) */
+    --teks-aksen: rgba(255, 255, 255, 0.95);
+    --teks-aksen-hover: #ffffff;
+    --teks-aksen-soft: rgba(255, 255, 255, 0.72);
+    --ikon-aksen-latar: rgba(255, 255, 255, 0.12);
+    --ikon-aksen-garis: rgba(255, 255, 255, 0.22);
+    --aksen-emas-lembut: var(--ikon-aksen-latar);
+    --aksen-emas-garis: var(--ikon-aksen-garis);
+
+    --gradasi-beli: var(--brand-black);
+    --gradasi-beli-hover: var(--brand-red);
+    --gradasi-beli-tekan: var(--brand-red-press);
+    --beli-teks: var(--brand-white);
+    --beli-bayangan-3d: 0 4px 14px rgba(17, 17, 17, 0.18);
+    --beli-bayangan-hover: 0 6px 20px rgba(214, 40, 40, 0.28);
+    --beli-bayangan-aktif: 0 2px 8px rgba(154, 26, 26, 0.35);
+    --ikon-placeholder-produk: #9CA3AF;
+
+    --hijau-sukses: var(--status-success);
+    --abu-latar: var(--brand-white);
+    --abu-latar-alt: var(--brand-gray-light);
+    --abu-kartu: var(--brand-white);
+    --abu-tepi: var(--brand-border);
+    --teks-utama: var(--brand-black);
+    --teks-redup: var(--brand-gray-text);
+    --kotak-fitur-bg: var(--brand-gray-light);
+
+    --radius: 12px;
+    --radius-login: 16px;
+    --bayangan-kartu: 0 4px 20px rgba(17, 17, 17, 0.06);
+    --bayangan-login: 0 8px 32px rgba(17, 17, 17, 0.08), 0 0 0 1px rgba(17, 17, 17, 0.04);
     --transisi-cepat: 0.2s ease;
     --transisi-tombol: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --merek-biru: #0a0a0a;
-    --merek-biru-redup: #000000;
-    --abu-input: #ffffff;
-    --ikon-input: #737373;
-    --fokus-ring: rgba(168, 144, 95, 0.35);
-    --placeholder: #a3a3a3;
-    --placeholder-fokus: #d4d4d4;
-    --error-teks: #b91c1c;
-    --error-bg: #fef2f2;
-    --error-tepi: #fecaca;
+    --merek-biru: var(--brand-black);
+    --merek-biru-redup: var(--brand-black-pure);
+    --abu-input: var(--brand-white);
+    --ikon-input: var(--brand-gray-text);
+    --fokus-ring: rgba(214, 40, 40, 0.35);
+    --placeholder: #9CA3AF;
+    --placeholder-fokus: #D1D5DB;
+    --error-teks: var(--status-danger);
+    --error-bg: #FEF2F2;
+    --error-tepi: #FECACA;
     --sukses-teks: #14532d;
     --sukses-bg: #f0fdf4;
     --sukses-tepi: #bbf7d0;
 
-    --hijau-sukses-lembut: rgba(27, 67, 50, 0.1);
-    --ungu-aksen: #525252;
-    --ungu-lembut: rgba(0, 0, 0, 0.06);
-    --kuning-aksen: #8a7a62;
-    --kuning-lembut: rgba(168, 144, 95, 0.12);
-    --merah-keluar: #991b1b;
-    --merah-keluar-bg: rgba(153, 27, 27, 0.06);
-    --merah-keluar-tepi: rgba(153, 27, 27, 0.28);
+    --hijau-sukses-lembut: rgba(22, 163, 74, 0.1);
+    --ungu-aksen: var(--brand-gray-text);
+    --ungu-lembut: rgba(17, 17, 17, 0.06);
+    --kuning-aksen: var(--status-warning);
+    --kuning-lembut: rgba(245, 158, 11, 0.12);
+    --merah-keluar: var(--status-danger);
+    --merah-keluar-bg: rgba(220, 38, 38, 0.06);
+    --merah-keluar-tepi: rgba(220, 38, 38, 0.28);
     --adm-sidebar-w: 260px;
     --adm-trans: 0.2s ease;
 }
 
-/* Paginasi — komponen daftar bersama (admin & toko) */
+/* Konten terang: aksen teks/ikon terbaca (bukan putih di atas putih) */
+.kontainer-toko,
+.kartu-produk,
+.kotak-fitur,
+.katalog-halaman,
+.pesanan-halaman,
+.checkout-halaman,
+.bantuan-wrap,
+.artikel-wrap,
+.keranjang-wrap,
+.wishlist-wrap,
+.halaman-masuk .kartu-form,
+.halaman-daftar .kartu-form,
+.admin-main {
+    --teks-aksen: var(--brand-black);
+    --teks-aksen-hover: var(--brand-gray-text);
+    --teks-aksen-soft: var(--teks-redup);
+    --ikon-aksen-latar: var(--brand-gray-light);
+    --ikon-aksen-garis: var(--brand-border);
+}
+
+/* Blok gelap: aksen emas/oranye dekoratif → putih */
+.hero-toko,
+.beranda-toko__footer,
+.tentang-hero,
+.tentang-panel--gelap,
+.panel-tentang,
+.bantuan-hero,
+.artikel-cta,
+.nav-toko {
+    --teks-aksen: rgba(255, 255, 255, 0.95);
+    --teks-aksen-hover: #ffffff;
+    --teks-aksen-soft: rgba(255, 255, 255, 0.72);
+    --ikon-aksen-latar: rgba(255, 255, 255, 0.12);
+    --ikon-aksen-garis: rgba(255, 255, 255, 0.22);
+}
+
+/* Tipografi global (halaman yang import tema) */
+h1, h2, h3, .judul-merek, .hero-toko__judul, .katalog-judul-bar h1 {
+    font-family: var(--font-heading);
+    letter-spacing: 0.02em;
+}
+
 .paginasi {
     display: flex;
     flex-wrap: wrap;
@@ -99,24 +158,25 @@
     padding: 0 0.6rem;
     font-size: 0.875rem;
     font-weight: 700;
+    font-family: var(--font-body);
     color: var(--teks-utama);
     text-decoration: none;
-    background: #fff;
+    background: var(--brand-white);
     border: 1px solid var(--abu-tepi);
-    border-radius: 8px;
+    border-radius: 10px;
     transition: var(--transisi-cepat);
 }
 
 .paginasi__item:hover {
     border-color: var(--oranye-cta);
-    color: var(--oranye-cta-hover);
+    color: var(--oranye-cta);
 }
 
 .paginasi__item--aktif,
 .paginasi__item--aktif:hover {
-    background: var(--biru-tombol);
-    border-color: var(--biru-tombol);
-    color: #fff;
+    background: var(--oranye-cta);
+    border-color: var(--oranye-cta);
+    color: var(--brand-white);
     cursor: default;
 }
 
@@ -130,9 +190,96 @@
     color: var(--teks-redup);
 }
 
-/* Indikator memuat saat pencarian langsung mengganti isi daftar */
 [aria-busy="true"] {
     opacity: 0.55;
     pointer-events: none;
     transition: opacity var(--transisi-cepat);
+}
+
+/* Logo teks EA SENIKERS (gambar hanya di --nav) */
+.logo-teks-merek {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.28em;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.logo-teks-merek__gambar {
+    display: block;
+    width: auto;
+    height: 2.35em;
+    max-height: 2.75rem;
+    object-fit: contain;
+    object-position: center;
+    flex-shrink: 0;
+}
+
+.logo-teks-merek__teks {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.28em;
+}
+
+.logo-teks-merek__ea {
+    color: var(--brand-white);
+}
+
+.logo-teks-merek__senikers {
+    color: var(--brand-red);
+}
+
+.logo-teks-merek--nav {
+    align-items: center;
+    gap: 0.45em;
+    font-size: clamp(1.1rem, 2.8vw, 1.35rem);
+}
+
+.logo-teks-merek--hero {
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+    filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.25));
+}
+
+.logo-teks-merek--footer {
+    font-size: clamp(1.25rem, 3.5vw, 1.65rem);
+}
+
+.logo-teks-merek--admin {
+    font-size: 1.15rem;
+    letter-spacing: 0.08em;
+}
+
+.logo-teks-merek--besar {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+}
+
+.logo-teks-merek--tentang {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    line-height: 0;
+}
+
+.logo-teks-merek--tentang .logo-teks-merek__gambar {
+    display: block;
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0 auto;
+    object-fit: contain;
+    object-position: center center;
+    filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.3));
+}
+
+.logo-teks-merek--terang .logo-teks-merek__ea {
+    color: var(--brand-black);
 }
