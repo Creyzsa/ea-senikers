@@ -156,7 +156,7 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                                     Ukuran: <strong><?php echo htmlspecialchars($sz !== '' ? $sz : '—', ENT_QUOTES, 'UTF-8'); ?></strong>
                                     · Qty: <?php echo (int) $qty; ?>
                                 </p>
-                                <p class="pesanan-item-baris__kecil" style="margin-top:0.35rem;font-weight:700;color:var(--oranye-cta-hover);"><?php echo htmlspecialchars(katalog_format_rupiah($pr), ENT_QUOTES, 'UTF-8'); ?></p>
+                                <p class="pesanan-item-baris__kecil" style="margin-top:0.35rem;font-weight:700;color:var(--teks-utama);"><?php echo htmlspecialchars(katalog_format_rupiah($pr), ENT_QUOTES, 'UTF-8'); ?></p>
                                 <?php if (in_array($status, ['shipped', 'completed'])): ?>
                                     <?php $pid = (string) ($it['id_produk'] ?? ''); ?>
                                     <?php if ($pid): ?>

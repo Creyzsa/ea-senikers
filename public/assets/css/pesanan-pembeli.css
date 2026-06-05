@@ -75,7 +75,7 @@
 }
 
 .pesanan-kartu:hover {
-    border-color: rgba(168, 144, 95, 0.45);
+    border-color: rgba(214, 40, 40, 0.45);
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.07);
 }
 
@@ -109,7 +109,7 @@
     margin: 0.4rem 0 0;
     font-size: 1.05rem;
     font-weight: 800;
-    color: var(--oranye-cta-hover);
+    color: var(--teks-aksen-hover);
 }
 
 .pesanan-kartu__aksi {
@@ -152,8 +152,8 @@
 }
 
 .pesanan-badge--kuning {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--brand-gray-light);
+    color: var(--teks-utama);
 }
 
 .pesanan-badge--biru {
@@ -167,8 +167,8 @@
 }
 
 .pesanan-badge--oranye {
-    background: #ffedd5;
-    color: #c2410c;
+    background: rgba(214, 40, 40, 0.1);
+    color: var(--brand-red);
 }
 
 .pesanan-badge--hijau {
@@ -218,7 +218,7 @@
     margin-bottom: 1rem;
     font-size: 0.88rem;
     font-weight: 600;
-    color: var(--oranye-cta-hover);
+    color: var(--teks-aksen-hover);
     text-decoration: none;
 }
 
@@ -399,10 +399,10 @@
 }
 
 .pesanan-stepper__item--aktif {
-    background: linear-gradient(165deg, rgba(168, 144, 95, 0.2) 0%, rgba(168, 144, 95, 0.08) 100%);
+    background: linear-gradient(165deg, rgba(214, 40, 40, 0.2) 0%, rgba(214, 40, 40, 0.08) 100%);
     color: var(--teks-utama);
     border-color: var(--oranye-cta);
-    box-shadow: 0 0 0 1px rgba(168, 144, 95, 0.25);
+    box-shadow: 0 0 0 1px rgba(214, 40, 40, 0.25);
     font-weight: 800;
 }
 
@@ -463,13 +463,20 @@
     justify-content: center;
     min-height: 2.65rem;
     padding: 0.7rem 1rem;
-    color: #0a0a0a;
+    color: var(--brand-white);
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 800;
-    background: linear-gradient(180deg, #d8c9a9 0%, var(--oranye-cta) 100%);
+    background: var(--oranye-cta);
     border-radius: 8px;
-    box-shadow: 0 7px 18px rgba(90, 75, 48, 0.22);
+    box-shadow: 0 6px 20px rgba(214, 40, 40, 0.32);
+    transition: background 0.15s ease, transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.pesanan-tombol-belanja:hover {
+    background: var(--oranye-cta-hover);
+    color: var(--brand-white);
+    transform: translateY(-1px);
 }
 
 .pesanan-filter {
@@ -517,8 +524,8 @@
 }
 
 .pesanan-filter__item--aktif {
-    background: rgba(168, 144, 95, 0.14);
-    border-color: rgba(168, 144, 95, 0.5);
+    background: rgba(214, 40, 40, 0.14);
+    border-color: rgba(214, 40, 40, 0.5);
 }
 
 .pesanan-kartu {
@@ -533,7 +540,7 @@
     margin: 0 0 0.25rem;
     font-size: 0.75rem;
     font-weight: 800;
-    color: var(--oranye-cta-hover);
+    color: var(--teks-aksen-hover);
 }
 
 .pesanan-badge {
