@@ -62,7 +62,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
         <div class="hero-toko__isi">
             <div class="hero-toko__teks">
                 <p class="hero-toko__logo-wrap">
-                    <img class="hero-toko__logo" src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" width="80" height="80" alt="EA SENIKERS" decoding="async" fetchpriority="high">
+                    <strong style="font-size:1.4rem; letter-spacing:1px; color:#D4B483;">EA SENIKERS</strong>
                 </p>
                 <p class="hero-toko__meta"><?php echo htmlspecialchars($merek_ringkas['hero_meta_satu_baris'], ENT_QUOTES, 'UTF-8'); ?></p>
                 <h1 id="hero-judul" class="hero-toko__judul"><?php echo htmlspecialchars($merek_ringkas['hero_judul'], ENT_QUOTES, 'UTF-8'); ?></h1>
@@ -77,6 +77,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                 </div>
             </div>
         </div>
+        <img class="hero-toko__watermark" src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" alt="" aria-hidden="true">
     </section>
 
     <main class="kontainer-toko" id="utama">
@@ -173,7 +174,10 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
         <div class="beranda-toko__footer-isi">
             <div class="beranda-toko__footer-merek">
                 <img class="beranda-toko__footer-logo" src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" width="120" height="120" alt="EA SENIKERS" loading="lazy" decoding="async">
-                <p class="beranda-toko__footer-tagline">Belanja sepatu nyaman dan terpercaya.</p>
+                <div>
+                    <strong style="font-size:1.15rem; letter-spacing:0.5px; display:block; color:#D4B483;">EA SENIKERS</strong>
+                    <p class="beranda-toko__footer-tagline">Toko sepatu branded dan preloved terpercaya.</p>
+                </div>
             </div>
             <div class="beranda-toko__footer-kolom">
                 <h2 class="beranda-toko__footer-judul">Tips &amp; Panduan</h2>

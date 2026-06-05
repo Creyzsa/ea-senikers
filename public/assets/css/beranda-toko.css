@@ -26,7 +26,8 @@ body.halaman-toko {
     align-items: center;
     gap: 0.75rem 1rem;
     padding: 0.65rem clamp(1rem, 3vw, 2rem);
-    background: var(--biru-header);
+    background: #000000;
+    border-bottom: 1px solid #D4B483;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -36,16 +37,23 @@ body.halaman-toko {
     color: #fff;
     display: flex;
     align-items: center;
-    line-height: 0;
+    gap: 0.5rem;
+    line-height: 1;
 }
 
 .bilah-toko__logo {
     display: block;
-    height: 1.7rem;
-    width: auto;
-    max-width: min(10.5rem, 42vw);
+    width: 45px;
+    height: 45px;
     object-fit: contain;
-    object-position: left center;
+    border-radius: 50%;
+}
+
+.bilah-toko__nama {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #D4B483;
 }
 
 .nav-toko {
@@ -66,11 +74,13 @@ body.halaman-toko {
 }
 
 .nav-toko__tautan:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(212, 180, 131, 0.12);
+    color: #D4B483;
 }
 
 .nav-toko__tautan--aktif {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(212, 180, 131, 0.18);
+    color: #D4B483;
     pointer-events: none;
 }
 
@@ -193,7 +203,7 @@ body.halaman-toko {
 
 .hero-toko__logo-wrap {
     margin: 0 0 0.15rem;
-    line-height: 0;
+    line-height: 1;
 }
 
 .hero-toko__logo {
@@ -267,6 +277,19 @@ body.halaman-toko {
     box-shadow:
         0 2px 0 rgba(90, 75, 48, 0.35),
         0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.hero-toko__watermark {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 340px;
+    max-width: 42vw;
+    opacity: 0.07;
+    pointer-events: none;
+    z-index: 0;
+    filter: grayscale(80%) contrast(1.1);
 }
 
 .tombol-oranye-besar {
@@ -622,9 +645,9 @@ body.halaman-toko {
 .beranda-toko__footer {
     margin-top: 2.5rem;
     padding: 2rem clamp(1rem, 3vw, 2rem) 1.5rem;
-    background: var(--biru-hero);
+    background: #000000;
     color: rgba(255, 255, 255, 0.88);
-    border-top: 1px solid rgba(168, 144, 95, 0.22);
+    border-top: 1px solid #D4B483;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
@@ -640,6 +663,9 @@ body.halaman-toko {
 .beranda-toko__footer-merek {
     grid-column: 1 / -1;
     max-width: 32rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 @media (min-width: 800px) {
@@ -650,21 +676,19 @@ body.halaman-toko {
 
 .beranda-toko__footer-logo {
     display: block;
-    width: min(220px, 60vw);
-    max-width: 100%;
-    height: auto;
-    max-height: 2.4rem;
+    width: 95px;
+    height: 95px;
     object-fit: contain;
-    object-position: left;
-    margin-bottom: 0.4rem;
-    opacity: 0.98;
+    border-radius: 6px;
+    flex-shrink: 0;
 }
 
 .beranda-toko__footer-tagline {
-    margin: 0;
+    margin: 0.1rem 0 0;
     font-size: 0.8rem;
-    color: rgba(201, 184, 150, 0.85);
+    color: rgba(255, 255, 255, 0.75);
     font-weight: 500;
+    line-height: 1.3;
 }
 
 .beranda-toko__footer-judul {
@@ -673,7 +697,7 @@ body.halaman-toko {
     font-weight: 800;
     letter-spacing: 0;
     text-transform: uppercase;
-    color: rgba(201, 184, 150, 0.95);
+    color: #D4B483;
 }
 
 .beranda-toko__footer-judul--lanjut {
