@@ -193,7 +193,7 @@ $u_checkout = aplikasi_url('checkout');
                             </div>
                             <?php endforeach; ?>
                         </div>
-                        <p class="detail-stok-hint"><strong>Keranjang</strong> menambah barang ke keranjang. <strong>Beli</strong> langsung ke ringkasan checkout (alamat &amp; bayar menyusul).</p>
+                        <p class="detail-stok-hint"><strong class="detail-hint-keranjang">Keranjang</strong> menambah barang ke keranjang. <strong>Beli</strong> langsung ke ringkasan checkout (alamat &amp; bayar menyusul).</p>
                     <?php endif; ?>
 
                     <div class="detail-baris-tombol">

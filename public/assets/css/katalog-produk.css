@@ -384,9 +384,9 @@ body.halaman-detail-produk {
 }
 
 .detail-ukuran input:checked + label {
-    border-color: var(--teks-aksen);
-    background: rgba(214, 40, 40, 0.12);
-    color: #0a0a0a;
+    border-color: var(--brand-black);
+    background: var(--brand-gray-light);
+    color: var(--brand-black);
 }
 
 .detail-ukuran--habis label {
@@ -431,9 +431,9 @@ body.halaman-detail-produk {
     padding: 0.75rem 1rem;
     font-size: 0.95rem;
     font-weight: 800;
-    color: var(--teks-aksen-hover);
+    color: var(--brand-red);
     text-decoration: none;
-    border: 2px solid var(--oranye-cta);
+    border: 2px solid var(--brand-red);
     border-radius: 10px;
     cursor: pointer;
     background: #fff;
@@ -442,7 +442,9 @@ body.halaman-detail-produk {
 }
 
 .detail-tombol-keranjang:hover {
-    background: rgba(214, 40, 40, 0.1);
+    color: var(--brand-red-hover);
+    border-color: var(--brand-red-hover);
+    background: rgba(214, 40, 40, 0.08);
     transform: translateY(-1px);
 }
 
@@ -987,7 +989,15 @@ body.halaman-detail-produk {
     line-height: 1.5;
 }
 
-/* --- Detail produk: stok hint per ukuran --- */
+/* --- Detail produk: ukuran & hint keranjang --- */
+.detail-form-aksi .detail-panel__subjudul,
+.detail-form-aksi .detail-stok-hint,
+.detail-ukuran label,
+.detail-ukuran__nomor,
+.detail-ukuran__sisa {
+    color: var(--brand-black);
+}
+
 .detail-ukuran label {
     display: inline-flex;
     flex-direction: column;
@@ -1004,12 +1014,16 @@ body.halaman-detail-produk {
     font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.03em;
-    color: var(--teks-aksen-hover);
     text-transform: lowercase;
 }
 
+.detail-stok-hint .detail-hint-keranjang,
+.detail-stok-hint strong:first-child {
+    color: var(--brand-red);
+}
+
 .detail-ukuran--terbatas label {
-    box-shadow: inset 0 0 0 1px rgba(214, 40, 40, 0.45);
+    box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.2);
 }
 
 .detail-ukuran--terbatas input:checked + label {
