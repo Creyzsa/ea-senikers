@@ -76,7 +76,7 @@
                 .finally(function () {
                     target.removeAttribute('aria-busy');
                 });
-        }, 300);
+        }, 220);
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();

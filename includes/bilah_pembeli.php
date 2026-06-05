@@ -34,6 +34,8 @@ $bp_cari_q = isset($bilah_cari_q)
     ? trim((string) $bilah_cari_q)
     : trim((string) ($_GET['q'] ?? ''));
 
+$u_cari_saran = aplikasi_url('api/cari-saran');
+
 $bp_label_keranjang = $bp_kj > 99 ? '99+' : (string) (int) $bp_kj;
 
 /**
@@ -69,14 +71,14 @@ $bp_render_tautan = static function (array $item) use ($bp_aktif): void {
                 ?>
             </div>
 
-            <form class="nav-toko__cari" method="get" action="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>" role="search">
+            <form class="nav-toko__cari" method="get" action="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>" role="search" data-cari-saran="<?php echo htmlspecialchars($u_cari_saran, ENT_QUOTES, 'UTF-8'); ?>">
                 <label class="nav-toko__cari-label" for="nav-toko-cari">Cari produk</label>
                 <span class="nav-toko__cari-ikon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/>
                     </svg>
                 </span>
-                <input type="search" id="nav-toko-cari" name="q" value="<?php echo htmlspecialchars($bp_cari_q, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari sneakers, merek..." autocomplete="off">
+                <input type="search" id="nav-toko-cari" name="q" value="<?php echo htmlspecialchars($bp_cari_q, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari sneakers, merek..." autocomplete="off" aria-autocomplete="list" aria-controls="nav-toko-cari-saran" aria-expanded="false">
             </form>
 
             <div class="nav-toko__ikon-grup" aria-label="Aksi cepat">
@@ -108,3 +110,4 @@ $bp_render_tautan = static function (array $item) use ($bp_aktif): void {
             </div>
         </nav>
     </header>
+    <script src="<?php echo htmlspecialchars(aplikasi_url_aset('assets/js/nav-cari-saran.js'), ENT_QUOTES, 'UTF-8'); ?>" defer></script>

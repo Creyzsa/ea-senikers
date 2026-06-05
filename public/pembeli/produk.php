@@ -37,7 +37,6 @@ $opsi_brand = array_values($opsi_brand);
 $opsi_kondisi = array_values($opsi_kondisi);
 
 $daftar_tersaring = array_values(array_filter($daftar_produk, static function (array $produk) use ($q, $brand_filter, $kondisi_filter): bool {
-    $nama = (string) ($produk['nama_produk'] ?? '');
     $brand = (string) ($produk['brand'] ?? '');
     $kondisi = (string) ($produk['kondisi'] ?? '');
 
@@ -47,7 +46,7 @@ $daftar_tersaring = array_values(array_filter($daftar_produk, static function (a
     if ($kondisi_filter !== '' && strcasecmp($kondisi, $kondisi_filter) !== 0) {
         return false;
     }
-    if ($q !== '' && !katalog_teks_cocok($nama . ' ' . $brand . ' ' . $kondisi, $q)) {
+    if ($q !== '' && !katalog_produk_cocok_pencarian($produk, $q)) {
         return false;
     }
 

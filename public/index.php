@@ -56,6 +56,7 @@ $cleanRoutes = [
     'detail-pesanan' => 'pembeli/detail_pesanan_pembeli.php',
     'keranjang-tambah' => 'pembeli/keranjang_tambah.php',
     'chat' => 'pembeli/chat.php',
+    'api/cari-saran' => 'api/cari-saran.php',
 ];
 
 if (array_key_exists($lookupPath, $cleanRoutes)) {

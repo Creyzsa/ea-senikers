@@ -107,6 +107,7 @@ body.halaman-toko {
 }
 
 .nav-toko__cari {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.4rem;
@@ -162,6 +163,105 @@ body.halaman-toko {
 
 .nav-toko__cari input[type="search"]::-webkit-search-cancel-button {
     -webkit-appearance: none;
+}
+
+.nav-toko__cari-saran {
+    position: absolute;
+    top: calc(100% + 0.45rem);
+    left: 0;
+    right: 0;
+    z-index: 120;
+    max-height: min(70vh, 22rem);
+    overflow: auto;
+    padding: 0.5rem 0;
+    background: var(--brand-white);
+    border: 1px solid var(--brand-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(17, 17, 17, 0.14);
+}
+
+.nav-toko__cari-saran[hidden] {
+    display: none !important;
+}
+
+.nav-toko__cari-judul {
+    margin: 0.35rem 0.25rem 0.2rem;
+    padding: 0 0.65rem;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand-gray-text);
+}
+
+.nav-toko__cari-daftar {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-toko__cari-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    padding: 0.5rem 0.65rem;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    font: inherit;
+    font-size: 0.82rem;
+    color: var(--brand-black);
+    cursor: pointer;
+}
+
+.nav-toko__cari-item:hover,
+.nav-toko__cari-item--aktif {
+    background: var(--brand-gray-light);
+}
+
+.nav-toko__cari-item--produk img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--brand-border);
+    flex-shrink: 0;
+    background: #f4f4f5;
+}
+
+.nav-toko__cari-item-isi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.nav-toko__cari-item-nama {
+    font-weight: 700;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.nav-toko__cari-item-meta {
+    font-size: 0.72rem;
+    color: var(--brand-gray-text);
+}
+
+.nav-toko__cari-item--semua {
+    font-weight: 700;
+    color: var(--brand-red);
+}
+
+.nav-toko__cari-memuat,
+.nav-toko__cari-kosong {
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+    color: var(--brand-gray-text);
 }
 
 .nav-toko__ikon-grup {

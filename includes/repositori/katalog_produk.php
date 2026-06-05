@@ -64,6 +64,251 @@ function katalog_teks_cocok(string $haystack, string $needle): bool
 }
 
 /**
+ * Pecah kata kunci pencarian menjadi token (spasi, aman UTF-8).
+ *
+ * @return list<string>
+ */
+function katalog_token_pencarian(string $q): array
+{
+    $q = trim($q);
+    if ($q === '') {
+        return [];
+    }
+    $norm = function_exists('mb_strtolower') ? mb_strtolower($q, 'UTF-8') : strtolower($q);
+    $potong = preg_split('/\s+/u', $norm, -1, PREG_SPLIT_NO_EMPTY);
+
+    return is_array($potong) ? array_values($potong) : [];
+}
+
+/**
+ * Teks gabungan produk untuk pencarian (nama, merek, kategori, kondisi, deskripsi).
+ */
+function katalog_indeks_teks_produk(array $produk): string
+{
+    $kondisi = (string) ($produk['kondisi'] ?? '');
+
+    return implode(' ', array_filter([
+        (string) ($produk['nama_produk'] ?? ''),
+        (string) ($produk['brand'] ?? ''),
+        (string) ($produk['kategori'] ?? ''),
+        $kondisi,
+        kondisi_label_pembeli($kondisi),
+        (string) ($produk['deskripsi'] ?? ''),
+    ], static fn (string $s): bool => trim($s) !== ''));
+}
+
+/**
+ * Satu token cocok di teks indeks atau sebagai awalan kata di nama/merek.
+ */
+function katalog_token_cocok_produk(string $token, string $indeks, string $nama, string $brand): bool
+{
+    if ($token === '') {
+        return true;
+    }
+    if (katalog_teks_cocok($indeks, $token)) {
+        return true;
+    }
+    foreach ([$nama, $brand] as $bidang) {
+        $kata = preg_split('/\s+/u', trim($bidang), -1, PREG_SPLIT_NO_EMPTY);
+        if (!is_array($kata)) {
+            continue;
+        }
+        foreach ($kata as $w) {
+            if (function_exists('mb_stripos')) {
+                if (mb_stripos($w, $token, 0, 'UTF-8') === 0) {
+                    return true;
+                }
+            } elseif (stripos($w, $token) === 0) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Produk cocok dengan pencarian: setiap kata kunci harus cocok (AND).
+ */
+function katalog_produk_cocok_pencarian(array $produk, string $q): bool
+{
+    $tokens = katalog_token_pencarian($q);
+    if ($tokens === []) {
+        return true;
+    }
+
+    $indeks = katalog_indeks_teks_produk($produk);
+    $nama = (string) ($produk['nama_produk'] ?? '');
+    $brand = (string) ($produk['brand'] ?? '');
+
+    foreach ($tokens as $token) {
+        if (!katalog_token_cocok_produk($token, $indeks, $nama, $brand)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Skor relevansi (lebih tinggi = lebih atas di saran).
+ */
+function katalog_skor_pencarian_produk(array $produk, string $q, array $tokens): int
+{
+    $nama = (string) ($produk['nama_produk'] ?? '');
+    $brand = (string) ($produk['brand'] ?? '');
+    $skor = 0;
+    $q_trim = trim($q);
+
+    if ($q_trim !== '' && katalog_teks_cocok($nama, $q_trim)) {
+        $skor += 120;
+    }
+    if ($q_trim !== '' && katalog_teks_cocok($brand, $q_trim)) {
+        $skor += 100;
+    }
+    if ($q_trim !== '' && function_exists('mb_stripos') && mb_stripos($nama, $q_trim, 0, 'UTF-8') === 0) {
+        $skor += 80;
+    } elseif ($q_trim !== '' && stripos($nama, $q_trim) === 0) {
+        $skor += 80;
+    }
+
+    foreach ($tokens as $token) {
+        if (katalog_teks_cocok($brand, $token)) {
+            $skor += 45;
+        }
+        if (katalog_teks_cocok($nama, $token)) {
+            $skor += 35;
+        }
+        if (function_exists('mb_stripos') && mb_stripos($nama, $token, 0, 'UTF-8') === 0) {
+            $skor += 25;
+        } elseif (stripos($nama, $token) === 0) {
+            $skor += 25;
+        }
+    }
+
+    return $skor;
+}
+
+/**
+ * @return list<array<string, mixed>>
+ */
+function katalog_ambil_produk_untuk_cari(): array
+{
+    static $cache = null;
+    if (is_array($cache)) {
+        return $cache;
+    }
+
+    $hasil = supabase_rest_request('GET', '/rest/v1/produk', [
+        'select' => 'id_produk,nama_produk,brand,kategori,kondisi,harga,deskripsi,produk_gambar(nama_file,urutan)',
+        'order' => 'created_at.desc',
+    ]);
+    if (!$hasil['ok'] || !is_array($hasil['data'])) {
+        $cache = [];
+
+        return $cache;
+    }
+    $rows = $hasil['data'];
+    if (isset($rows['code']) || isset($rows['message'])) {
+        $cache = [];
+
+        return $cache;
+    }
+    if (isset($rows['id_produk'])) {
+        $cache = [$rows];
+
+        return $cache;
+    }
+    $cache = [];
+    foreach ($rows as $row) {
+        if (is_array($row)) {
+            $cache[] = $row;
+        }
+    }
+
+    return $cache;
+}
+
+/**
+ * Saran pencarian untuk autocomplete navbar.
+ *
+ * @return array{produk: list<array<string, mixed>>, kata_kunci: list<array<string, string>>}
+ */
+function katalog_saran_pencarian(string $q, int $batas_produk = 8, int $batas_kata = 4): array
+{
+    $q = trim($q);
+    $tokens = katalog_token_pencarian($q);
+    $min_len = function_exists('mb_strlen') ? mb_strlen($q, 'UTF-8') : strlen($q);
+    if ($min_len < 2) {
+        return ['produk' => [], 'kata_kunci' => []];
+    }
+
+    $kandidat = [];
+    foreach (katalog_ambil_produk_untuk_cari() as $produk) {
+        if (!katalog_produk_cocok_pencarian($produk, $q)) {
+            continue;
+        }
+        $kandidat[] = [
+            'produk' => $produk,
+            'skor' => katalog_skor_pencarian_produk($produk, $q, $tokens),
+        ];
+    }
+
+    usort($kandidat, static fn (array $a, array $b): int => $b['skor'] <=> $a['skor']);
+
+    $produk_out = [];
+    foreach (array_slice($kandidat, 0, max(1, $batas_produk)) as $baris) {
+        $p = $baris['produk'];
+        $id = (string) ($p['id_produk'] ?? '');
+        if ($id === '') {
+            continue;
+        }
+        $produk_out[] = [
+            'id' => $id,
+            'nama' => (string) ($p['nama_produk'] ?? ''),
+            'brand' => (string) ($p['brand'] ?? ''),
+            'harga' => katalog_format_rupiah((int) ($p['harga'] ?? 0)),
+            'gambar' => katalog_url_gambar_utama($p),
+            'url' => aplikasi_url('detail-produk?id=' . rawurlencode($id)),
+        ];
+    }
+
+    $kata_out = [];
+    $merek_seen = [];
+    foreach ($kandidat as $baris) {
+        $brand = trim((string) ($baris['produk']['brand'] ?? ''));
+        if ($brand === '' || isset($merek_seen[$brand])) {
+            continue;
+        }
+        $cocok_merek = katalog_teks_cocok($brand, $q);
+        foreach ($tokens as $token) {
+            if (katalog_teks_cocok($brand, $token)) {
+                $cocok_merek = true;
+                break;
+            }
+        }
+        if (!$cocok_merek) {
+            continue;
+        }
+        $merek_seen[$brand] = true;
+        $kata_out[] = [
+            'label' => $brand,
+            'url' => aplikasi_url('produk?' . http_build_query(['q' => $brand])),
+        ];
+        if (count($kata_out) >= $batas_kata) {
+            break;
+        }
+    }
+
+    $kata_out[] = [
+        'label' => 'Lihat semua hasil untuk "' . $q . '"',
+        'url' => aplikasi_url('produk?' . http_build_query(['q' => $q])),
+    ];
+
+    return ['produk' => $produk_out, 'kata_kunci' => $kata_out];
+}
+
+/**
  * Label kondisi untuk ditampilkan ke pembeli.
  * Data internal memakai 'Baru' / 'Second' (untuk admin form),
  * tetapi pembeli melihatnya sebagai 'Baru' / 'Preloved' agar selaras
