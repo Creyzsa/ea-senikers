@@ -671,7 +671,7 @@ body.halaman-toko {
 
 .kotak-fitur__teks span {
     font-size: 0.8rem;
-    color: var(--brand-red);
+    color: var(--teks-redup);
     line-height: 1.4;
 }
 
