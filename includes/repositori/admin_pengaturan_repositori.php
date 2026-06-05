@@ -107,10 +107,9 @@ function admin_pengaturan_muat_terapan(): array
     $wa1 = admin_pengaturan_normalisasi_wa((string) ($out['nomor_wa_1'] ?? $bawaan['nomor_wa_1']));
     $wa2 = admin_pengaturan_normalisasi_wa((string) ($out['nomor_wa_2'] ?? $bawaan['nomor_wa_2']));
 
-    $kota_asal_kode = preg_replace('/\D+/', '', (string) ($out['rajaongkir_kota_asal_kode'] ?? '')) ?? '';
-    if (strlen($kota_asal_kode) !== 10) {
-        $legacy = preg_replace('/\D+/', '', (string) ($out['rajaongkir_kota_asal_id'] ?? '')) ?? '';
-        $kota_asal_kode = strlen($legacy) === 10 ? $legacy : '';
+    $kota_asal_kode = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) ($out['rajaongkir_kota_asal_kode'] ?? '')) ?? '');
+    if (!preg_match('/^[A-Z]{3}\d{5}$/', $kota_asal_kode)) {
+        $kota_asal_kode = '';
     }
     $kota_asal_id = (int) ($out['rajaongkir_kota_asal_id'] ?? $bawaan['rajaongkir_kota_asal_id']);
     if ($kota_asal_id < 0) {
@@ -184,8 +183,8 @@ function admin_pengaturan_simpan_terapan(array $data): bool
 
     $email = strtolower(trim((string) ($data['email_toko'] ?? '')));
 
-    $kota_asal_kode = preg_replace('/\D+/', '', (string) ($data['rajaongkir_kota_asal_kode'] ?? '')) ?? '';
-    if (strlen($kota_asal_kode) !== 10) {
+    $kota_asal_kode = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) ($data['rajaongkir_kota_asal_kode'] ?? '')) ?? '');
+    if (!preg_match('/^[A-Z]{3}\d{5}$/', $kota_asal_kode)) {
         $kota_asal_kode = '';
     }
     $kota_asal_id_raw = $data['rajaongkir_kota_asal_id'] ?? 0;

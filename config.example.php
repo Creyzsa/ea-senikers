@@ -71,8 +71,8 @@ define('URL_APLIKASI', 'https://www.easenikers.shop');   // PROD. Untuk local de
 
 define('PAYMENT_CALLBACK_SECRET', '');
 
-/** API Co.id — cek ongkir & regional (header x-api-co-id). Bisa juga di Pengaturan admin. */
-define('APICOID_API_KEY', '');
+/** Kode asal JNE toko (3 huruf + 5 angka). EA Senikers Padang Panjang = PDG21100 */
+define('JNE_ORIGIN_CODE', 'PDG21100');
 
 define('EMAIL_DRIVER', 'log');
 define('EMAIL_PENGIRIM', 'EA SENIKERS <noreply@example.com>');

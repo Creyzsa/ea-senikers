@@ -16,7 +16,7 @@ $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
 $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF-8');
 $urlPengaturan = aplikasi_url('admin/pengaturan_admin.php');
 
-$api_key_ada = rajaongkir_api_key() !== '';
+$api_key_ada = true;
 $kota_asal_kode_tersimpan = rajaongkir_asal_kode();
 $cfg = admin_pengaturan_muat_terapan();
 $kota_asal_nama_tersimpan = (string) ($cfg['rajaongkir_kota_asal_nama'] ?? '');
@@ -51,7 +51,7 @@ if ($aksi === 'cek_ongkir') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Cek Ongkir API — EA SENIKERS Admin</title>
+    <title>Cek Ongkir JNE — EA SENIKERS Admin</title>
     <link rel="stylesheet" href="../assets/css/beranda-admin.css">
 </head>
 <body class="halaman-admin">
@@ -83,7 +83,7 @@ if ($aksi === 'cek_ongkir') {
             <main class="admin-isi">
                 <div class="admin-kop-halaman">
                     <div>
-                        <h1 class="admin-judul-besar">Cek Ongkir (API Co.id)</h1>
+                        <h1 class="admin-judul-besar">Cek Ongkir JNE</h1>
                         <p class="admin-salam"><a href="<?php echo htmlspecialchars($urlPengaturan, ENT_QUOTES, 'UTF-8'); ?>">← Pengaturan</a></p>
                     </div>
                     <?php if ($api_key_ada): ?>
@@ -91,9 +91,9 @@ if ($aksi === 'cek_ongkir') {
                     <?php endif; ?>
                 </div>
 
-                <?php if (!$api_key_ada): ?>
+                <?php if ($kota_asal_kode_tersimpan === ''): ?>
                     <div class="admin-alert admin-alert--error">
-                        API Key belum diisi. <a href="<?php echo htmlspecialchars($urlPengaturan, ENT_QUOTES, 'UTF-8'); ?>">Buka Pengaturan toko →</a>
+                        Kode asal JNE belum diatur. <a href="<?php echo htmlspecialchars($urlPengaturan, ENT_QUOTES, 'UTF-8'); ?>">Buka Pengaturan toko</a> (contoh <code>PDG21100</code> untuk Padang Panjang).
                     </div>
                 <?php else: ?>
 
@@ -117,7 +117,7 @@ if ($aksi === 'cek_ongkir') {
                         <strong><?php echo $kota_asal_nama_tersimpan !== '' ? htmlspecialchars($kota_asal_nama_tersimpan, ENT_QUOTES, 'UTF-8') : '<em class="admin-kosong">belum diatur</em>'; ?></strong>
                     </div>
                     <div class="admin-status-kartu">
-                        <span>Kode desa asal</span>
+                        <span>Kode asal JNE</span>
                         <strong><?php echo $kota_asal_kode_tersimpan !== '' ? htmlspecialchars($kota_asal_kode_tersimpan, ENT_QUOTES, 'UTF-8') : '<em class="admin-kosong">—</em>'; ?></strong>
                     </div>
                 </section>
@@ -132,7 +132,7 @@ if ($aksi === 'cek_ongkir') {
                             <div class="admin-form-grid">
                                 <div class="admin-field admin-field--full">
                                     <label for="cari" class="visually-hidden">Cari</label>
-                                    <input type="search" id="cari" name="cari" value="<?php echo htmlspecialchars($cari_kata, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari desa/kelurahan — mis. Padang Panjang" required autofocus>
+                                    <input type="search" id="cari" name="cari" value="<?php echo htmlspecialchars($cari_kata, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari kota/kecamatan JNE — mis. padang panjang, jakarta" required autofocus>
                                 </div>
                             </div>
                             <div class="admin-form-aksi">
@@ -152,7 +152,7 @@ if ($aksi === 'cek_ongkir') {
                                         <table class="admin-tabel">
                                             <thead>
                                                 <tr>
-                                                    <th>Kode desa</th>
+                                                    <th>Kode JNE</th>
                                                     <th>Lokasi</th>
                                                     <th>Kode Pos</th>
                                                 </tr>
@@ -199,12 +199,12 @@ if ($aksi === 'cek_ongkir') {
                             <input type="hidden" name="aksi" value="cek_ongkir">
                             <div class="admin-form-grid">
                                 <div class="admin-field">
-                                    <label for="origin">Kode desa asal</label>
-                                    <input type="text" id="origin" name="origin" inputmode="numeric" pattern="\d{10}" maxlength="10" value="<?php echo htmlspecialchars(isset($_GET['origin']) ? (string) $_GET['origin'] : $kota_asal_kode_tersimpan, ENT_QUOTES, 'UTF-8'); ?>" required placeholder="10 digit">
+                                    <label for="origin">Kode asal JNE</label>
+                                    <input type="text" id="origin" name="origin" pattern="[A-Za-z]{3}[0-9]{5}" maxlength="8" value="<?php echo htmlspecialchars(isset($_GET['origin']) ? (string) $_GET['origin'] : $kota_asal_kode_tersimpan, ENT_QUOTES, 'UTF-8'); ?>" required placeholder="PDG21100" style="text-transform:uppercase">
                                 </div>
                                 <div class="admin-field">
-                                    <label for="destination">Kode desa tujuan</label>
-                                    <input type="text" id="destination" name="destination" inputmode="numeric" pattern="\d{10}" maxlength="10" value="<?php echo htmlspecialchars((string) ($_GET['destination'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" required placeholder="10 digit">
+                                    <label for="destination">Kode tujuan JNE</label>
+                                    <input type="text" id="destination" name="destination" pattern="[A-Za-z]{3}[0-9]{5}" maxlength="8" value="<?php echo htmlspecialchars((string) ($_GET['destination'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" required placeholder="CGK10400" style="text-transform:uppercase">
                                 </div>
                                 <div class="admin-field">
                                     <label for="weight">Berat (gram)</label>

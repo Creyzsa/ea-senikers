@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Checkout pembeli — flow lengkap dengan API Co.id (ongkir & regional).
+ * Checkout pembeli — ongkir via API publik jne.co.id (sama dengan Cek Ongkir JNE).
  *
  * Step:
  *   1. Pembeli klik "Beli" di detail produk (POST: id_produk, ukuran).
@@ -272,7 +272,7 @@ $profil_lengkap = trim($profil['nama_penerima']) !== ''
     && trim($profil['alamat_detail']) !== '';
 
 $asal_kode_toko = rajaongkir_asal_kode();
-$api_key_toko = rajaongkir_api_key();
+$ongkir_siap = rajaongkir_asal_kode() !== '';
 
 $flash_error = $_SESSION['flash_checkout_error'] ?? null;
 unset($_SESSION['flash_checkout_error']);
@@ -309,7 +309,7 @@ if ($cari === '' && $destination_kode_pilih === '' && $profil_lengkap) {
 $hasil_cari = null;
 $hasil_ongkir = null;
 
-if ($profil_lengkap && $api_key_toko !== '' && $asal_kode_toko !== '') {
+if ($profil_lengkap && $asal_kode_toko !== '') {
     if ($cari !== '') {
         $hasil_cari = rajaongkir_cari_destinasi($cari, 30);
     }
@@ -457,10 +457,10 @@ $total_final = $harga_produk + $ongkir_pilih;
             Nama penerima, nomor HP, dan alamat detail wajib diisi sebelum checkout.
             <a href="<?php echo htmlspecialchars($u_akun, ENT_QUOTES, 'UTF-8'); ?>#profil-pengiriman">Buka profil →</a>
         </div>
-    <?php elseif ($api_key_toko === '' || $asal_kode_toko === ''): ?>
+    <?php elseif (!$ongkir_siap): ?>
         <div class="checkout-alert checkout-alert--peringatan">
             <strong>Toko belum siap menerima pesanan.</strong>
-            Admin perlu mengisi API key &amp; kode desa asal (API Co.id) terlebih dahulu.
+            Admin perlu mengisi <strong>kode asal JNE</strong> di Pengaturan (contoh <code>PDG21100</code> untuk Padang Panjang).
             Sementara waktu, silakan hubungi admin lewat WhatsApp.
         </div>
     <?php else: ?>
@@ -523,7 +523,7 @@ $total_final = $harga_produk + $ongkir_pilih;
                     </p>
 
                     <?php if ($hasil_ongkir === null || !$hasil_ongkir['ok']): ?>
-                        <p class="checkout-error-baris">Gagal hitung ongkir: <?php echo htmlspecialchars((string) ($hasil_ongkir['error'] ?? 'koneksi API Co.id gagal'), ENT_QUOTES, 'UTF-8'); ?>. Coba ulang.</p>
+                        <p class="checkout-error-baris">Gagal hitung ongkir JNE: <?php echo htmlspecialchars((string) ($hasil_ongkir['error'] ?? 'koneksi jne.co.id gagal'), ENT_QUOTES, 'UTF-8'); ?>. Coba ulang.</p>
                     <?php else: ?>
                         <?php
                         $opsi_ongkir = [];
@@ -573,20 +573,20 @@ $total_final = $harga_produk + $ongkir_pilih;
                 <?php else: ?>
                     <?php if ($auto_no_match): ?>
                         <p class="checkout-auto-cari checkout-auto-cari--peringatan">
-                            Kode pos profil kamu (<strong><?php echo htmlspecialchars($kode_pos_profil, ENT_QUOTES, 'UTF-8'); ?></strong>) tidak cocok dengan desa/kelurahan di daftar.
-                            Pilih lokasi yang paling sesuai alamat pengiriman di bawah.
+                            Kode pos profil (<strong><?php echo htmlspecialchars($kode_pos_profil, ENT_QUOTES, 'UTF-8'); ?></strong>) tidak bisa dicocokkan otomatis.
+                            Cari dan pilih kota/kecamatan tujuan JNE yang paling sesuai alamat di bawah.
                         </p>
                     <?php elseif (!empty($kode_pos_api_tidak_tersedia)): ?>
                         <p class="checkout-auto-cari">
                             Pencarian otomatis dari profil: <strong><?php echo htmlspecialchars($cari, ENT_QUOTES, 'UTF-8'); ?></strong>.
-                            Kode pos tidak bisa dicocokkan otomatis di paket API saat ini — pilih desa/kelurahan yang sesuai alamat Anda (mis. yang dekat <strong><?php echo htmlspecialchars($kode_pos_profil, ENT_QUOTES, 'UTF-8'); ?></strong>).
+                            Pilih lokasi tujuan JNE yang sesuai alamat pengiriman (cari nama kota/kecamatan, mis. dekat kode pos <strong><?php echo htmlspecialchars($kode_pos_profil, ENT_QUOTES, 'UTF-8'); ?></strong>).
                         </p>
                     <?php elseif ($cari_otomatis && $hasil_cari !== null && $hasil_cari['ok'] && is_array($hasil_cari['data']) && $hasil_cari['data'] !== []): ?>
                         <p class="checkout-auto-cari">Dicari otomatis dari alamat profil: <strong><?php echo htmlspecialchars($cari, ENT_QUOTES, 'UTF-8'); ?></strong>. Pilih salah satu di bawah, atau cari ulang.</p>
                     <?php endif; ?>
                     <form method="get" class="checkout-cari-form">
                         <label for="cari" class="visually-hidden">Cari</label>
-                        <input type="search" id="cari" name="cari" value="<?php echo htmlspecialchars($cari, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Ketik kecamatan / kota tujuan, mis. Jakarta Pusat" required<?php echo $cari_otomatis ? '' : ' autofocus'; ?>>
+                        <input type="search" id="cari" name="cari" value="<?php echo htmlspecialchars($cari, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Ketik kota/kecamatan tujuan, mis. Batusangkar atau Jakarta Utara" required<?php echo $cari_otomatis ? '' : ' autofocus'; ?>>
                         <button type="submit" class="tombol-page-utama">Cari</button>
                     </form>
 
@@ -601,7 +601,6 @@ $total_final = $harga_produk + $ongkir_pilih;
                                 <ul class="checkout-destinasi-list">
                                     <?php foreach ($rows as $r):
                                         if (!is_array($r)) continue;
-                                        if (empty($r['is_courier_support'])) continue;
                                         $rid = rajaongkir_normalisasi_kode_desa((string) ($r['id'] ?? ''));
                                         if ($rid === '') continue;
                                         $label = (string) ($r['label'] ?? '');

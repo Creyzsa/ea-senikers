@@ -110,8 +110,8 @@ function pesanan_buat(
     $kurir = trim((string) ($shipping['kurir'] ?? ''));
     $layanan = trim((string) ($shipping['layanan'] ?? ''));
     $ongkir = max(0, (int) ($shipping['ongkir'] ?? 0));
-    $destination_id = preg_replace('/\D+/', '', (string) ($shipping['destination_id'] ?? '')) ?? '';
-    if (strlen($destination_id) !== 10) {
+    $destination_id = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) ($shipping['destination_id'] ?? '')) ?? '');
+    if (!preg_match('/^[A-Z]{3}\d{5}$/', $destination_id)) {
         $destination_id = '';
     }
     $total = max(0, $subtotal_produk) + $ongkir;
