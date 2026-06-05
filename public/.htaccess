@@ -45,10 +45,12 @@ RewriteRule ^pembeli/detail_produk\.php$ /detail-produk [R=301,L,QSA]
 RewriteRule ^pembeli/keranjang_pembeli\.php$ /keranjang [R=301,L,QSA]
 RewriteRule ^pembeli/akun_pembeli\.php$ /akun [R=301,L,QSA]
 RewriteRule ^pembeli/pesanan_pembeli\.php$ /pesanan [R=301,L,QSA]
+RewriteRule ^pembeli/wishlist\.php$ /wishlist [R=301,L,QSA]
 RewriteRule ^pembeli/checkout_pembeli\.php$ /checkout [R=301,L,QSA]
 RewriteRule ^pembeli/lapor_masalah\.php$ /lapor-masalah [R=301,L,QSA]
 RewriteRule ^pembeli/detail_pesanan_pembeli\.php$ /detail-pesanan [R=301,L,QSA]
 RewriteRule ^pembeli/keranjang_tambah\.php$ /keranjang-tambah [R=301,L,QSA]
+RewriteRule ^pembeli/chat\.php$ /chat [R=301,L,QSA]
 
 # Caching untuk aset statis (CSS, JS, gambar)
 <IfModule mod_expires.c>

@@ -15,8 +15,15 @@ if (sudah_masuk() && ambil_peran() === 'admin') {
 }
 
 // Clean simple URLs mapping (same as Vercel api/index.php)
+// Note: wishlist and chat were added for the new features (ulasan/wishlist/chat/rekomendasi)
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $requestPath = ltrim($requestPath, '/');
+
+// Support both clean (/wishlist) and with .php (/wishlist.php) for robustness
+$lookupPath = $requestPath;
+if (substr($lookupPath, -4) === '.php') {
+    $lookupPath = substr($lookupPath, 0, -4);
+}
 
 $cleanRoutes = [
     '' => 'pembeli/beranda_pembeli.php',
@@ -30,14 +37,16 @@ $cleanRoutes = [
     'keranjang' => 'pembeli/keranjang_pembeli.php',
     'akun' => 'pembeli/akun_pembeli.php',
     'pesanan' => 'pembeli/pesanan_pembeli.php',
+    'wishlist' => 'pembeli/wishlist.php',
     'checkout' => 'pembeli/checkout_pembeli.php',
     'lapor-masalah' => 'pembeli/lapor_masalah.php',
     'detail-pesanan' => 'pembeli/detail_pesanan_pembeli.php',
     'keranjang-tambah' => 'pembeli/keranjang_tambah.php',
+    'chat' => 'pembeli/chat.php',
 ];
 
-if (array_key_exists($requestPath, $cleanRoutes)) {
-    $includePath = __DIR__ . '/' . $cleanRoutes[$requestPath];
+if (array_key_exists($lookupPath, $cleanRoutes)) {
+    $includePath = __DIR__ . '/' . $cleanRoutes[$lookupPath];
     if (file_exists($includePath)) {
         include $includePath;
         exit;
@@ -53,4 +62,7 @@ if (array_key_exists($requestPath, $cleanRoutes)) {
 
 // Fallback: serve beranda at root (for / and unknown)
 include __DIR__ . '/pembeli/beranda_pembeli.php';
+
+// Note: beranda_pembeli.php has JS that auto-redirects Supabase auth tokens/errors (#access_token or #error) to /login/konfirmasi_email.php
+// This catches cases where Supabase redirects to Site URL root with error hash (e.g. otp_expired from pre-fetched links).
 

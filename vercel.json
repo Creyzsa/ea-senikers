@@ -26,11 +26,16 @@
     { "src": "/pembeli/keranjang_pembeli.php", "dest": "/keranjang", "status": 301 },
     { "src": "/pembeli/akun_pembeli.php", "dest": "/akun", "status": 301 },
     { "src": "/pembeli/pesanan_pembeli.php", "dest": "/pesanan", "status": 301 },
+    { "src": "/pembeli/wishlist.php", "dest": "/wishlist", "status": 301 },
+    { "src": "/wishlist.php", "dest": "/wishlist", "status": 301 },
+    { "src": "/pembeli/chat.php", "dest": "/chat", "status": 301 },
+    { "src": "/chat.php", "dest": "/chat", "status": 301 },
     { "src": "/pembeli/checkout_pembeli.php", "dest": "/checkout", "status": 301 },
     { "src": "/pembeli/lapor_masalah.php", "dest": "/lapor-masalah", "status": 301 },
     { "src": "/pembeli/beranda_pembeli.php", "dest": "/", "status": 301 },
     { "src": "/pembeli/detail_pesanan_pembeli.php", "dest": "/detail-pesanan", "status": 301 },
     { "src": "/pembeli/keranjang_tambah.php", "dest": "/keranjang-tambah", "status": 301 },
+    { "src": "/pembeli/chat.php", "dest": "/chat", "status": 301 },
     {
       "src": "/(.*)",
       "dest": "/api/index.php"

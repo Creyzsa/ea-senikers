@@ -22,6 +22,12 @@ $path = parse_url($requestUri, PHP_URL_PATH) ?: '/';
 // Remove leading slash
 $path = ltrim($path, '/');
 
+// Support requesting with or without .php for clean routes
+$lookup = $path;
+if (substr($lookup, -4) === '.php') {
+    $lookup = substr($lookup, 0, -4);
+}
+
 // Clean simple URLs for buyer area (no /pembeli/ prefix, no .php)
 $cleanRoutes = [
     '' => 'pembeli/beranda_pembeli.php',
@@ -35,14 +41,16 @@ $cleanRoutes = [
     'keranjang' => 'pembeli/keranjang_pembeli.php',
     'akun' => 'pembeli/akun_pembeli.php',
     'pesanan' => 'pembeli/pesanan_pembeli.php',
+    'wishlist' => 'pembeli/wishlist.php',
     'checkout' => 'pembeli/checkout_pembeli.php',
     'lapor-masalah' => 'pembeli/lapor_masalah.php',
     'detail-pesanan' => 'pembeli/detail_pesanan_pembeli.php',
     'keranjang-tambah' => 'pembeli/keranjang_tambah.php',
+    'chat' => 'pembeli/chat.php',
 ];
 
-if (array_key_exists($path, $cleanRoutes)) {
-    $path = $cleanRoutes[$path];
+if (array_key_exists($lookup, $cleanRoutes)) {
+    $path = $cleanRoutes[$lookup];
 } elseif (strpos($path, 'admin/') === 0) {
     // admin paths kept as-is (e.g. /admin/beranda_admin.php)
 } elseif ($path === '' || str_ends_with($path, '/')) {
