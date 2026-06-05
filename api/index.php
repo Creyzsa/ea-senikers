@@ -48,6 +48,7 @@ $cleanRoutes = [
     'keranjang-tambah' => 'pembeli/keranjang_tambah.php',
     'chat' => 'pembeli/chat.php',
     'api/cari-saran' => 'api/cari-saran.php',
+    'api/wishlist-toggle' => 'api/wishlist-toggle.php',
 ];
 
 if (array_key_exists($lookup, $cleanRoutes)) {

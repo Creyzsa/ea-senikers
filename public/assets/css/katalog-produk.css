@@ -6,174 +6,561 @@
     box-sizing: border-box;
 }
 
+/* === Katalog premium EA SENIKERS === */
 body.halaman-katalog {
+    --katalog-primary: #0f0f10;
+    --katalog-accent: #e63946;
+    --katalog-bg: #ffffff;
+    --katalog-surface: #f3f4f6;
+    --katalog-muted: #6b7280;
     margin: 0;
     min-height: 100vh;
     font-family: var(--font-body);
-    color: var(--teks-utama);
-    background: var(--abu-latar-alt);
+    color: var(--katalog-primary);
+    background: var(--katalog-bg);
 }
 
 .katalog-latar {
-    background: var(--abu-latar-alt);
-    padding-bottom: 2rem;
+    background: var(--katalog-bg);
+    padding-bottom: 3rem;
 }
 
 .katalog-kontainer {
-    max-width: 1180px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 0 clamp(1rem, 3vw, 1.5rem);
+    padding: 1.25rem clamp(1rem, 3vw, 1.75rem) 0;
 }
 
-.katalog-judul-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 1rem 0 0.75rem;
-}
-
-.katalog-judul-bar h1 {
-    margin: 0;
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: var(--teks-utama);
-}
-
-.katalog-judul-bar p {
-    margin: 0;
-    font-size: 0.85rem;
-    color: var(--teks-redup);
-}
-
-.katalog-grid {
+/* Hero */
+.katalog-hero-premium {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+    gap: clamp(1.25rem, 3vw, 2rem);
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: clamp(1.5rem, 4vw, 2.25rem);
+    background: var(--katalog-primary);
+    border-radius: 16px;
+    color: #fff;
+    box-shadow: 0 20px 50px rgba(15, 15, 16, 0.18);
 }
 
-@media (min-width: 640px) {
-    .katalog-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-    }
+.katalog-hero-premium__eyebrow {
+    margin: 0 0 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--katalog-accent);
 }
 
-@media (min-width: 1024px) {
-    .katalog-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
+.katalog-hero-premium h1 {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: clamp(1.65rem, 4vw, 2.35rem);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: 0.01em;
 }
 
-.kartu-katalog {
+.katalog-hero-premium__deskripsi {
+    margin: 0.85rem 0 0;
+    max-width: 36rem;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.katalog-hero-premium__trust {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    background: #fff;
+    gap: 0.85rem;
+}
+
+.katalog-hero-premium__trust li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    overflow: hidden;
-    text-decoration: none;
-    color: inherit;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.kartu-katalog:hover {
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
-    transform: translateY(-2px);
+.katalog-trust__ikon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: #fff;
+    background: rgba(230, 57, 70, 0.2);
+    border-radius: 10px;
 }
 
-.kartu-katalog__gambar-wrap {
+.katalog-trust__teks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.katalog-trust__teks strong {
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.katalog-trust__teks span {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+/* Filter */
+.katalog-filter-premium {
     position: relative;
+    display: grid;
+    grid-template-columns: minmax(14rem, 1.35fr) repeat(3, minmax(9rem, 1fr)) auto;
+    gap: 0.85rem;
+    align-items: end;
+    margin-bottom: 1.5rem;
+    padding: 1.15rem;
+    background: var(--katalog-bg);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(15, 15, 16, 0.05);
+}
+
+.katalog-filter-premium__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.katalog-filter-premium__field span {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--katalog-muted);
+}
+
+.katalog-filter-premium__field input,
+.katalog-filter-premium__field select {
     width: 100%;
-    aspect-ratio: 1;
-    background: var(--brand-gray-light);
+    height: 2.75rem;
+    padding: 0 0.85rem;
+    font: inherit;
+    font-size: 0.88rem;
+    color: var(--katalog-primary);
+    background: var(--katalog-bg);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(15, 15, 16, 0.04);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.katalog-filter-premium__field input:focus,
+.katalog-filter-premium__field select:focus {
+    outline: none;
+    border-color: var(--katalog-accent);
+    box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
+}
+
+.katalog-filter-premium__aksi {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.katalog-filter-premium__tombol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.75rem;
+    padding: 0 1.1rem;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: opacity 0.3s ease, transform 0.3s ease, background 0.3s ease;
+}
+
+.katalog-filter-premium__tombol--utama {
+    color: #fff;
+    background: var(--katalog-primary);
+    border: 1px solid var(--katalog-primary);
+}
+
+.katalog-filter-premium__tombol--utama:hover {
+    opacity: 0.9;
+}
+
+.katalog-filter-premium__tombol--reset {
+    color: var(--katalog-primary);
+    background: var(--katalog-bg);
+    border: 1px solid #e5e7eb;
+}
+
+.katalog-filter-premium__tombol--reset:hover {
+    opacity: 0.9;
+    background: var(--katalog-surface);
+}
+
+/* Toolbar & grid */
+.katalog-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.katalog-toolbar__hitung {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--katalog-muted);
+}
+
+.katalog-toolbar__hitung strong {
+    color: var(--katalog-primary);
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.katalog-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.katalog-chip-row a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--katalog-primary);
+    text-decoration: none;
+    background: var(--katalog-surface);
+    border-radius: 999px;
+    transition: opacity 0.3s ease;
+}
+
+.katalog-chip-row a:hover {
+    opacity: 0.85;
+}
+
+.katalog-grid-premium {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+/* Product card */
+.kartu-premium {
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+    background: var(--katalog-bg);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #ebebeb;
+    box-shadow: 0 4px 16px rgba(15, 15, 16, 0.06);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.kartu-premium:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(15, 15, 16, 0.12);
+}
+
+.kartu-premium__media {
+    position: relative;
+    flex: 7 1 0;
+    min-height: 220px;
+    background: linear-gradient(160deg, #1a1a1c 0%, #2d2d30 55%, #0f0f10 100%);
     overflow: hidden;
 }
 
-.kartu-katalog__gambar {
-    position: absolute;
-    inset: 0;
+.kartu-premium__gambar-tautan {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.kartu-premium__gambar {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center center;
     display: block;
+    transition: transform 0.3s ease;
 }
 
-.kartu-katalog__badge-kondisi {
+.kartu-premium:hover .kartu-premium__gambar {
+    transform: scale(1.03);
+}
+
+.kartu-premium__badge {
     position: absolute;
-    z-index: 1;
-    top: 0.5rem;
-    left: 0.5rem;
-    padding: 0.2rem 0.5rem;
-    font-size: 0.65rem;
+    top: 0.65rem;
+    left: 0.65rem;
+    z-index: 2;
+    padding: 0.28rem 0.55rem;
+    font-size: 0.62rem;
     font-weight: 800;
-    letter-spacing: 0;
-    text-transform: uppercase;
+    letter-spacing: 0.06em;
     border-radius: 6px;
-    background: rgba(10, 10, 10, 0.88);
+}
+
+.kartu-premium__badge--baru {
     color: #fff;
+    background: #16a34a;
 }
 
-.kartu-katalog__badge-kondisi--baru {
-    background: linear-gradient(135deg, #14532d, #166534);
+.kartu-premium__badge--preloved {
+    color: #fff;
+    background: var(--katalog-primary);
 }
 
-.kartu-katalog__badge-kondisi--second {
-    background: var(--brand-black);
-    color: var(--brand-white);
+.kartu-premium__wishlist {
+    position: absolute;
+    top: 0.55rem;
+    right: 0.55rem;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    padding: 0;
+    color: var(--katalog-primary);
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    transition: color 0.3s ease, background 0.3s ease, transform 0.3s ease;
 }
 
-.kartu-katalog__isi {
-    padding: 0.65rem 0.75rem 0.85rem;
+.kartu-premium__wishlist:hover {
+    transform: scale(1.05);
+}
+
+.kartu-premium__wishlist--aktif {
+    color: var(--katalog-accent);
+}
+
+.kartu-premium__isi {
+    display: flex;
+    flex: 3 1 0;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1rem 1rem 1.1rem;
+}
+
+.kartu-premium__nama {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.kartu-premium__nama a {
+    color: var(--katalog-primary);
+    text-decoration: none;
+}
+
+.kartu-premium__nama a:hover {
+    color: var(--katalog-accent);
+}
+
+.kartu-premium__meta {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
-    flex: 1;
+    font-size: 0.8rem;
+    color: var(--katalog-muted);
 }
 
-.kartu-katalog__brand {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0;
-    color: var(--teks-aksen-hover);
+.kartu-premium__meta-label {
+    font-weight: 600;
+    color: var(--katalog-primary);
 }
 
-.kartu-katalog__nama {
-    margin: 0;
+.kartu-premium__rating {
+    color: var(--katalog-primary);
+    font-weight: 600;
+}
+
+.kartu-premium__harga {
+    margin: 0.15rem 0 0;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--katalog-accent);
+}
+
+.kartu-premium__aksi {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.35rem;
+}
+
+.kartu-premium__tombol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    font: inherit;
     font-size: 0.82rem;
     font-weight: 700;
-    line-height: 1.35;
-    color: var(--teks-utama);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    min-height: 2.7em;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: opacity 0.3s ease, background 0.3s ease, color 0.3s ease;
 }
 
-.kartu-katalog__harga {
-    margin: 0.15rem 0 0;
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: var(--teks-aksen);
+.kartu-premium__tombol--detail {
+    flex: 1;
+    color: var(--katalog-primary);
+    background: var(--katalog-surface);
+    border: 1px solid #e5e7eb;
+}
+
+.kartu-premium__tombol--detail:hover {
+    opacity: 0.9;
+}
+
+.kartu-premium__tombol--keranjang {
+    width: 2.75rem;
+    padding: 0;
+    color: #fff;
+    background: var(--katalog-accent);
+    border: 1px solid var(--katalog-accent);
+}
+
+.kartu-premium__tombol--keranjang:hover {
+    opacity: 0.9;
+}
+
+.kartu-premium__tombol--nonaktif {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.katalog-muat-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.katalog-muat-lagi {
+    min-width: 12rem;
+    height: 2.85rem;
+    padding: 0 1.5rem;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--katalog-primary);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.katalog-muat-lagi:hover {
+    opacity: 0.9;
+}
+
+.katalog-muat-lagi:disabled {
+    opacity: 0.5;
+    cursor: wait;
 }
 
 .katalog-kosong {
     text-align: center;
-    padding: 2.5rem 1rem;
-    background: #fff;
-    border-radius: 12px;
+    padding: 2.5rem 1.25rem;
+    background: var(--katalog-surface);
+    border-radius: 16px;
     border: 1px dashed #d1d5db;
-    color: var(--teks-redup);
+    color: var(--katalog-muted);
 }
 
 .katalog-kosong strong {
     display: block;
     margin-bottom: 0.35rem;
-    color: var(--teks-utama);
+    color: var(--katalog-primary);
+}
+
+.katalog-kosong__aksi {
+    margin: 0.75rem 0 0;
+}
+
+.katalog-kosong__aksi a {
+    color: var(--katalog-accent);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.katalog-kembali {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.katalog-kembali a {
+    color: var(--katalog-muted);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.katalog-kembali a:hover {
+    color: var(--katalog-accent);
+}
+
+@media (max-width: 1024px) {
+    .katalog-hero-premium {
+        grid-template-columns: 1fr;
+    }
+
+    .katalog-filter-premium {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .katalog-filter-premium__field--cari {
+        grid-column: 1 / -1;
+    }
+
+    .katalog-filter-premium__aksi {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 640px) {
+    .katalog-filter-premium {
+        grid-template-columns: 1fr;
+    }
+
+    .katalog-filter-premium__tombol {
+        width: 100%;
+    }
+
+    .katalog-grid-premium {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* --- Detail produk (gaya marketplace + tema EA SENIKERS) --- */
@@ -698,270 +1085,7 @@ body.halaman-detail-produk {
     margin: 1rem 0 0;
 }
 
-/* Katalog pembeli */
-.katalog-latar {
-    min-height: calc(100vh - 5rem);
-    background:
-        linear-gradient(180deg, #f8fafc 0%, #f3f4f6 45%, #fff 100%);
-}
-
-.katalog-kontainer {
-    padding-top: 1rem;
-}
-
-.katalog-hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(15rem, 22rem);
-    gap: 1rem;
-    align-items: stretch;
-    margin-bottom: 1rem;
-    padding: clamp(1.15rem, 3vw, 1.5rem);
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-}
-
-.katalog-hero__teks h1 {
-    margin: 0;
-    max-width: 44rem;
-    font-size: clamp(1.45rem, 3vw, 2.1rem);
-    line-height: 1.12;
-    font-weight: 900;
-    color: var(--teks-utama);
-}
-
-.katalog-hero__teks p:last-child {
-    margin: 0.65rem 0 0;
-    max-width: 44rem;
-    font-size: 0.96rem;
-    line-height: 1.6;
-    color: var(--teks-redup);
-}
-
-.katalog-hero__stat {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.55rem;
-}
-
-.katalog-hero__stat div {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0.85rem;
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-}
-
-.katalog-hero__stat strong {
-    font-size: 1.45rem;
-    line-height: 1;
-    font-weight: 900;
-}
-
-.katalog-hero__stat span {
-    margin-top: 0.35rem;
-    font-size: 0.76rem;
-    font-weight: 800;
-    color: var(--teks-redup);
-}
-
-.katalog-filter {
-    display: grid;
-    grid-template-columns: minmax(14rem, 1.4fr) repeat(3, minmax(9rem, 0.8fr)) auto;
-    gap: 0.75rem;
-    align-items: end;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 6px 22px rgba(15, 23, 42, 0.05);
-}
-
-.katalog-filter label {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-.katalog-filter label span {
-    font-size: 0.76rem;
-    font-weight: 800;
-    color: var(--teks-redup);
-}
-
-.katalog-filter input,
-.katalog-filter select {
-    width: 100%;
-    min-height: 2.65rem;
-    padding: 0.65rem 0.72rem;
-    color: var(--teks-utama);
-    background: #f9fafb;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font: inherit;
-}
-
-.katalog-filter input:focus,
-.katalog-filter select:focus {
-    outline: 3px solid var(--fokus-ring);
-    border-color: var(--teks-aksen);
-    background: #fff;
-}
-
-.katalog-filter__aksi {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.tombol-filter {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.65rem;
-    padding: 0.65rem 0.9rem;
-    color: #fff;
-    text-decoration: none;
-    font: inherit;
-    font-size: 0.88rem;
-    font-weight: 800;
-    background: #111827;
-    border: 1px solid #111827;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.tombol-filter--sekunder {
-    color: var(--teks-utama);
-    background: #fff;
-    border-color: #d1d5db;
-}
-
-.katalog-hasil-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin: 0 0 1rem;
-}
-
-.katalog-hasil-bar p {
-    margin: 0;
-    color: var(--teks-redup);
-    font-size: 0.9rem;
-}
-
-.katalog-hasil-bar a {
-    color: var(--teks-aksen-hover);
-    text-decoration: none;
-    font-weight: 800;
-}
-
-.katalog-chip-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-}
-
-.katalog-chip-row a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2rem;
-    padding: 0.35rem 0.6rem;
-    color: #1f2937;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-}
-
-.kartu-katalog {
-    border-radius: 8px;
-    box-shadow: 0 8px 26px rgba(15, 23, 42, 0.06);
-}
-
-.kartu-katalog__gambar-wrap {
-    background: linear-gradient(145deg, #fff, #f3f4f6);
-}
-
-.kartu-katalog__gambar {
-    object-fit: contain;
-    padding: 0.45rem;
-}
-
-.kartu-katalog__isi {
-    padding: 0.8rem 0.85rem 0.95rem;
-}
-
-.kartu-katalog__brand {
-    letter-spacing: 0;
-}
-
-.kartu-katalog__harga {
-    margin-top: auto;
-}
-
-.kartu-katalog__cta {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.35rem;
-    margin-top: auto;
-    padding: 0.5rem 0.75rem;
-    color: #fff;
-    font-size: 0.84rem;
-    font-weight: 800;
-    background: #111827;
-    border-radius: 8px;
-}
-
-.kartu-katalog__badge-kondisi {
-    letter-spacing: 0;
-    border-radius: 8px;
-}
-
-.kartu-katalog__badge-kondisi--netral {
-    background: #374151;
-}
-
-.katalog-kembali {
-    margin-top: 1.25rem;
-    text-align: center;
-}
-
-.katalog-kembali a {
-    color: var(--teks-aksen-hover);
-    text-decoration: none;
-    font-weight: 800;
-}
-
-@media (max-width: 980px) {
-    .katalog-hero,
-    .katalog-filter {
-        grid-template-columns: 1fr;
-    }
-
-    .katalog-filter__aksi {
-        justify-content: flex-start;
-    }
-}
-
-@media (max-width: 620px) {
-    .katalog-hero__stat {
-        grid-template-columns: 1fr;
-    }
-
-    .katalog-filter__aksi,
-    .tombol-filter {
-        width: 100%;
-    }
-}
+/* (gaya katalog lama diganti blok Katalog premium di atas) */
 
 /* --- Detail produk: tombol gambar utama (untuk zoom) --- */
 .detail-gambar-tombol {

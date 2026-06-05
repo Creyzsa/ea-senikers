@@ -4,8 +4,15 @@ require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 require_once __DIR__ . '/../../includes/paginasi.php';
 
 $bilah_pembeli_aktif = 'produk';
-$u_beranda = aplikasi_url(''); // clean root homepage
+$u_beranda = aplikasi_url('');
+$u_masuk = aplikasi_url('login/masuk.php');
+$u_cari_saran = aplikasi_url('api/cari-saran');
+$u_wishlist_toggle = aplikasi_url('api/wishlist-toggle');
 $daftar_produk = katalog_ambil_semua_produk();
+
+$sudah_login = sudah_masuk();
+$id_pengguna = $sudah_login ? (int) ($_SESSION['id_pengguna'] ?? 0) : 0;
+$wishlist_ids = $id_pengguna > 0 ? wishlist_id_set($id_pengguna) : [];
 
 $q = trim(is_string($_GET['q'] ?? null) ? (string) $_GET['q'] : '');
 $bilah_cari_q = $q;
@@ -29,12 +36,10 @@ foreach ($daftar_produk as $produk) {
         $opsi_kondisi[$kondisi] = true;
     }
 }
-$opsi_brand = array_keys($opsi_brand);
-$opsi_kondisi = array_keys($opsi_kondisi);
+$opsi_brand = array_values(array_keys($opsi_brand));
+$opsi_kondisi = array_values(array_keys($opsi_kondisi));
 natcasesort($opsi_brand);
 natcasesort($opsi_kondisi);
-$opsi_brand = array_values($opsi_brand);
-$opsi_kondisi = array_values($opsi_kondisi);
 
 $daftar_tersaring = array_values(array_filter($daftar_produk, static function (array $produk) use ($q, $brand_filter, $kondisi_filter): bool {
     $brand = (string) ($produk['brand'] ?? '');
@@ -72,12 +77,11 @@ function produk_url_filter(array $params): string
     }
 
     $url = aplikasi_url('produk');
+
     return $query === [] ? $url : $url . '?' . http_build_query($query);
 }
 
-$total_produk = count($daftar_produk);
 $total_tersaring = count($daftar_tersaring);
-$jumlah_filter_aktif = ($q !== '' ? 1 : 0) + ($brand_filter !== '' ? 1 : 0) + ($kondisi_filter !== '' ? 1 : 0);
 
 $pg_params = [];
 foreach (['q' => $q, 'brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'sort' => $sort] as $pg_k => $pg_v) {
@@ -94,44 +98,60 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('produk'), $pg_params, 'hal');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Katalog produk - EA SENIKERS</title>
+    <title>Katalog produk — EA SENIKERS</title>
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
     <link rel="stylesheet" href="../assets/css/katalog-produk.css">
 </head>
-<body class="halaman-toko halaman-katalog">
+<body class="halaman-toko halaman-katalog"
+      data-wishlist-api="<?php echo htmlspecialchars($u_wishlist_toggle, ENT_QUOTES, 'UTF-8'); ?>">
 
 <?php include __DIR__ . '/../../includes/bilah_pembeli.php'; ?>
 
 <div class="katalog-latar">
     <div class="katalog-kontainer">
-        <section class="katalog-hero" aria-labelledby="judul-katalog">
-            <div class="katalog-hero__teks">
-                <p class="section-eyebrow">Katalog EA SENIKERS</p>
-                <h1 id="judul-katalog">Pilih sneakers yang siap dipakai.</h1>
-                <p>Temukan sepatu baru dan preloved terkurasi dengan kondisi jelas, foto produk, dan harga transparan.</p>
+        <section class="katalog-hero-premium" aria-labelledby="judul-katalog">
+            <div class="katalog-hero-premium__kiri">
+                <p class="katalog-hero-premium__eyebrow">EA SENIKERS</p>
+                <h1 id="judul-katalog">Koleksi Sneaker Terbaik Untuk Gaya Terbaikmu</h1>
+                <p class="katalog-hero-premium__deskripsi">Temukan sneaker original dan preloved berkualitas dengan kondisi terjamin dan harga transparan.</p>
             </div>
-            <div class="katalog-hero__stat" aria-label="Ringkasan katalog">
-                <div>
-                    <strong><?php echo (string) $total_produk; ?></strong>
-                    <span>Produk</span>
-                </div>
-                <div>
-                    <strong><?php echo (string) count($opsi_brand); ?></strong>
-                    <span>Merek</span>
-                </div>
-                <div>
-                    <strong><?php echo (string) $jumlah_filter_aktif; ?></strong>
-                    <span>Filter aktif</span>
-                </div>
-            </div>
+            <ul class="katalog-hero-premium__trust" aria-label="Keunggulan toko">
+                <li>
+                    <span class="katalog-trust__ikon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                    </span>
+                    <span class="katalog-trust__teks">
+                        <strong>100% Original</strong>
+                        <span>Kami hanya menjual sneaker original.</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="katalog-trust__ikon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </span>
+                    <span class="katalog-trust__teks">
+                        <strong>Kondisi Terjamin</strong>
+                        <span>Setiap produk diperiksa secara detail.</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="katalog-trust__ikon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                    </span>
+                    <span class="katalog-trust__teks">
+                        <strong>Transaksi Aman</strong>
+                        <span>Pembayaran aman dan terpercaya.</span>
+                    </span>
+                </li>
+            </ul>
         </section>
 
-        <form class="katalog-filter" method="get" action="<?php echo htmlspecialchars(aplikasi_url('produk'), ENT_QUOTES, 'UTF-8'); ?>" data-live data-target="#hasil-katalog">
-            <label class="katalog-filter__cari">
-                <span>Cari produk</span>
-                <input type="search" name="q" value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Nike, Vans, Air Max..." autocomplete="off">
+        <form class="katalog-filter-premium" method="get" action="<?php echo htmlspecialchars(aplikasi_url('produk'), ENT_QUOTES, 'UTF-8'); ?>" data-live data-target="#hasil-katalog" data-cari-saran="<?php echo htmlspecialchars($u_cari_saran, ENT_QUOTES, 'UTF-8'); ?>">
+            <label class="katalog-filter-premium__field katalog-filter-premium__field--cari">
+                <span>Search produk</span>
+                <input type="search" name="q" value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Nike, Adidas, Air Max..." autocomplete="off" aria-autocomplete="list">
             </label>
-            <label>
+            <label class="katalog-filter-premium__field">
                 <span>Merek</span>
                 <select name="brand">
                     <option value="">Semua merek</option>
@@ -140,7 +160,7 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('produk'), $pg_params, 'hal');
                     <?php endforeach; ?>
                 </select>
             </label>
-            <label>
+            <label class="katalog-filter-premium__field">
                 <span>Kondisi</span>
                 <select name="kondisi">
                     <option value="">Semua kondisi</option>
@@ -149,82 +169,23 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('produk'), $pg_params, 'hal');
                     <?php endforeach; ?>
                 </select>
             </label>
-            <label>
+            <label class="katalog-filter-premium__field">
                 <span>Urutkan</span>
                 <select name="sort">
                     <option value="terbaru"<?php echo $sort === 'terbaru' ? ' selected' : ''; ?>>Terbaru</option>
-                    <option value="harga_asc"<?php echo $sort === 'harga_asc' ? ' selected' : ''; ?>>Harga rendah</option>
-                    <option value="harga_desc"<?php echo $sort === 'harga_desc' ? ' selected' : ''; ?>>Harga tinggi</option>
-                    <option value="nama"<?php echo $sort === 'nama' ? ' selected' : ''; ?>>Nama A-Z</option>
+                    <option value="harga_asc"<?php echo $sort === 'harga_asc' ? ' selected' : ''; ?>>Harga terendah</option>
+                    <option value="harga_desc"<?php echo $sort === 'harga_desc' ? ' selected' : ''; ?>>Harga tertinggi</option>
+                    <option value="nama"<?php echo $sort === 'nama' ? ' selected' : ''; ?>>Nama A–Z</option>
                 </select>
             </label>
-            <div class="katalog-filter__aksi">
-                <button type="submit" class="tombol-filter">Terapkan</button>
-                <a class="tombol-filter tombol-filter--sekunder" href="<?php echo htmlspecialchars(aplikasi_url('produk'), ENT_QUOTES, 'UTF-8'); ?>">Reset</a>
+            <div class="katalog-filter-premium__aksi">
+                <button type="submit" class="katalog-filter-premium__tombol katalog-filter-premium__tombol--utama">Terapkan</button>
+                <a class="katalog-filter-premium__tombol katalog-filter-premium__tombol--reset" href="<?php echo htmlspecialchars(aplikasi_url('produk'), ENT_QUOTES, 'UTF-8'); ?>">Reset</a>
             </div>
         </form>
 
         <div id="hasil-katalog">
-        <?php if ($daftar_produk === []): ?>
-            <div class="katalog-kosong">
-                <strong>Katalog kosong atau tidak dapat dimuat.</strong>
-                Silakan refresh halaman. Jika masalah berlanjut, hubungi admin toko.
-            </div>
-        <?php elseif ($daftar_tersaring === []): ?>
-            <div class="katalog-hasil-bar">
-                <p>Tidak ada produk yang cocok dengan filter saat ini.</p>
-                <a href="<?php echo htmlspecialchars(aplikasi_url('produk'), ENT_QUOTES, 'UTF-8'); ?>">Tampilkan semua produk</a>
-            </div>
-            <div class="katalog-kosong">
-                <strong>Produk tidak ditemukan.</strong>
-                Coba gunakan kata kunci lain atau reset filter katalog.
-            </div>
-        <?php else: ?>
-            <div class="katalog-hasil-bar">
-                <p>Menampilkan <strong><?php echo (string) $pg['dari']; ?>&ndash;<?php echo (string) $pg['sampai']; ?></strong> dari <?php echo (string) $total_tersaring; ?> produk.</p>
-                <div class="katalog-chip-row" aria-label="Filter aktif">
-                    <?php if ($q !== ''): ?>
-                        <a href="<?php echo htmlspecialchars(produk_url_filter(['brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Cari: <?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?></a>
-                    <?php endif; ?>
-                    <?php if ($brand_filter !== ''): ?>
-                        <a href="<?php echo htmlspecialchars(produk_url_filter(['q' => $q, 'kondisi' => $kondisi_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Merek: <?php echo htmlspecialchars($brand_filter, ENT_QUOTES, 'UTF-8'); ?></a>
-                    <?php endif; ?>
-                    <?php if ($kondisi_filter !== ''): ?>
-                        <a href="<?php echo htmlspecialchars(produk_url_filter(['q' => $q, 'brand' => $brand_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Kondisi: <?php echo htmlspecialchars(kondisi_label_pembeli($kondisi_filter), ENT_QUOTES, 'UTF-8'); ?></a>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="katalog-grid">
-                <?php foreach ($daftar_tersaring_hal as $p):
-                    $id = (string) ($p['id_produk'] ?? '');
-                    $nama = (string) ($p['nama_produk'] ?? '');
-                    $brand = (string) ($p['brand'] ?? '');
-                    $kondisi = (string) ($p['kondisi'] ?? '');
-                    $harga = (int) ($p['harga'] ?? 0);
-                    $url_detail = aplikasi_url('detail-produk?id=' . rawurlencode($id));
-                    $url_gambar = katalog_url_gambar_utama($p);
-                    $kelas_kondisi = $kondisi === ''
-                        ? 'kartu-katalog__badge-kondisi--netral'
-                        : (strcasecmp($kondisi, 'Baru') === 0 ? 'kartu-katalog__badge-kondisi--baru' : 'kartu-katalog__badge-kondisi--second');
-                    ?>
-                <a class="kartu-katalog" href="<?php echo htmlspecialchars($url_detail, ENT_QUOTES, 'UTF-8'); ?>">
-                    <div class="kartu-katalog__gambar-wrap">
-                        <img class="kartu-katalog__gambar" src="<?php echo htmlspecialchars($url_gambar, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?>" loading="lazy" width="400" height="400">
-                        <?php if ($kondisi !== ''): ?>
-                            <span class="kartu-katalog__badge-kondisi <?php echo htmlspecialchars($kelas_kondisi, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(kondisi_label_pembeli($kondisi), ENT_QUOTES, 'UTF-8'); ?></span>
-                        <?php endif; ?>
-                    </div>
-                    <div class="kartu-katalog__isi">
-                        <span class="kartu-katalog__brand"><?php echo htmlspecialchars($brand !== '' ? $brand : 'EA SENIKERS', ENT_QUOTES, 'UTF-8'); ?></span>
-                        <p class="kartu-katalog__nama"><?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?></p>
-                        <p class="kartu-katalog__harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga), ENT_QUOTES, 'UTF-8'); ?></p>
-                        <span class="kartu-katalog__cta">Lihat detail</span>
-                    </div>
-                </a>
-                <?php endforeach; ?>
-            </div>
-            <?php echo paginasi_render($pg, $pg_url); ?>
-        <?php endif; ?>
+            <?php include __DIR__ . '/../../includes/komponen/isi_katalog_produk.php'; ?>
         </div>
 
         <p class="katalog-kembali">
@@ -233,5 +194,6 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('produk'), $pg_params, 'hal');
     </div>
 </div>
 <script src="../assets/js/pencarian-langsung.js" defer></script>
+<script src="../assets/js/katalog-premium.js" defer></script>
 </body>
 </html>

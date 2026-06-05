@@ -639,6 +639,158 @@ function wishlist_ada(int $user_id, string $id_produk): bool
     }, false);
 }
 
+/**
+ * Set id_produk yang ada di wishlist user (untuk tampilan kartu katalog).
+ *
+ * @return array<string, true>
+ */
+function wishlist_id_set(int $user_id): array
+{
+    return _db_call(function () use ($user_id) {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare('SELECT id_produk FROM wishlist WHERE user_id = :u');
+        $stmt->execute(['u' => $user_id]);
+        $set = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $id = (string) ($row['id_produk'] ?? '');
+            if ($id !== '') {
+                $set[$id] = true;
+            }
+        }
+
+        return $set;
+    }, []);
+}
+
+/**
+ * Ukuran ringkas untuk kartu katalog (contoh: Size 42 atau Size 40–43).
+ */
+function katalog_ukuran_ringkas_kartu(array $produk): string
+{
+    $salin = $produk;
+    katalog_lengkapi_ukuran_produk($salin);
+    $tersedia = [];
+    foreach ($salin['produk_ukuran'] ?? [] as $u) {
+        if (!is_array($u)) {
+            continue;
+        }
+        $st = (int) ($u['stok'] ?? 0);
+        $uk = trim((string) ($u['ukuran'] ?? ''));
+        if ($st > 0 && $uk !== '') {
+            $tersedia[] = $uk;
+        }
+    }
+    if ($tersedia === []) {
+        return 'Stok habis';
+    }
+    usort($tersedia, static function (string $a, string $b): int {
+        if (ctype_digit($a) && ctype_digit($b)) {
+            return (int) $a <=> (int) $b;
+        }
+
+        return strnatcasecmp($a, $b);
+    });
+    if (count($tersedia) === 1) {
+        return 'Size ' . $tersedia[0];
+    }
+
+    return 'Size ' . $tersedia[0] . '–' . $tersedia[array_key_last($tersedia)];
+}
+
+/** Persen kondisi untuk tampilan kartu (preloved: dari deskripsi atau default). */
+function katalog_persen_kondisi_kartu(array $produk): string
+{
+    $kondisi = trim((string) ($produk['kondisi'] ?? ''));
+    if (strcasecmp($kondisi, 'Baru') === 0) {
+        return '100%';
+    }
+    $desk = (string) ($produk['deskripsi'] ?? '');
+    if (preg_match('/\b(\d{1,3})\s*%/u', $desk, $m)) {
+        return ((int) $m[1]) . '%';
+    }
+
+    return '90%';
+}
+
+/**
+ * Render satu kartu produk premium (katalog).
+ *
+ * @param array<string, true> $wishlist_ids
+ */
+function katalog_render_kartu_produk(
+    array $p,
+    bool $sudah_login,
+    string $url_masuk,
+    array $wishlist_ids = []
+): void {
+    $id = (string) ($p['id_produk'] ?? '');
+    $nama = (string) ($p['nama_produk'] ?? '');
+    $brand = (string) ($p['brand'] ?? '');
+    $kondisi = (string) ($p['kondisi'] ?? '');
+    $harga = (int) ($p['harga'] ?? 0);
+    $url_detail = aplikasi_url('detail-produk?id=' . rawurlencode($id));
+    $url_gambar = katalog_url_gambar_utama($p);
+    $label_kondisi = $kondisi !== '' ? strtoupper(kondisi_label_pembeli($kondisi)) : '';
+    $kelas_badge = strcasecmp($kondisi, 'Baru') === 0 ? 'kartu-premium__badge--baru' : 'kartu-premium__badge--preloved';
+    $rata = (float) ($p['rating_rata'] ?? 0);
+    $jml_ulasan = (int) ($p['jumlah_ulasan'] ?? 0);
+    $di_wishlist = isset($wishlist_ids[$id]);
+    $siap_jual = (bool) ($p['siap_jual'] ?? ((int) ($p['total_stok'] ?? 0) > 0));
+    ?>
+    <article class="kartu-premium" data-produk-id="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
+        <div class="kartu-premium__media">
+            <a class="kartu-premium__gambar-tautan" href="<?php echo htmlspecialchars($url_detail, ENT_QUOTES, 'UTF-8'); ?>" tabindex="-1" aria-hidden="true">
+                <img class="kartu-premium__gambar" src="<?php echo htmlspecialchars($url_gambar, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?>" loading="lazy" width="400" height="520">
+            </a>
+            <?php if ($label_kondisi !== ''): ?>
+                <span class="kartu-premium__badge <?php echo htmlspecialchars($kelas_badge, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($label_kondisi, ENT_QUOTES, 'UTF-8'); ?></span>
+            <?php endif; ?>
+            <button type="button"
+                class="kartu-premium__wishlist<?php echo $di_wishlist ? ' kartu-premium__wishlist--aktif' : ''; ?>"
+                data-wishlist-toggle
+                data-id-produk="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>"
+                data-login-url="<?php echo htmlspecialchars($url_masuk, ENT_QUOTES, 'UTF-8'); ?>"
+                data-masuk="<?php echo $sudah_login ? '1' : '0'; ?>"
+                aria-pressed="<?php echo $di_wishlist ? 'true' : 'false'; ?>"
+                aria-label="<?php echo $di_wishlist ? 'Hapus dari wishlist' : 'Tambah ke wishlist'; ?>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="<?php echo $di_wishlist ? 'currentColor' : 'none'; ?>" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+            </button>
+        </div>
+        <div class="kartu-premium__isi">
+            <h2 class="kartu-premium__nama">
+                <a href="<?php echo htmlspecialchars($url_detail, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?></a>
+            </h2>
+            <ul class="kartu-premium__meta">
+                <li><span class="kartu-premium__meta-label">Ukuran</span> <?php echo htmlspecialchars(katalog_ukuran_ringkas_kartu($p), ENT_QUOTES, 'UTF-8'); ?></li>
+                <li><span class="kartu-premium__meta-label">Kondisi</span> <?php echo htmlspecialchars(katalog_persen_kondisi_kartu($p), ENT_QUOTES, 'UTF-8'); ?></li>
+                <li class="kartu-premium__rating">
+                    <span aria-hidden="true">★</span>
+                    <?php if ($jml_ulasan > 0): ?>
+                        <?php echo htmlspecialchars(number_format($rata, 1), ENT_QUOTES, 'UTF-8'); ?> (<?php echo (int) $jml_ulasan; ?>)
+                    <?php else: ?>
+                        Baru
+                    <?php endif; ?>
+                </li>
+            </ul>
+            <p class="kartu-premium__harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga), ENT_QUOTES, 'UTF-8'); ?></p>
+            <div class="kartu-premium__aksi">
+                <a class="kartu-premium__tombol kartu-premium__tombol--detail" href="<?php echo htmlspecialchars($url_detail, ENT_QUOTES, 'UTF-8'); ?>">Detail</a>
+                <a class="kartu-premium__tombol kartu-premium__tombol--keranjang<?php echo $siap_jual ? '' : ' kartu-premium__tombol--nonaktif'; ?>"
+                   href="<?php echo htmlspecialchars($url_detail, ENT_QUOTES, 'UTF-8'); ?>"
+                   aria-label="Lihat produk untuk beli"
+                   <?php echo $siap_jual ? '' : ' aria-disabled="true" tabindex="-1"'; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </article>
+    <?php
+}
+
 /** Ambil wishlist user + data produk lengkap. */
 function wishlist_ambil_user(int $user_id): array
 {
