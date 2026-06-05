@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 $bilah_pembeli_aktif = 'tentang';
 $u_beranda = aplikasi_url(''); // clean root homepage
 $u_produk = aplikasi_url('produk');
-$logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
+$logo_toko = aplikasi_url('assets/images/logo.png');
 $merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
@@ -38,7 +38,7 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
     <main class="kontainer-toko halaman-tentang" id="utama">
         <section class="tentang-hero" aria-labelledby="judul-tentang">
             <div class="tentang-hero__brand">
-                <img src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" width="260" height="50" alt="EA SENIKERS" decoding="async">
+                <img src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" width="80" height="80" alt="EA SENIKERS" decoding="async" style="border-radius:8px;">
                 <p class="section-eyebrow"><?php echo htmlspecialchars((string) $merek_ringkas['badge_toko'], ENT_QUOTES, 'UTF-8'); ?></p>
             </div>
             <div class="tentang-hero__teks">
