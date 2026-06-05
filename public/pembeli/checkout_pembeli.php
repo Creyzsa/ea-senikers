@@ -17,15 +17,45 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
-require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
-require_once __DIR__ . '/../../includes/keranjang_sesi.php';
 require_once __DIR__ . '/../../includes/checkout_sesi.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
+require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
+require_once __DIR__ . '/../../includes/keranjang_sesi.php';
 require_once __DIR__ . '/../../includes/repositori/profil_pembeli_repositori.php';
 require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
 require_once __DIR__ . '/../../includes/integrasi/rajaongkir.php';
 
+$u_self = aplikasi_url('checkout');
+$u_katalog = aplikasi_url('produk');
+$u_keranjang = aplikasi_url('keranjang');
+
+// =========================================================================
+// 0. ENTRY Beli: simpan produk SEBELUM cek login (cookie cadangan untuk Vercel).
+// =========================================================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_produk'], $_POST['ukuran']) && !isset($_POST['aksi'])) {
+    $id_beli = trim((string) $_POST['id_produk']);
+    $uk_beli = trim((string) $_POST['ukuran']);
+    if ($id_beli !== '' && $uk_beli !== '') {
+        checkout_set_sesi_baris([
+            ['id_produk' => $id_beli, 'ukuran' => $uk_beli, 'qty' => 1],
+        ]);
+    }
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    if (checkout_ambil_baris_aktif() === []) {
+        $balik = $id_beli !== ''
+            ? aplikasi_url('detail-produk?id=' . rawurlencode($id_beli) . '&checkout=habis')
+            : $u_katalog . '?checkout=habis';
+        header('Location: ' . $balik);
+        exit;
+    }
+    header('Location: ' . $u_self);
+    exit;
+}
+
 wajib_sudah_masuk();
+checkout_pulihkan_dari_cookie();
 $peran_checkout = ambil_peran();
 if ($peran_checkout === 'admin') {
     header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
@@ -43,27 +73,8 @@ if (!isset($_SESSION['csrf_checkout']) || !is_string($_SESSION['csrf_checkout'])
 $csrf = $_SESSION['csrf_checkout'];
 
 $id_pengguna = ambil_id_pengguna_efektif();
-$u_self = aplikasi_url('checkout');
-$u_katalog = aplikasi_url('produk');
-$u_keranjang = aplikasi_url('keranjang');
 $u_akun = aplikasi_url('akun');
 $u_pengaturan_toko = aplikasi_url('admin/pengaturan_admin.php');
-
-// =========================================================================
-// 0. ENTRY: kalau ada POST id_produk + ukuran dari detail produk,
-//    simpan ke session lalu redirect (post-redirect-get).
-// =========================================================================
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_produk'], $_POST['ukuran']) && !isset($_POST['aksi'])) {
-    $id_beli = trim((string) $_POST['id_produk']);
-    $uk_beli = trim((string) $_POST['ukuran']);
-    if ($id_beli !== '' && $uk_beli !== '') {
-        checkout_set_sesi_baris([
-            ['id_produk' => $id_beli, 'ukuran' => $uk_beli, 'qty' => 1],
-        ]);
-    }
-    header('Location: ' . $u_self);
-    exit;
-}
 
 // =========================================================================
 // 0b. ENTRY dari keranjang: POST aksi=dari_keranjang
@@ -152,10 +163,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
         exit;
     }
 
-    $sesi = $_SESSION['checkout_pesanan'] ?? null;
-    $baris_konfirm = checkout_baris_dari_sesi(is_array($sesi) ? $sesi : null);
+    checkout_pulihkan_dari_cookie();
+    $baris_konfirm = checkout_ambil_baris_aktif();
     if ($baris_konfirm === []) {
-        header('Location: ' . $u_keranjang);
+        header('Location: ' . $u_katalog . '?checkout=habis');
         exit;
     }
 
@@ -241,6 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
     }
 
     unset($_SESSION['checkout_pesanan'], $_SESSION['checkout_destinasi'], $_SESSION['checkout_kurir']);
+    checkout_hapus_cookie_baris();
     keranjang_kosongkan();
     $_SESSION['flash_pesanan_baru'] = 'Pesanan #' . $order_id . ' berhasil dibuat. Selanjutnya menunggu pembayaran.';
     header('Location: ' . aplikasi_url('detail-pesanan?id=' . $order_id));
@@ -250,11 +262,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
 // =========================================================================
 // 2. GET render: tampilkan checkout berdasar state session + query string.
 // =========================================================================
-$sesi_pesanan = $_SESSION['checkout_pesanan'] ?? null;
-$baris_checkout = checkout_baris_dari_sesi(is_array($sesi_pesanan) ? $sesi_pesanan : null);
+$baris_checkout = checkout_ambil_baris_aktif();
 if ($baris_checkout === []) {
-    header('Location: ' . $u_keranjang);
+    header('Location: ' . $u_katalog . '?checkout=habis');
     exit;
+}
+if (checkout_baris_dari_sesi($_SESSION['checkout_pesanan'] ?? null) === []) {
+    checkout_set_sesi_baris($baris_checkout);
 }
 
 $detail_checkout = checkout_muat_detail_baris($baris_checkout);

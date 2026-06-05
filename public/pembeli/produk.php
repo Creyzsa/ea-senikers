@@ -9,6 +9,7 @@ $u_masuk = aplikasi_url('login/masuk.php');
 $u_cari_saran = aplikasi_url('api/cari-saran');
 $u_wishlist_toggle = aplikasi_url('api/wishlist-toggle');
 $daftar_produk = katalog_ambil_semua_produk();
+$checkout_habis = isset($_GET['checkout']) && (string) $_GET['checkout'] === 'habis';
 
 $sudah_login = sudah_masuk();
 $id_pengguna = $sudah_login ? (int) ($_SESSION['id_pengguna'] ?? 0) : 0;
@@ -146,6 +147,10 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('produk'), $pg_params, 'hal');
                 </li>
             </ul>
         </section>
+
+        <?php if ($checkout_habis): ?>
+            <p class="katalog-flash-checkout" role="alert">Data checkout tidak ditemukan. Buka produk, pilih ukuran, lalu klik <strong>Beli</strong> sekali lagi.</p>
+        <?php endif; ?>
 
         <form class="katalog-filter-premium" method="get" action="<?php echo htmlspecialchars(aplikasi_url('produk'), ENT_QUOTES, 'UTF-8'); ?>" data-live data-target="#hasil-katalog" data-cari-saran="<?php echo htmlspecialchars($u_cari_saran, ENT_QUOTES, 'UTF-8'); ?>">
             <label class="katalog-filter-premium__field katalog-filter-premium__field--cari">

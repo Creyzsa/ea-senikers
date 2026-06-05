@@ -7,6 +7,7 @@ $flash_keranjang_error = $_SESSION['flash_keranjang_error'] ?? null;
 if ($flash_keranjang_error !== null) {
     unset($_SESSION['flash_keranjang_error']);
 }
+$checkout_habis = isset($_GET['checkout']) && (string) $_GET['checkout'] === 'habis';
 
 $flash_wishlist = $_SESSION['flash_wishlist'] ?? null;
 if ($flash_wishlist !== null) {
@@ -155,6 +156,9 @@ $u_checkout = aplikasi_url('checkout');
 
                 <?php if (is_string($flash_keranjang_error) && $flash_keranjang_error !== ''): ?>
                     <p class="detail-flash-error" role="alert"><?php echo htmlspecialchars($flash_keranjang_error, ENT_QUOTES, 'UTF-8'); ?></p>
+                <?php endif; ?>
+                <?php if ($checkout_habis): ?>
+                    <p class="detail-flash-error" role="alert">Checkout gagal dimuat. Pilih ukuran lalu klik <strong>Beli</strong> sekali lagi.</p>
                 <?php endif; ?>
 
                 <form method="post" class="detail-form-aksi">

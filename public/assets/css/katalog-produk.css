@@ -31,6 +31,17 @@ body.halaman-katalog {
     padding: 1.25rem clamp(1rem, 3vw, 1.75rem) 0;
 }
 
+.katalog-flash-checkout {
+    margin: 0 0 1rem;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #991b1b;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+}
+
 /* Hero */
 .katalog-hero-premium {
     display: grid;
