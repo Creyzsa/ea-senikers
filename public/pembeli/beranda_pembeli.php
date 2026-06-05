@@ -12,7 +12,7 @@ if ($nama_sapa === '') {
 $bilah_pembeli_aktif = 'beranda';
 $tautan_produk = aplikasi_url('produk');
 $u_artikel_rawat = aplikasi_url('cara-membersihkan');
-$logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
+$logo_toko = aplikasi_url('assets/images/logo.jpeg');
 $merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 

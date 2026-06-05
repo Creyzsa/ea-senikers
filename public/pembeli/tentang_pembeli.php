@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 $bilah_pembeli_aktif = 'tentang';
 $u_beranda = aplikasi_url(''); // clean root homepage
 $u_produk = aplikasi_url('produk');
-$logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
+$logo_toko = aplikasi_url('assets/images/logo.jpeg');
 $merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
