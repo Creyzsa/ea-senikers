@@ -1516,13 +1516,35 @@ body.halaman-detail-produk {
 
 .checkout-destinasi-baris:hover {
     background: #fff;
-    border-color: var(--teks-aksen);
+    border-color: var(--brand-black);
 }
 
-.checkout-destinasi-baris span {
-    color: var(--teks-aksen);
+.checkout-destinasi-baris .checkout-destinasi-isi,
+.checkout-destinasi-baris .checkout-destinasi-isi strong {
+    color: var(--brand-black);
+    font-weight: 700;
+}
+
+.checkout-destinasi-baris .checkout-destinasi-pilih {
+    color: var(--brand-red);
     font-weight: 700;
     font-size: 0.85rem;
+}
+
+.checkout-destinasi-baris--match .checkout-destinasi-isi,
+.checkout-destinasi-baris--match .checkout-destinasi-isi strong {
+    color: var(--brand-black);
+}
+
+.checkout-destinasi-baris--match .checkout-destinasi-pilih {
+    color: var(--brand-red);
+}
+
+.checkout-destinasi-baris:hover .checkout-destinasi-isi,
+.checkout-destinasi-baris:hover .checkout-destinasi-isi strong,
+.checkout-destinasi-baris--match:hover .checkout-destinasi-isi,
+.checkout-destinasi-baris--match:hover .checkout-destinasi-isi strong {
+    color: var(--brand-black);
 }
 
 /* Form inline (tombol "Ganti" pada destinasi terpilih) */
