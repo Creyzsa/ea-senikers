@@ -86,8 +86,9 @@
         }
 
         var api = document.body.getAttribute('data-wishlist-api');
+        var csrf = document.body.getAttribute('data-wishlist-csrf') || '';
         var idProduk = btn.getAttribute('data-id-produk') || '';
-        if (!api || !idProduk) {
+        if (!api || !idProduk || !csrf) {
             return;
         }
 
@@ -95,6 +96,7 @@
         var fd = new FormData();
         fd.append('id_produk', idProduk);
         fd.append('aksi', aktif ? 'hapus' : 'tambah');
+        fd.append('csrf', csrf);
 
         btn.disabled = true;
         fetch(api, { method: 'POST', body: fd, credentials: 'same-origin' })

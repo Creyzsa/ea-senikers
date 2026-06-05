@@ -340,3 +340,15 @@ function easenikers_sesi_login_dari_token_supabase(string $access_token, string 
 
     return $peran;
 }
+
+/**
+ * Token CSRF untuk API wishlist (POST same-origin).
+ */
+function csrf_wishlist_token(): string
+{
+    if (empty($_SESSION['csrf_wishlist']) || !is_string($_SESSION['csrf_wishlist'])) {
+        $_SESSION['csrf_wishlist'] = bin2hex(random_bytes(24));
+    }
+
+    return $_SESSION['csrf_wishlist'];
+}

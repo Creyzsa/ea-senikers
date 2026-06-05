@@ -25,8 +25,16 @@ if (!sudah_masuk()) {
 $id_pengguna = (int) ($_SESSION['id_pengguna'] ?? 0);
 $id_produk = trim((string) ($_POST['id_produk'] ?? ''));
 $aksi = (string) ($_POST['aksi'] ?? '');
+$csrf = (string) ($_POST['csrf'] ?? '');
+$csrf_sesi = csrf_wishlist_token();
 
-if ($id_pengguna <= 0 || $id_produk === '') {
+if ($csrf === '' || !hash_equals($csrf_sesi, $csrf)) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'pesan' => 'Sesi tidak valid. Muat ulang halaman.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if ($id_pengguna <= 0 || $id_produk === '' || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id_produk)) {
     http_response_code(400);
     echo json_encode(['ok' => false, 'pesan' => 'Data tidak valid.']);
 

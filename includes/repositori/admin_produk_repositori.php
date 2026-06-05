@@ -244,12 +244,26 @@ function admin_produk_upload_gambar(string $id_produk, array $files): void
     $errors = (array) ($gambar_files['error'] ?? []);
 
     foreach ($names as $i => $name) {
-        if ($errors[$i] !== UPLOAD_ERR_OK || !is_uploaded_file($tmp_names[$i])) {
+        if (($errors[$i] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($tmp_names[$i])) {
             continue;
         }
 
-        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+        $tmp = (string) $tmp_names[$i];
+        if ((int) ($gambar_files['size'][$i] ?? 0) > 5 * 1024 * 1024) {
+            continue;
+        }
+
+        $info = @getimagesize($tmp);
+        if ($info === false) {
+            continue;
+        }
+        $ext_map = [
+            IMAGETYPE_JPEG => 'jpg',
+            IMAGETYPE_PNG => 'png',
+            IMAGETYPE_WEBP => 'webp',
+        ];
+        $ext = $ext_map[$info[2]] ?? '';
+        if ($ext === '') {
             continue;
         }
 
@@ -272,7 +286,8 @@ function admin_produk_upload_gambar(string $id_produk, array $files): void
  */
 function admin_produk_hapus_gambar_file(string $nama_file): void
 {
-    if ($nama_file === '') {
+    $nama_file = basename($nama_file);
+    if ($nama_file === '' || preg_match('/^[a-zA-Z0-9._-]+$/', $nama_file) !== 1) {
         return;
     }
     $path = dirname(__DIR__, 2) . '/public/assets/images/produk/' . $nama_file;

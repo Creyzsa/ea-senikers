@@ -652,6 +652,7 @@ function pesanan_admin_ubah_status(int $order_id, string $status_baru): bool
             return false;
         }
 
+        $stmt_u = $pdo->prepare('UPDATE orders SET status = :s WHERE id = :id');
         $ok = $stmt_u->execute(['s' => $status_baru, 'id' => $order_id]);
         if ($ok && in_array($status_baru, ['paid', 'processed', 'shipped', 'completed'], true)) {
             $stmtI = $pdo->prepare('SELECT DISTINCT id_produk FROM order_items WHERE order_id = :oid AND id_produk IS NOT NULL');

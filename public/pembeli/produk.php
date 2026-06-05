@@ -103,7 +103,8 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('produk'), $pg_params, 'hal');
     <link rel="stylesheet" href="../assets/css/katalog-produk.css">
 </head>
 <body class="halaman-toko halaman-katalog"
-      data-wishlist-api="<?php echo htmlspecialchars($u_wishlist_toggle, ENT_QUOTES, 'UTF-8'); ?>">
+      data-wishlist-api="<?php echo htmlspecialchars($u_wishlist_toggle, ENT_QUOTES, 'UTF-8'); ?>"
+      <?php if ($sudah_login): ?>data-wishlist-csrf="<?php echo htmlspecialchars(csrf_wishlist_token(), ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>>
 
 <?php include __DIR__ . '/../../includes/bilah_pembeli.php'; ?>
 

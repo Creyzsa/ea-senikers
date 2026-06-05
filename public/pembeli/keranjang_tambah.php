@@ -13,9 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $id = trim((string) ($_POST['id_produk'] ?? ''));
 $ukuran = trim((string) ($_POST['ukuran'] ?? ''));
-$detail_url = aplikasi_url('detail-produk?id=' . rawurlencode($id));
+$detail_url = $id !== '' ? aplikasi_url('detail-produk?id=' . rawurlencode($id)) : aplikasi_url('produk');
 
-if ($id === '' || $ukuran === '') {
+if ($id === '' || $ukuran === '' || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
     $_SESSION['flash_keranjang_error'] = 'Pilih ukuran terlebih dahulu.';
     header('Location: ' . $detail_url);
     exit;
