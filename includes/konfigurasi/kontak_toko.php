@@ -15,7 +15,7 @@ return [
      * langsung membuka pin resmi "EA Senikers" (rating, foto, jam buka) — bukan
      * sekadar pencarian alamat.
      */
-    'url_peta' => 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode('EA Senikers, Padang Panjang'),
+    'url_peta' => 'https://www.google.com/maps/place/EA+Senikers/@-0.4565269,100.4061786,17z',
     /** Alamat lengkap seperti yang tertera di listing Google Maps. */
     'teks_peta' => 'Jalan Dr Jl. Abu Hanifah, Guguk Malintang, Kec. Padang Panjang Tim., Kota Padang Panjang, Sumatera Barat 27118',
     /**
