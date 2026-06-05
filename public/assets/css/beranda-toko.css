@@ -657,8 +657,8 @@ body.halaman-toko {
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 8px;
-    background: var(--aksen-emas-lembut);
-    color: var(--teks-aksen-hover);
+    background: rgba(214, 40, 40, 0.1);
+    color: var(--brand-red);
 }
 
 .kotak-fitur__teks strong {
@@ -671,7 +671,7 @@ body.halaman-toko {
 
 .kotak-fitur__teks span {
     font-size: 0.8rem;
-    color: var(--teks-redup);
+    color: var(--brand-red);
     line-height: 1.4;
 }
 
