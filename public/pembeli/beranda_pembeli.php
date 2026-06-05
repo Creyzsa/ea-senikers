@@ -12,7 +12,7 @@ if ($nama_sapa === '') {
 $bilah_pembeli_aktif = 'beranda';
 $tautan_produk = aplikasi_url('produk');
 $u_artikel_rawat = aplikasi_url('cara-membersihkan');
-$logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
+$logo_toko = aplikasi_url_aset('assets/images/logo-easenikers.svg');
 $merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
@@ -39,14 +39,16 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Beranda - EA SENIKERS</title>
-    <link rel="stylesheet" href="../assets/css/beranda-toko.css">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(aplikasi_url_aset('assets/css/beranda-toko.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <script>
     // Handle Supabase email confirmation tokens in hash (common case) or query
     (function () {
         var h = window.location.hash || '';
         var s = window.location.search || '';
         var keKonfirmasi = h.indexOf('access_token=') !== -1 || h.indexOf('error=') !== -1
-            || s.indexOf('access_token=') !== -1 || s.indexOf('code=') !== -1 || s.indexOf('error=') !== -1;
+            || h.indexOf('token_hash=') !== -1
+            || s.indexOf('access_token=') !== -1 || s.indexOf('code=') !== -1 || s.indexOf('error=') !== -1
+            || s.indexOf('token_hash=') !== -1;
         if (keKonfirmasi) {
             var tujuan = <?php echo json_encode(aplikasi_url('login/konfirmasi_email.php'), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?>;
             window.location.replace(tujuan + s + h);

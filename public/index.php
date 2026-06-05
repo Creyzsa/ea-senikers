@@ -1,5 +1,17 @@
 <?php
 require_once __DIR__ . '/../includes/auth_db/sesi.php';
+require_once __DIR__ . '/../includes/url_bantu.php';
+
+/**
+ * Tautan email Supabase kadang mengarah ke Site URL (root) — teruskan ke halaman konfirmasi.
+ */
+$uri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+$qstr = (string) ($_SERVER['QUERY_STRING'] ?? '');
+if (preg_match('/(?:^|[?&])(?:access_token|token_hash|code|error)=/i', $uri . '&' . $qstr)) {
+    // Email salah format (…/public?token_hash=) → tetap ke halaman konfirmasi (pakai host yang dibuka)
+    header('Location: ' . aplikasi_url_auth('login/konfirmasi_email.php') . ($qstr !== '' ? '?' . $qstr : ''));
+    exit;
+}
 
 /**
  * Homepage di root URL (https://www.easenikers.shop/)
@@ -17,6 +29,7 @@ if (sudah_masuk() && ambil_peran() === 'admin') {
 // Clean simple URLs mapping (same as Vercel api/index.php)
 // Note: wishlist and chat were added for the new features (ulasan/wishlist/chat/rekomendasi)
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$requestPath = preg_replace('#/+#', '/', $requestPath) ?: '/';
 $requestPath = ltrim($requestPath, '/');
 
 // Support both clean (/wishlist) and with .php (/wishlist.php) for robustness

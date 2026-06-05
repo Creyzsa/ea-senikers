@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../config_loader.php';
+require_once __DIR__ . '/../url_bantu.php';
 
 /**
  * Ambil URL dasar project (tanpa slash di akhir).
@@ -219,11 +220,8 @@ function supabase_auth_daftar(string $email, string $password, array $metadata_t
         return ['ok' => false, 'pesan' => 'Layanan belum siap. Hubungi pengelola situs.'];
     }
 
-    // redirect_to harus URL lengkap ke halaman callback (bukan hanya http://IP/) agar tidak 404 di root server
-    $tujuan_setelah_klik_email = '';
-    if (defined('URL_APLIKASI') && URL_APLIKASI !== '') {
-        $tujuan_setelah_klik_email = rtrim((string) URL_APLIKASI, '/') . '/login/konfirmasi_email.php';
-    }
+    // redirect_to: URL yang sama dengan browser saat submit (Laragon/IP), bukan hanya config statis
+    $tujuan_setelah_klik_email = aplikasi_url_konfirmasi_email();
 
     $payload = [
         'email' => $email,
@@ -298,8 +296,8 @@ function supabase_auth_lupa_password(string $email): array
     $payload = [
         'email' => $email,
     ];
-    if (defined('URL_APLIKASI') && URL_APLIKASI !== '') {
-        $balik = rtrim((string) URL_APLIKASI, '/') . '/login/konfirmasi_email.php';
+    $balik = aplikasi_url_konfirmasi_email();
+    if ($balik !== '') {
         $payload['redirect_to'] = $balik;
         // Sama seperti signup: beberapa versi GoTrue mengharapkan redirect di beberapa kunci.
         $payload['options'] = [

@@ -126,8 +126,9 @@ $pesan_konfirmasi_gagal = isset($_GET['konfirmasi']) && $_GET['konfirmasi'] === 
     (function () {
         var h = window.location.hash || '';
         var s = window.location.search || '';
-        if (h.indexOf('access_token=') !== -1 || h.indexOf('error=') !== -1
-            || s.indexOf('access_token=') !== -1 || s.indexOf('code=') !== -1 || s.indexOf('error=') !== -1) {
+        if (h.indexOf('access_token=') !== -1 || h.indexOf('error=') !== -1 || h.indexOf('token_hash=') !== -1
+            || s.indexOf('access_token=') !== -1 || s.indexOf('code=') !== -1 || s.indexOf('error=') !== -1
+            || s.indexOf('token_hash=') !== -1) {
             window.location.replace(<?php echo json_encode(aplikasi_url('login/konfirmasi_email.php'), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?> + s + h);
         }
     })();
@@ -150,12 +151,6 @@ $pesan_konfirmasi_gagal = isset($_GET['konfirmasi']) && $_GET['konfirmasi'] === 
         <?php endif; ?>
         <?php if (!empty($pesan_daftar_cek_email)): ?>
             <p class="pesan-sukses" role="status">Hampir selesai. Buka email Anda, klik tautan konfirmasi, lalu kembali ke sini untuk masuk. Periksa folder spam bila perlu.</p>
-            <?php
-            $daftar_redirect = (defined('URL_APLIKASI') && URL_APLIKASI !== '') ? rtrim(URL_APLIKASI, '/') . '/login/konfirmasi_email.php' : 'NOT SET';
-            ?>
-            <p style="font-size:0.8rem; color:#b45309; margin-top:0.5rem;">
-                <strong>Dev:</strong> Redirect yang dikirim: <code><?= htmlspecialchars($daftar_redirect) ?></code>. Minta daftar ulang jika masih salah.
-            </p>
         <?php endif; ?>
         <?php if (!empty($pesan_konfirmasi_gagal)): ?>
             <p class="<?php echo htmlspecialchars($kelas_error); ?>" role="alert">Tautan tidak berlaku atau sudah kedaluwarsa. Daftar ulang atau gunakan Lupa kata sandi.</p>

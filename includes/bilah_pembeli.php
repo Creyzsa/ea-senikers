@@ -17,7 +17,7 @@ if ($bp_kj < 0) {
 
 $sudah_login = sudah_masuk();
 
-$u_logo = aplikasi_url('assets/images/logo-easenikers.svg');
+$u_logo = aplikasi_url_aset('assets/images/logo-easenikers.svg');
 $u_beranda = aplikasi_url(''); // homepage at root for clean URL
 $u_produk = aplikasi_url('produk');
 $u_kategori = aplikasi_url('kategori');

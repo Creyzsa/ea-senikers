@@ -7,16 +7,17 @@
  */
 require_once __DIR__ . '/../../includes/url_bantu.php';
 
-$aksi_konfirmasi = aplikasi_url('login/sesi_konfirmasi.php');
-$aksi_reset_sandi = aplikasi_url('login/proses_reset_email.php');
-$aksi_verifikasi_hash = aplikasi_url('login/proses_verifikasi_token_hash.php');
-$masuk = aplikasi_url('login/masuk.php');
-$lupa = aplikasi_url('login/lupa_sandi.php');
+$aksi_konfirmasi = aplikasi_url_auth('login/sesi_konfirmasi.php');
+$aksi_reset_sandi = aplikasi_url_auth('login/proses_reset_email.php');
+$aksi_verifikasi_hash = aplikasi_url_auth('login/proses_verifikasi_token_hash.php');
+$masuk = aplikasi_url_auth('login/masuk.php');
+$lupa = aplikasi_url_auth('login/lupa_sandi.php');
 
 $token_hash_q = isset($_GET['token_hash']) ? trim((string) $_GET['token_hash']) : '';
 $type_q = isset($_GET['type']) ? strtolower(trim((string) $_GET['type'])) : '';
 $tipe_hash_izin = ['recovery', 'signup', 'email', 'invite', 'magiclink'];
 $tampil_form_token_hash = $token_hash_q !== '' && in_array($type_q, $tipe_hash_izin, true);
+$auto_kirim_token_hash = $tampil_form_token_hash;
 
 $verify_gagal = isset($_GET['verify']) && $_GET['verify'] === 'gagal';
 $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
@@ -42,14 +43,24 @@ $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
 </head>
 <body>
 <?php if ($tampil_form_token_hash): ?>
-    <h1 style="font-size:1.15rem;">Lanjutkan dari email</h1>
-    <p>Klik tombol di bawah untuk memverifikasi tautan. Langkah ini mencegah layanan email memakai tautan sebelum Anda (penyebab umum pesan &quot;link kedaluwarsa&quot;).</p>
-    <form method="post" action="<?php echo htmlspecialchars($aksi_verifikasi_hash, ENT_QUOTES, 'UTF-8'); ?>">
+    <h1 style="font-size:1.15rem;"><?php echo $type_q === 'recovery' ? 'Reset kata sandi' : 'Konfirmasi email'; ?></h1>
+    <p id="status-hash"><?php echo $auto_kirim_token_hash ? 'Memverifikasi tautan…' : 'Klik tombol di bawah untuk memverifikasi tautan.'; ?></p>
+    <form id="form-token-hash" method="post" action="<?php echo htmlspecialchars($aksi_verifikasi_hash, ENT_QUOTES, 'UTF-8'); ?>">
         <input type="hidden" name="token_hash" value="<?php echo htmlspecialchars($token_hash_q, ENT_QUOTES, 'UTF-8'); ?>">
         <input type="hidden" name="type" value="<?php echo htmlspecialchars($type_q, ENT_QUOTES, 'UTF-8'); ?>">
-        <button class="tombol" type="submit"><?php echo $type_q === 'recovery' ? 'Lanjutkan reset sandi' : 'Verifikasi &amp; lanjutkan'; ?></button>
+        <button class="tombol" type="submit" id="tombol-hash"<?php echo $auto_kirim_token_hash ? ' style="display:none;"' : ''; ?>><?php echo $type_q === 'recovery' ? 'Lanjutkan reset sandi' : 'Verifikasi &amp; lanjutkan'; ?></button>
     </form>
     <p style="margin-top:1.25rem;font-size:0.9rem;"><a href="<?php echo htmlspecialchars($masuk, ENT_QUOTES, 'UTF-8'); ?>">Kembali ke masuk</a></p>
+    <?php if ($auto_kirim_token_hash): ?>
+    <script>
+    (function () {
+        var form = document.getElementById('form-token-hash');
+        if (form) {
+            form.submit();
+        }
+    })();
+    </script>
+    <?php endif; ?>
 <?php elseif ($verify_gagal): ?>
     <h1 style="font-size:1.15rem;">Verifikasi gagal</h1>
     <p class="pesan-api" role="alert"><?php echo htmlspecialchars($alasan_verify !== '' ? $alasan_verify : 'Tautan tidak berlaku atau sudah kedaluwarsa.', ENT_QUOTES, 'UTF-8'); ?></p>
@@ -160,6 +171,15 @@ $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
         }
         var params = new URLSearchParams(hash);
         var q = new URLSearchParams(window.location.search);
+
+        var th = params.get('token_hash') || q.get('token_hash');
+        var tp = (params.get('type') || q.get('type') || '').toLowerCase();
+        if (th && tp) {
+            window.location.replace(
+                window.location.pathname + '?token_hash=' + encodeURIComponent(th) + '&type=' + encodeURIComponent(tp)
+            );
+            return;
+        }
 
         if (params.get('error') || q.get('error')) {
             tampilkanErrorOtp(params, q);

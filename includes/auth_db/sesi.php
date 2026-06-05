@@ -18,6 +18,22 @@ const EASENIKERS_SESI_INGAT_DETIK = 60 * 60 * 24 * 30;
 /** Kunci $_SESSION untuk token reset sandi (alur email Supabase). */
 const EASENIKERS_SESI_RESET_SANDI = 'easenikers_reset_sandi_sb';
 
+/**
+ * Simpan token reset sandi lalu redirect ke form (tanpa regenerate_id agar cookie tidak hilang).
+ */
+function sesi_simpan_reset_sandi_lalu_ke_form(string $access_token, string $refresh_token, string $email): void
+{
+    $_SESSION[EASENIKERS_SESI_RESET_SANDI] = [
+        'access_token' => $access_token,
+        'refresh_token' => $refresh_token,
+        'email' => $email,
+        'ts' => time(),
+    ];
+    session_write_close();
+    header('Location: ' . aplikasi_url_auth('login/setel_sandi_baru.php'), true, 303);
+    exit;
+}
+
 function easenikers_konfirmasi_https(): bool
 {
     // Support for proxies like Vercel, Cloudflare, etc.
@@ -34,11 +50,12 @@ if (session_status() === PHP_SESSION_NONE) {
     }
 
     $lifetime = $tetap_masuk ? EASENIKERS_SESI_INGAT_DETIK : 0;
+    $path_sesi = easenikers_path_cookie_sesi();
 
     $secure_cookie = easenikers_konfirmasi_https() || (isset($_SERVER['HTTP_HOST']) && strpos((string)$_SERVER['HTTP_HOST'], 'easenikers.shop') !== false);
     session_set_cookie_params([
         'lifetime' => $lifetime,
-        'path' => '/',
+        'path' => $path_sesi,
         'domain' => '',
         'secure' => $secure_cookie,
         'httponly' => true,
@@ -89,7 +106,7 @@ function sesi_terapkan_tetap_masuk(bool $ingat): void
  */
 function sesi_ganti_ke_mode_sementara(array $data): void
 {
-    $path = '/';
+    $path = easenikers_path_cookie_sesi();
     $domain = '';
     $secure = easenikers_konfirmasi_https() || (isset($_SERVER['HTTP_HOST']) && strpos((string)$_SERVER['HTTP_HOST'], 'easenikers.shop') !== false);
     $httponly = true;
@@ -124,7 +141,7 @@ function sesi_ganti_ke_mode_sementara(array $data): void
 
     session_set_cookie_params([
         'lifetime' => 0,
-        'path' => '/',
+        'path' => easenikers_path_cookie_sesi(),
         'domain' => '',
         'secure' => easenikers_konfirmasi_https(),
         'httponly' => true,

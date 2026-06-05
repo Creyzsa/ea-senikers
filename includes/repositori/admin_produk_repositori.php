@@ -258,7 +258,7 @@ function admin_produk_upload_gambar(string $id_produk, array $files): void
         }
 
         $nama_file = uniqid('produk_', true) . '.' . $ext;
-        $path = __DIR__ . '/../public/assets/images/produk/' . $nama_file;
+        $path = dirname(__DIR__, 2) . '/public/assets/images/produk/' . $nama_file;
 
         if (move_uploaded_file($tmp_names[$i], $path)) {
             supabase_rest_request('POST', '/rest/v1/produk_gambar', [], [
@@ -279,7 +279,7 @@ function admin_produk_hapus_gambar_file(string $nama_file): void
     if ($nama_file === '') {
         return;
     }
-    $path = __DIR__ . '/../public/assets/images/produk/' . $nama_file;
+    $path = dirname(__DIR__, 2) . '/public/assets/images/produk/' . $nama_file;
     if (file_exists($path)) {
         unlink($path);
     }

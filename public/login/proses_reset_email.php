@@ -25,14 +25,8 @@ if ($user === null) {
     exit;
 }
 
-sesi_perbarui_id_aman();
-
-$_SESSION[EASENIKERS_SESI_RESET_SANDI] = [
-    'access_token' => $access,
-    'refresh_token' => $refresh,
-    'email' => (string) ($user['email'] ?? ''),
-    'ts' => time(),
-];
-
-header('Location: ' . aplikasi_url('login/setel_sandi_baru.php'), true, 303);
-exit;
+sesi_simpan_reset_sandi_lalu_ke_form(
+    $access,
+    $refresh,
+    (string) ($user['email'] ?? '')
+);

@@ -49,12 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $sesi_reset !== null) {
     $sesi_reset = ambil_sesi_reset_sandi();
 }
 
-if ($sesi_reset === null && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    header('Location: ' . aplikasi_url('login/masuk.php') . '?konfirmasi=gagal');
-    exit;
-}
-
 $tampilkan_form = $sesi_reset !== null;
+if (!$tampilkan_form && $_SERVER['REQUEST_METHOD'] === 'GET' && $pesan_kesalahan === '') {
+    $pesan_kesalahan = 'Tautan reset tidak berlaku atau sudah dipakai. Minta tautan baru dari halaman Lupa kata sandi, lalu buka link di email sekali saja.';
+}
 $email_tampil = $sesi_reset ? htmlspecialchars((string) ($sesi_reset['email'] ?? ''), ENT_QUOTES, 'UTF-8') : '';
 $kelas_error = 'pesan-error' . ($pesan_kesalahan !== '' ? ' pesan-error--goyang' : '');
 ?>

@@ -15,7 +15,15 @@ const KATALOG_FOLDER_GAMBAR = 'assets/images/produk';
 function katalog_url_gambar_produk(string $nama_file): string
 {
     $nama_file = str_replace(['/', '\\'], '', $nama_file);
-    return aplikasi_url(KATALOG_FOLDER_GAMBAR . '/' . rawurlencode($nama_file));
+    if ($nama_file === '') {
+        return katalog_url_gambar_placeholder();
+    }
+    $lokal = easenikers_folder_public() . '/' . KATALOG_FOLDER_GAMBAR . '/' . $nama_file;
+    if (!is_file($lokal)) {
+        return katalog_url_gambar_placeholder();
+    }
+
+    return aplikasi_url_aset(KATALOG_FOLDER_GAMBAR . '/' . rawurlencode($nama_file));
 }
 
 /** Gambar pengganti bila belum ada upload (tanpa file statis). */

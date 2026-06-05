@@ -24,8 +24,12 @@ ServerSignature Off
 RewriteEngine On
 RewriteRule ^(includes|database|config\.php)/ - [F,L]
 
-# Force HTTPS
+# Force HTTPS (kecuali localhost / IP lokal — agar link email & Laragon HTTP tetap jalan)
 RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP_HOST} !^localhost(:\d+)?$ [NC]
+RewriteCond %{HTTP_HOST} !^127\.0\.0\.1(:\d+)?$ [NC]
+RewriteCond %{HTTP_HOST} !^192\.168\.[0-9.]+(:\d+)?$ [NC]
+RewriteCond %{HTTP_HOST} !^10\.[0-9.]+(:\d+)?$ [NC]
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # Clean URL rewrite: semua ke index.php (yang handle mapping)

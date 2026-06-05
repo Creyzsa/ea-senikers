@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/auth_db/supabase_auth.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
 
-$gagal = aplikasi_url('login/konfirmasi_email.php') . '?verify=gagal';
+$gagal = aplikasi_url_auth('login/konfirmasi_email.php') . '?verify=gagal';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ' . aplikasi_url('login/masuk.php'));
@@ -34,20 +34,16 @@ $access = (string) $hasil['access_token'];
 $refresh = (string) ($hasil['refresh_token'] ?? '');
 
 if ($tipe === 'recovery') {
-    sesi_perbarui_id_aman();
     $user = supabase_auth_ambil_user_dengan_token($access);
     if ($user === null) {
         header('Location: ' . $gagal);
         exit;
     }
-    $_SESSION[EASENIKERS_SESI_RESET_SANDI] = [
-        'access_token' => $access,
-        'refresh_token' => $refresh,
-        'email' => (string) ($user['email'] ?? ''),
-        'ts' => time(),
-    ];
-    header('Location: ' . aplikasi_url('login/setel_sandi_baru.php'), true, 303);
-    exit;
+    sesi_simpan_reset_sandi_lalu_ke_form(
+        $access,
+        $refresh,
+        (string) ($user['email'] ?? '')
+    );
 }
 
 $peran = easenikers_sesi_login_dari_token_supabase($access, $refresh);

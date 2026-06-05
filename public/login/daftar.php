@@ -137,22 +137,6 @@ $kelas_error = 'pesan-error' . ($pesan_kesalahan !== '' ? ' pesan-error--goyang'
             <p class="merek__tagline">Buat akun untuk mulai belanja</p>
         </header>
 
-        <?php
-        $configured_redirect = (defined('URL_APLIKASI') && URL_APLIKASI !== '') ? rtrim(URL_APLIKASI, '/') . '/login/konfirmasi_email.php' : 'NOT SET';
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $script_dir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
-        $current_base = $scheme . '://' . $host . $script_dir;
-        $mismatch = (defined('URL_APLIKASI') && URL_APLIKASI !== '' && strpos($current_base, rtrim(URL_APLIKASI, '/')) === false);
-        ?>
-        <div style="background:#fff3cd; border:2px solid #ffc107; color:#856404; padding:0.75rem 1rem; font-size:0.9rem; border-radius:6px; margin-bottom:1rem; text-align:left;">
-            <strong>⚠️ PENTING untuk email link konfirmasi:</strong> Redirect yang akan dikirim ke Supabase sekarang: <code><?= htmlspecialchars($configured_redirect) ?></code><br>
-            <strong>Harus match dengan URL yang kamu buka di browser + Redirect URLs di Supabase.</strong><br>
-            <?php if ($mismatch): ?>
-            <strong style="color:#721c24; font-size:1.05em;">⚠️ MISMATCH! Kamu via <code><?= htmlspecialchars($current_base) ?></code> tapi config pakai <code><?= htmlspecialchars(URL_APLIKASI) ?></code>. <a href="<?= htmlspecialchars(rtrim(URL_APLIKASI, '/') . '/login/daftar.php') ?>">Buka ulang di URL config yang benar</a>, lalu submit lagi!</strong><br>
-            <?php endif; ?>
-        </div>
-
         <?php if ($pesan_kesalahan !== ''): ?>
             <p class="<?php echo htmlspecialchars($kelas_error); ?>" role="alert"><?php echo htmlspecialchars($pesan_kesalahan); ?></p>
         <?php endif; ?>
