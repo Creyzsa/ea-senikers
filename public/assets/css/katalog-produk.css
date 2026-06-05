@@ -389,9 +389,36 @@ body.halaman-detail-produk {
     color: var(--brand-black);
 }
 
-.detail-ukuran--habis label {
-    opacity: 0.45;
+.detail-ukuran__kotak {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    min-width: 2.75rem;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.1;
+    border-radius: 8px;
+    border: 1px dashed var(--brand-border);
+    background: var(--brand-gray-light);
+    color: var(--brand-black);
+    opacity: 0.55;
     cursor: not-allowed;
+    user-select: none;
+    pointer-events: none;
+}
+
+.detail-ukuran__habis {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--brand-gray-text);
+}
+
+.detail-ukuran--habis .detail-ukuran__nomor {
     text-decoration: line-through;
 }
 
@@ -993,6 +1020,7 @@ body.halaman-detail-produk {
 .detail-form-aksi .detail-panel__subjudul,
 .detail-form-aksi .detail-stok-hint,
 .detail-ukuran label,
+.detail-ukuran__kotak,
 .detail-ukuran__nomor,
 .detail-ukuran__sisa {
     color: var(--brand-black);

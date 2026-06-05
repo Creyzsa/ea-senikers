@@ -12,7 +12,7 @@ require_once __DIR__ . '/katalog_produk.php';
 /** Ukuran default untuk produk. */
 function admin_daftar_ukuran_default(): array
 {
-    return ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
+    return katalog_daftar_ukuran_default();
 }
 
 /**
@@ -110,15 +110,13 @@ function admin_produk_tambah(array $payload, array $stok_ukuran, array $files): 
         throw new Exception('ID produk tidak diterima dari database.');
     }
 
-    // Insert stok ukuran
+    // Insert stok ukuran (semua ukuran, termasuk stok 0)
     foreach ($stok_ukuran as $ukuran => $stok) {
-        if ($stok > 0) {
-            supabase_rest_request('POST', '/rest/v1/produk_ukuran', [], [
-                'id_produk' => $id_produk,
-                'ukuran' => $ukuran,
-                'stok' => $stok,
-            ]);
-        }
+        supabase_rest_request('POST', '/rest/v1/produk_ukuran', [], [
+            'id_produk' => $id_produk,
+            'ukuran' => $ukuran,
+            'stok' => max(0, (int) $stok),
+        ]);
     }
 
     // Upload gambar jika ada
@@ -172,13 +170,11 @@ function admin_produk_update(string $id_produk, array $payload, array $stok_ukur
     supabase_rest_request('DELETE', '/rest/v1/produk_ukuran', ['id_produk' => 'eq.' . $id_produk]);
 
     foreach ($stok_ukuran as $ukuran => $stok) {
-        if ($stok > 0) {
-            supabase_rest_request('POST', '/rest/v1/produk_ukuran', [], [
-                'id_produk' => $id_produk,
-                'ukuran' => $ukuran,
-                'stok' => $stok,
-            ]);
-        }
+        supabase_rest_request('POST', '/rest/v1/produk_ukuran', [], [
+            'id_produk' => $id_produk,
+            'ukuran' => $ukuran,
+            'stok' => max(0, (int) $stok),
+        ]);
     }
 
     // Upload gambar baru jika ada

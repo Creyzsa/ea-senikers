@@ -161,39 +161,50 @@ $u_checkout = aplikasi_url('checkout');
                     <input type="hidden" name="id_produk" value="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
 
                     <h2 class="detail-panel__subjudul">Ukuran</h2>
-                    <?php if ($ukuran === []): ?>
-                        <p class="detail-stok-hint">Ukuran dan stok akan segera tersedia.</p>
-                    <?php else: ?>
-                        <div class="detail-ukuran-grup" role="radiogroup" aria-label="Pilih ukuran">
-                            <?php
-                            $radio_pertama = true;
-                            foreach ($ukuran as $u):
-                                $uk = (string) ($u['ukuran'] ?? '');
-                                $st = (int) ($u['stok'] ?? 0);
-                                $id_radio = 'uk-' . substr(md5($id . '|' . $uk), 0, 12);
-                                $cek = $st > 0 && $radio_pertama;
-                                if ($st > 0) {
-                                    $radio_pertama = false;
-                                }
-                                $kelas_ukuran = 'detail-ukuran';
-                                if ($st <= 0) {
-                                    $kelas_ukuran .= ' detail-ukuran--habis';
-                                } elseif ($st <= 3) {
-                                    $kelas_ukuran .= ' detail-ukuran--terbatas';
-                                }
-                                ?>
-                            <div class="<?php echo $kelas_ukuran; ?>">
-                                <input type="radio" name="ukuran" value="<?php echo htmlspecialchars($uk, ENT_QUOTES, 'UTF-8'); ?>" id="<?php echo htmlspecialchars($id_radio, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $st <= 0 ? 'disabled' : ''; ?> <?php echo $cek ? 'checked' : ''; ?> <?php echo $ada_ukuran_siap ? 'required' : ''; ?>>
-                                <label for="<?php echo htmlspecialchars($id_radio, ENT_QUOTES, 'UTF-8'); ?>">
-                                    <span class="detail-ukuran__nomor"><?php echo htmlspecialchars($uk, ENT_QUOTES, 'UTF-8'); ?></span>
-                                    <?php if ($st > 0 && $st <= 3): ?>
-                                        <span class="detail-ukuran__sisa">sisa <?php echo (int) $st; ?></span>
-                                    <?php endif; ?>
-                                </label>
-                            </div>
-                            <?php endforeach; ?>
+                    <div class="detail-ukuran-grup" role="radiogroup" aria-label="Pilih ukuran">
+                        <?php
+                        $radio_pertama = true;
+                        foreach ($ukuran as $u):
+                            $uk = (string) ($u['ukuran'] ?? '');
+                            if ($uk === '') {
+                                continue;
+                            }
+                            $st = (int) ($u['stok'] ?? 0);
+                            $habis = $st <= 0;
+                            $id_radio = 'uk-' . substr(md5($id . '|' . $uk), 0, 12);
+                            $cek = !$habis && $radio_pertama;
+                            if (!$habis) {
+                                $radio_pertama = false;
+                            }
+                            $kelas_ukuran = 'detail-ukuran';
+                            if ($habis) {
+                                $kelas_ukuran .= ' detail-ukuran--habis';
+                            } elseif ($st <= 3) {
+                                $kelas_ukuran .= ' detail-ukuran--terbatas';
+                            }
+                            ?>
+                        <div class="<?php echo $kelas_ukuran; ?>">
+                            <?php if ($habis): ?>
+                            <span class="detail-ukuran__kotak" aria-disabled="true" title="Stok habis">
+                                <span class="detail-ukuran__nomor"><?php echo htmlspecialchars($uk, ENT_QUOTES, 'UTF-8'); ?></span>
+                                <span class="detail-ukuran__habis">Habis</span>
+                            </span>
+                            <?php else: ?>
+                            <input type="radio" name="ukuran" value="<?php echo htmlspecialchars($uk, ENT_QUOTES, 'UTF-8'); ?>" id="<?php echo htmlspecialchars($id_radio, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $cek ? 'checked' : ''; ?> <?php echo $ada_ukuran_siap ? 'required' : ''; ?>>
+                            <label for="<?php echo htmlspecialchars($id_radio, ENT_QUOTES, 'UTF-8'); ?>">
+                                <span class="detail-ukuran__nomor"><?php echo htmlspecialchars($uk, ENT_QUOTES, 'UTF-8'); ?></span>
+                                <?php if ($st <= 3): ?>
+                                    <span class="detail-ukuran__sisa">sisa <?php echo (int) $st; ?></span>
+                                <?php endif; ?>
+                            </label>
+                            <?php endif; ?>
                         </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php if ($ada_ukuran_siap): ?>
                         <p class="detail-stok-hint"><strong class="detail-hint-keranjang">Keranjang</strong> menambah barang ke keranjang. <strong>Beli</strong> langsung ke ringkasan checkout (alamat &amp; bayar menyusul).</p>
+                    <?php else: ?>
+                        <p class="detail-stok-hint">Semua ukuran sedang habis. Cek lagi nanti atau hubungi toko lewat WhatsApp.</p>
                     <?php endif; ?>
 
                     <div class="detail-baris-tombol">

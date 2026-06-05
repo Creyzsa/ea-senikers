@@ -107,6 +107,39 @@ function katalog_ambil_semua_produk(): array
     return $rows;
 }
 
+/** Ukuran standar EU yang ditampilkan di katalog & detail produk. */
+function katalog_daftar_ukuran_default(): array
+{
+    return ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
+}
+
+/**
+ * Lengkapi produk_ukuran dengan semua ukuran default; yang tidak ada di DB = stok 0.
+ *
+ * @param array<string, mixed> $produk
+ */
+function katalog_lengkapi_ukuran_produk(array &$produk): void
+{
+    $map = [];
+    $list = $produk['produk_ukuran'] ?? [];
+    if (is_array($list)) {
+        foreach ($list as $u) {
+            if (!is_array($u)) {
+                continue;
+            }
+            $uk = trim((string) ($u['ukuran'] ?? ''));
+            if ($uk !== '') {
+                $map[$uk] = max(0, (int) ($u['stok'] ?? 0));
+            }
+        }
+    }
+    $lengkap = [];
+    foreach (katalog_daftar_ukuran_default() as $uk) {
+        $lengkap[] = ['ukuran' => $uk, 'stok' => $map[$uk] ?? 0];
+    }
+    $produk['produk_ukuran'] = katalog_urutkan_ukuran($lengkap);
+}
+
 /**
  * Isi field turunan `total_stok` dan `siap_jual` pada array produk
  * berdasarkan daftar `produk_ukuran`. Field ini bukan kolom database,
@@ -116,6 +149,7 @@ function katalog_ambil_semua_produk(): array
  */
 function katalog_isi_ringkasan_stok(array &$produk): void
 {
+    katalog_lengkapi_ukuran_produk($produk);
     $ukuran_list = $produk['produk_ukuran'] ?? [];
     $total = 0;
     if (is_array($ukuran_list)) {
