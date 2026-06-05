@@ -587,7 +587,7 @@ body.halaman-daftar::before {
 
 .kaki-halaman__tautan-emas {
     font-weight: 700;
-    color: var(--teks-aksen);
+    color: var(--brand-red);
     text-decoration: none;
     border-bottom: 2px solid transparent;
     transition:
@@ -596,12 +596,12 @@ body.halaman-daftar::before {
 }
 
 .kaki-halaman__tautan-emas:hover {
-    color: var(--teks-aksen-hover);
+    color: var(--brand-red-hover);
     border-bottom-color: currentColor;
 }
 
 .kaki-halaman__tautan-emas:focus-visible {
-    outline: 2px solid var(--oranye-cta);
+    outline: 2px solid var(--brand-red);
     outline-offset: 3px;
     border-radius: 4px;
 }
