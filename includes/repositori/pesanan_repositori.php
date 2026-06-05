@@ -90,6 +90,35 @@ function pesanan_url_gambar_item(array $item): string
 }
 
 /**
+ * Pastikan orders.destination_id bisa menyimpan kode JNE (VARCHAR), bukan INTEGER lama.
+ */
+function pesanan_pastikan_skema_destination_jne(PDO $pdo): void
+{
+    static $sudah = false;
+    if ($sudah) {
+        return;
+    }
+    $sudah = true;
+
+    try {
+        $stmt = $pdo->query(
+            "SELECT data_type FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'destination_id'"
+        );
+        $tipe = $stmt ? strtolower((string) $stmt->fetchColumn()) : '';
+        if ($tipe === 'integer' || $tipe === 'bigint' || $tipe === 'smallint') {
+            $pdo->exec(
+                "ALTER TABLE orders
+                 ALTER COLUMN destination_id TYPE VARCHAR(12)
+                 USING NULLIF(TRIM(destination_id::text), '')"
+            );
+        }
+    } catch (Throwable $e) {
+        // Biarkan pesanan_buat menangkap error insert jika migrasi gagal (hak akses DB).
+    }
+}
+
+/**
  * Buat pesanan baru beserta item-itemnya dalam satu transaksi.
  * Mengembalikan ID pesanan baru, atau null bila gagal.
  *
@@ -118,6 +147,7 @@ function pesanan_buat(
 
     try {
         $pdo = koneksi_database();
+        pesanan_pastikan_skema_destination_jne($pdo);
         $pdo->beginTransaction();
 
         $stmt_order = $pdo->prepare(
