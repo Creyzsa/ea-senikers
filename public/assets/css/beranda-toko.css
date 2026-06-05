@@ -2455,7 +2455,7 @@ body.halaman-toko {
 .rating-big {
     font-size: 2rem;
     font-weight: 800;
-    color: var(--accent);
+    color: var(--brand-black);
 }
 .rating-meta {
     font-size: 0.85rem;
@@ -2571,7 +2571,7 @@ body.halaman-toko {
     overflow: hidden;
 }
 .rekom-harga {
-    color: var(--accent);
+    color: var(--brand-black);
     font-weight: 700;
     font-size: 0.85rem;
 }

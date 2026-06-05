@@ -198,7 +198,7 @@ body.halaman-detail-produk {
 }
 
 .detail-breadcrumb a {
-    color: var(--teks-aksen);
+    color: var(--brand-black);
     text-decoration: none;
     font-weight: 600;
 }
@@ -288,7 +288,7 @@ body.halaman-detail-produk {
     font-weight: 800;
     letter-spacing: 0;
     text-transform: uppercase;
-    color: var(--teks-aksen-hover);
+    color: var(--brand-black);
     margin-bottom: 0.25rem;
 }
 
@@ -297,12 +297,13 @@ body.halaman-detail-produk {
     font-size: clamp(1.1rem, 2.5vw, 1.35rem);
     font-weight: 800;
     line-height: 1.35;
+    color: var(--brand-black);
 }
 
 .detail-panel__harga {
     font-size: 1.5rem;
     font-weight: 800;
-    color: var(--teks-aksen);
+    color: var(--brand-black);
     margin-bottom: 0.5rem;
 }
 
@@ -535,7 +536,7 @@ body.halaman-detail-produk {
 }
 
 .detail-404 a {
-    color: var(--teks-aksen);
+    color: var(--brand-black);
     font-weight: 700;
 }
 
