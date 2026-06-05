@@ -146,9 +146,9 @@ function pesanan_buat(
 
         $stmt_item = $pdo->prepare(
             'INSERT INTO order_items
-                (order_id, product_name, price, size, quantity, product_image)
+                (order_id, product_name, price, size, quantity, product_image, id_produk)
              VALUES
-                (:oid, :nama, :harga, :ukuran, :qty, :gambar)'
+                (:oid, :nama, :harga, :ukuran, :qty, :gambar, :idp)'
         );
         foreach ($items as $it) {
             $stmt_item->execute([
@@ -158,6 +158,7 @@ function pesanan_buat(
                 'ukuran' => trim((string) ($it['size'] ?? '')),
                 'qty' => max(1, (int) ($it['quantity'] ?? 1)),
                 'gambar' => trim((string) ($it['product_image'] ?? '')),
+                'idp' => !empty($it['id_produk']) ? (string)$it['id_produk'] : null,
             ]);
         }
 
@@ -243,7 +244,7 @@ function pesanan_ambil_items_untuk_order_ids(PDO $pdo, array $order_ids): array
     }
     $placeholders = implode(',', array_fill(0, count($order_ids), '?'));
     $stmt = $pdo->prepare(
-        "SELECT id, order_id, product_name, price, size, quantity, product_image
+        "SELECT id, order_id, product_name, price, size, quantity, product_image, id_produk
          FROM order_items
          WHERE order_id IN ($placeholders)
          ORDER BY order_id, id"
@@ -285,7 +286,7 @@ function pesanan_ambil_detail_untuk_user(int $order_id, int $user_id): ?array
             return null;
         }
         $stmtI = $pdo->prepare(
-            'SELECT id, order_id, product_name, price, size, quantity, product_image
+            'SELECT id, order_id, product_name, price, size, quantity, product_image, id_produk
              FROM order_items
              WHERE order_id = :oid
              ORDER BY id'
@@ -312,7 +313,18 @@ function pesanan_set_status_oleh_id(int $order_id, string $status_baru): bool
         $pdo = koneksi_database();
         $stmt = $pdo->prepare('UPDATE orders SET status = :s WHERE id = :id');
 
-        return $stmt->execute(['s' => $status_baru, 'id' => $order_id]);
+        $ok = $stmt->execute(['s' => $status_baru, 'id' => $order_id]);
+        if ($ok && in_array($status_baru, ['paid', 'processed', 'shipped', 'completed'], true)) {
+            // update sold count for products in this order
+            $stmtI = $pdo->prepare('SELECT DISTINCT id_produk FROM order_items WHERE order_id = :oid AND id_produk IS NOT NULL');
+            $stmtI->execute(['oid' => $order_id]);
+            foreach ($stmtI->fetchAll() as $it) {
+                if (!empty($it['id_produk'])) {
+                    update_produk_terjual((string) $it['id_produk']);
+                }
+            }
+        }
+        return $ok;
     } catch (Throwable $e) {
         return false;
     }
@@ -524,7 +536,7 @@ function pesanan_admin_detail(int $order_id): ?array
 
         // Ambil items pesanan
         $stmtI = $pdo->prepare(
-            'SELECT id, order_id, product_name, price, size, quantity, product_image
+            'SELECT id, order_id, product_name, price, size, quantity, product_image, id_produk
              FROM order_items
              WHERE order_id = :oid
              ORDER BY id'
@@ -607,9 +619,17 @@ function pesanan_admin_ubah_status(int $order_id, string $status_baru): bool
             return false;
         }
 
-        $stmt_u = $pdo->prepare('UPDATE orders SET status = :s WHERE id = :id');
-
-        return $stmt_u->execute(['s' => $status_baru, 'id' => $order_id]);
+        $ok = $stmt_u->execute(['s' => $status_baru, 'id' => $order_id]);
+        if ($ok && in_array($status_baru, ['paid', 'processed', 'shipped', 'completed'], true)) {
+            $stmtI = $pdo->prepare('SELECT DISTINCT id_produk FROM order_items WHERE order_id = :oid AND id_produk IS NOT NULL');
+            $stmtI->execute(['oid' => $order_id]);
+            foreach ($stmtI->fetchAll() as $it) {
+                if (!empty($it['id_produk'])) {
+                    update_produk_terjual((string) $it['id_produk']);
+                }
+            }
+        }
+        return $ok;
     } catch (Throwable $e) {
         return false;
     }
