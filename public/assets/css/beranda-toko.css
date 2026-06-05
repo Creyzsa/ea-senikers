@@ -1018,22 +1018,7 @@ body.halaman-toko {
     border-bottom-color: var(--ikon-aksen-garis);
 }
 
-.beranda-toko__footer-list--ikon a:has(.footer-ikon-svg--wa),
-.beranda-toko__footer-list--ikon a:has(.footer-ikon-svg--ig),
-.beranda-toko__footer-list--ikon a:has(.footer-ikon-svg--tt) {
-    color: var(--brand-red);
-}
-
-.beranda-toko__footer-list--ikon a:has(.footer-ikon-svg--wa):hover,
-.beranda-toko__footer-list--ikon a:has(.footer-ikon-svg--ig):hover,
-.beranda-toko__footer-list--ikon a:has(.footer-ikon-svg--tt):hover {
-    color: var(--brand-red-hover);
-    border-bottom-color: rgba(214, 40, 40, 0.45);
-}
-
-.beranda-toko__footer-list--ikon a:has(.footer-ikon-svg--wa) .footer-ikon-svg,
-.beranda-toko__footer-list--ikon a:has(.footer-ikon-svg--ig) .footer-ikon-svg,
-.beranda-toko__footer-list--ikon a:has(.footer-ikon-svg--tt) .footer-ikon-svg {
+.beranda-toko__footer-kolom:last-of-type .beranda-toko__footer-judul {
     color: var(--brand-red);
 }
 
