@@ -14,6 +14,7 @@
  *   SUPABASE_URL, SUPABASE_ANON_KEY,
  *   URL_APLIKASI,
  *   PAYMENT_CALLBACK_SECRET (optional),
+ *   APICOID_API_KEY (optional, ongkir api.co.id),
  *   EMAIL_DRIVER, EMAIL_PENGIRIM (optional)
  */
 
@@ -45,5 +46,9 @@ if (!defined('DB_HOST')) {
 
         define('EMAIL_DRIVER', getenv('EMAIL_DRIVER') ?: 'log');
         define('EMAIL_PENGIRIM', getenv('EMAIL_PENGIRIM') ?: 'EA SENIKERS <noreply@example.com>');
+
+        if (!defined('APICOID_API_KEY')) {
+            define('APICOID_API_KEY', getenv('APICOID_API_KEY') ?: '');
+        }
     }
 }

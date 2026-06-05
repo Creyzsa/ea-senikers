@@ -71,5 +71,8 @@ define('URL_APLIKASI', 'https://www.easenikers.shop');   // PROD. Untuk local de
 
 define('PAYMENT_CALLBACK_SECRET', '');
 
+/** API Co.id — cek ongkir & regional (header x-api-co-id). Bisa juga di Pengaturan admin. */
+define('APICOID_API_KEY', '');
+
 define('EMAIL_DRIVER', 'log');
 define('EMAIL_PENGIRIM', 'EA SENIKERS <noreply@example.com>');

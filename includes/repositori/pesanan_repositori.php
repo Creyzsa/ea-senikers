@@ -93,7 +93,7 @@ function pesanan_url_gambar_item(array $item): string
  * Buat pesanan baru beserta item-itemnya dalam satu transaksi.
  * Mengembalikan ID pesanan baru, atau null bila gagal.
  *
- * @param array{kurir:string, layanan:string, ongkir:int, destination_id:int} $shipping
+ * @param array{kurir:string, layanan:string, ongkir:int, destination_id:string} $shipping
  * @param list<array{product_name:string, price:int, size:string, quantity:int, product_image?:string}> $items
  */
 function pesanan_buat(
@@ -110,7 +110,10 @@ function pesanan_buat(
     $kurir = trim((string) ($shipping['kurir'] ?? ''));
     $layanan = trim((string) ($shipping['layanan'] ?? ''));
     $ongkir = max(0, (int) ($shipping['ongkir'] ?? 0));
-    $destination_id = max(0, (int) ($shipping['destination_id'] ?? 0));
+    $destination_id = preg_replace('/\D+/', '', (string) ($shipping['destination_id'] ?? '')) ?? '';
+    if (strlen($destination_id) !== 10) {
+        $destination_id = '';
+    }
     $total = max(0, $subtotal_produk) + $ongkir;
 
     try {
@@ -135,7 +138,7 @@ function pesanan_buat(
             'kurir' => $kurir !== '' ? $kurir : null,
             'layanan' => $layanan !== '' ? $layanan : null,
             'ongkir' => $ongkir,
-            'dest' => $destination_id > 0 ? $destination_id : null,
+            'dest' => $destination_id !== '' ? $destination_id : null,
         ]);
         $row = $stmt_order->fetch();
         $order_id = $row ? (int) $row['id'] : 0;

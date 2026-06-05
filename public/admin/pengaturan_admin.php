@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'nomor_wa_2' => (string) ($_POST['nomor_wa_2'] ?? ''),
             'rajaongkir_api_key' => (string) ($_POST['rajaongkir_api_key'] ?? ''),
             'rajaongkir_kota_asal_nama' => (string) ($_POST['rajaongkir_kota_asal_nama'] ?? ''),
+            'rajaongkir_kota_asal_kode' => (string) ($_POST['rajaongkir_kota_asal_kode'] ?? ''),
             'rajaongkir_kota_asal_id' => (string) ($_POST['rajaongkir_kota_asal_id'] ?? '0'),
             'tripay_mode' => (string) ($_POST['tripay_mode'] ?? 'sandbox'),
             'tripay_merchant_code' => (string) ($_POST['tripay_merchant_code'] ?? ''),
@@ -225,34 +226,36 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
 
                     <section class="admin-kartu" aria-labelledby="judul-rajaongkir">
                         <div class="admin-kartu__header">
-                            <h2 id="judul-rajaongkir">Integrasi RajaOngkir</h2>
+                            <h2 id="judul-rajaongkir">Integrasi API Co.id (Ongkir)</h2>
                             <span class="admin-lencana admin-lencana--tunda">Tahap 2</span>
                         </div>
                         <div class="admin-form-konten">
                             <p class="admin-form-keterangan">
-                                Untuk hitung ongkos kirim otomatis. Daftar gratis di
-                                <a href="https://collaborator.komerce.id/" target="_blank" rel="noopener noreferrer">collaborator.komerce.id</a>
-                                (RajaOngkir kini dikelola Komerce, API baru level <em>district/kecamatan</em>).
-                                Lokasi asal pengiriman adalah kecamatan tempat paket dikirim — biasanya kecamatan tempat toko offline berada.
+                                Untuk hitung ongkos kirim otomatis. Daftar di
+                                <a href="https://api.co.id/" target="_blank" rel="noopener noreferrer">api.co.id</a>
+                                dan salin API key (header <code>x-api-co-id</code>).
+                                Dokumentasi: <a href="https://docs.api.co.id/products/indonesia-expedition-cost/" target="_blank" rel="noopener noreferrer">Cek Ongkos Kirim</a>
+                                &amp; <a href="https://docs.api.co.id/products/indonesia-regional/" target="_blank" rel="noopener noreferrer">Regional</a>.
+                                Lokasi asal = <strong>kode desa/kelurahan 10 digit</strong> tempat paket dikirim.
                             </p>
                             <div class="admin-form-grid">
                                 <div class="admin-field admin-field--full">
-                                    <label for="rajaongkir-api-key">API Key</label>
-                                    <input type="password" id="rajaongkir-api-key" name="rajaongkir_api_key" value="<?php echo htmlspecialchars((string) $cfg['rajaongkir_api_key'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" placeholder="Salin dari dashboard Komerce → Shipping Cost → API Key">
+                                    <label for="rajaongkir-api-key">API Key (x-api-co-id)</label>
+                                    <input type="password" id="rajaongkir-api-key" name="rajaongkir_api_key" value="<?php echo htmlspecialchars((string) $cfg['rajaongkir_api_key'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" placeholder="API key dari dashboard api.co.id">
                                 </div>
                                 <div class="admin-field">
                                     <label for="rajaongkir-kota-asal-nama">Lokasi asal (label)</label>
-                                    <input type="text" id="rajaongkir-kota-asal-nama" name="rajaongkir_kota_asal_nama" value="<?php echo htmlspecialchars((string) $cfg['rajaongkir_kota_asal_nama'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="Padang Panjang Timur, Padang Panjang">
+                                    <input type="text" id="rajaongkir-kota-asal-nama" name="rajaongkir_kota_asal_nama" value="<?php echo htmlspecialchars((string) $cfg['rajaongkir_kota_asal_nama'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="Padang Panjang, Sumatera Barat">
                                 </div>
                                 <div class="admin-field">
-                                    <label for="rajaongkir-kota-asal-id">Lokasi asal (destination_id)</label>
-                                    <input type="number" id="rajaongkir-kota-asal-id" name="rajaongkir_kota_asal_id" value="<?php echo htmlspecialchars((string) (int) $cfg['rajaongkir_kota_asal_id'], ENT_QUOTES, 'UTF-8'); ?>" min="0" step="1" placeholder="ID level district">
+                                    <label for="rajaongkir-kota-asal-kode">Kode desa asal (10 digit)</label>
+                                    <input type="text" id="rajaongkir-kota-asal-kode" name="rajaongkir_kota_asal_kode" value="<?php echo htmlspecialchars((string) ($cfg['rajaongkir_kota_asal_kode'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" inputmode="numeric" pattern="\d{10}" maxlength="10" placeholder="contoh: 1704082012">
                                 </div>
                             </div>
                             <p class="admin-form-keterangan" style="margin-top:0.6rem;">
-                                <strong>Cara dapat destination_id:</strong> setelah API Key terisi &amp; tersimpan,
-                                buka alat bantu <a href="<?php echo htmlspecialchars(aplikasi_url('admin/cek_rajaongkir.php'), ENT_QUOTES, 'UTF-8'); ?>"><strong>Cek RajaOngkir</strong></a>
-                                untuk validasi koneksi, cari ID lokasi asal lewat search, dan simulasi ongkir.
+                                <strong>Cara dapat kode desa:</strong> setelah API Key terisi &amp; tersimpan,
+                                buka <a href="<?php echo htmlspecialchars(aplikasi_url('admin/cek_rajaongkir.php'), ENT_QUOTES, 'UTF-8'); ?>"><strong>Cek Ongkir API</strong></a>
+                                untuk tes koneksi, cari desa/kelurahan, lalu salin kode 10 digit ke field di atas.
                             </p>
                         </div>
                     </section>

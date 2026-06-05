@@ -56,6 +56,7 @@ function admin_pengaturan_format_wa(string $masukan): string
  *   nomor_wa_2:string,
  *   rajaongkir_api_key:string,
  *   rajaongkir_kota_asal_nama:string,
+ *   rajaongkir_kota_asal_kode:string,
  *   rajaongkir_kota_asal_id:int,
  *   tripay_mode:string,
  *   tripay_merchant_code:string,
@@ -76,6 +77,7 @@ function admin_pengaturan_muat_terapan(): array
         'nomor_wa_2' => '6282171590759',
         'rajaongkir_api_key' => '',
         'rajaongkir_kota_asal_nama' => '',
+        'rajaongkir_kota_asal_kode' => '',
         'rajaongkir_kota_asal_id' => 0,
         'tripay_mode' => 'sandbox',
         'tripay_merchant_code' => '',
@@ -105,6 +107,11 @@ function admin_pengaturan_muat_terapan(): array
     $wa1 = admin_pengaturan_normalisasi_wa((string) ($out['nomor_wa_1'] ?? $bawaan['nomor_wa_1']));
     $wa2 = admin_pengaturan_normalisasi_wa((string) ($out['nomor_wa_2'] ?? $bawaan['nomor_wa_2']));
 
+    $kota_asal_kode = preg_replace('/\D+/', '', (string) ($out['rajaongkir_kota_asal_kode'] ?? '')) ?? '';
+    if (strlen($kota_asal_kode) !== 10) {
+        $legacy = preg_replace('/\D+/', '', (string) ($out['rajaongkir_kota_asal_id'] ?? '')) ?? '';
+        $kota_asal_kode = strlen($legacy) === 10 ? $legacy : '';
+    }
     $kota_asal_id = (int) ($out['rajaongkir_kota_asal_id'] ?? $bawaan['rajaongkir_kota_asal_id']);
     if ($kota_asal_id < 0) {
         $kota_asal_id = 0;
@@ -127,6 +134,7 @@ function admin_pengaturan_muat_terapan(): array
         'nomor_wa_2' => $wa2,
         'rajaongkir_api_key' => trim((string) ($out['rajaongkir_api_key'] ?? '')),
         'rajaongkir_kota_asal_nama' => trim((string) ($out['rajaongkir_kota_asal_nama'] ?? '')),
+        'rajaongkir_kota_asal_kode' => $kota_asal_kode,
         'rajaongkir_kota_asal_id' => $kota_asal_id,
         'tripay_mode' => $tripay_mode,
         'tripay_merchant_code' => trim((string) ($out['tripay_merchant_code'] ?? '')),
@@ -176,6 +184,10 @@ function admin_pengaturan_simpan_terapan(array $data): bool
 
     $email = strtolower(trim((string) ($data['email_toko'] ?? '')));
 
+    $kota_asal_kode = preg_replace('/\D+/', '', (string) ($data['rajaongkir_kota_asal_kode'] ?? '')) ?? '';
+    if (strlen($kota_asal_kode) !== 10) {
+        $kota_asal_kode = '';
+    }
     $kota_asal_id_raw = $data['rajaongkir_kota_asal_id'] ?? 0;
     $kota_asal_id = is_numeric($kota_asal_id_raw) ? (int) $kota_asal_id_raw : 0;
     if ($kota_asal_id < 0) {
@@ -198,6 +210,7 @@ function admin_pengaturan_simpan_terapan(array $data): bool
         'nomor_wa_2' => admin_pengaturan_normalisasi_wa((string) ($data['nomor_wa_2'] ?? '')),
         'rajaongkir_api_key' => trim((string) ($data['rajaongkir_api_key'] ?? '')),
         'rajaongkir_kota_asal_nama' => trim((string) ($data['rajaongkir_kota_asal_nama'] ?? '')),
+        'rajaongkir_kota_asal_kode' => $kota_asal_kode,
         'rajaongkir_kota_asal_id' => $kota_asal_id,
         'tripay_mode' => $tripay_mode,
         'tripay_merchant_code' => trim((string) ($data['tripay_merchant_code'] ?? '')),

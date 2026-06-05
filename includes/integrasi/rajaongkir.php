@@ -3,111 +3,118 @@
 declare(strict_types=1);
 
 /**
- * Wrapper RajaOngkir API (versi Komerce/Collaborator).
+ * Integrasi ongkir & wilayah — API Co.id (https://docs.api.co.id/).
  *
- * Endpoint dasar: https://rajaongkir.komerce.id/api/v1
- * Header autentikasi: key: <API_KEY>
+ * - Regional: GET https://use.api.co.id/regional/indonesia/...
+ * - Ongkir: GET https://use.api.co.id/expedition/shipping-cost
+ * - Header: x-api-co-id: <API_KEY>
  *
- * Catatan:
- *   - RajaOngkir kini di-host di Komerce dengan API baru level district
- *     (bukan city seperti API lama).
- *   - Pencarian destinasi dilakukan via search keyword, bukan listing per
- *     province seperti sebelumnya.
- *   - Hitung ongkir mendukung multi-kurir dalam satu panggilan (dipisah
- *     tanda titik dua, mis. "jne:pos:tiki").
- *   - API key dibaca dari pengaturan admin (file JSON gitignored).
+ * Nama fungsi rajaongkir_* dipertahankan agar checkout/admin tidak perlu refactor besar.
  */
 
+require_once __DIR__ . '/../config_loader.php';
 require_once __DIR__ . '/../repositori/admin_pengaturan_repositori.php';
 
-const RAJAONGKIR_BASE_URL = 'https://rajaongkir.komerce.id/api/v1';
+const APICOID_BASE_URL = 'https://use.api.co.id';
 
 /**
- * Daftar kurir yang didukung API Komerce RajaOngkir.
- * @return array<string,string>
+ * @return array<string, string>
  */
 function rajaongkir_kurir_didukung(): array
 {
     return [
         'jne' => 'JNE',
-        'pos' => 'POS Indonesia',
-        'tiki' => 'TIKI',
         'jnt' => 'J&T Express',
+        'jt' => 'J&T Express',
         'sicepat' => 'SiCepat',
-        'ide' => 'ID Express',
         'sap' => 'SAP Express',
-        'ninja' => 'Ninja Xpress',
         'anteraja' => 'AnterAja',
         'lion' => 'Lion Parcel',
-        'ncs' => 'NCS',
-        'rex' => 'REX',
-        'rpx' => 'RPX',
-        'wahana' => 'Wahana',
-        'sentral' => 'Sentral Cargo',
-        'star' => 'Star Cargo',
-        'dse' => 'DSE Logistic',
+        'ninja' => 'Ninja Xpress',
+        'idexpress' => 'iDexpress',
+        'pos' => 'POS Indonesia',
+        'tiki' => 'TIKI',
     ];
 }
 
 function rajaongkir_api_key(): string
 {
+    if (defined('APICOID_API_KEY') && is_string(APICOID_API_KEY) && APICOID_API_KEY !== '') {
+        return trim(APICOID_API_KEY);
+    }
+    $env = getenv('APICOID_API_KEY');
+    if (is_string($env) && trim($env) !== '') {
+        return trim($env);
+    }
     $cfg = admin_pengaturan_muat_terapan();
     return trim((string) ($cfg['rajaongkir_api_key'] ?? ''));
 }
 
-function rajaongkir_kota_asal_id(): int
+function rajaongkir_normalisasi_kode_desa(string|int $nilai): string
+{
+    $s = preg_replace('/\D+/', '', (string) $nilai) ?? '';
+    return strlen($s) === 10 ? $s : '';
+}
+
+/** Kode desa/kelurahan asal pengiriman (10 digit). */
+function rajaongkir_asal_kode(): string
 {
     $cfg = admin_pengaturan_muat_terapan();
-    return (int) ($cfg['rajaongkir_kota_asal_id'] ?? 0);
+    $kode = rajaongkir_normalisasi_kode_desa((string) ($cfg['rajaongkir_kota_asal_kode'] ?? ''));
+    if ($kode !== '') {
+        return $kode;
+    }
+    $legacy = (string) ($cfg['rajaongkir_kota_asal_id'] ?? '');
+    return rajaongkir_normalisasi_kode_desa($legacy);
 }
 
 /**
- * Panggil endpoint RajaOngkir (Komerce).
- *
- * Parsing respons mendukung dua format:
- *   - Baru (Komerce): { "meta": { "code": 200, "status": "success", "message": "..." }, "data": [...] }
- *   - Lama (legacy fallback): { "rajaongkir": { "status": {...}, "results": [...] } }
- *
+ * Kompatibilitas lama: > 0 bila kode asal sudah diatur.
+ */
+function rajaongkir_kota_asal_id(): int
+{
+    return rajaongkir_asal_kode() !== '' ? 1 : 0;
+}
+
+/**
  * @param 'GET'|'POST' $metode
- * @param string $path Path relatif (mis. '/destination/province')
- * @param array<string,scalar> $body Query string untuk GET, form body untuk POST
+ * @param array<string, scalar> $query
  * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
  */
-function rajaongkir_request(string $metode, string $path, array $body = []): array
+function apicoid_request(string $metode, string $path, array $query = []): array
 {
     $key = rajaongkir_api_key();
     if ($key === '') {
         return [
             'ok' => false,
             'http' => 0,
-            'error' => 'API Key RajaOngkir belum diisi. Buka Pengaturan admin → Integrasi RajaOngkir.',
+            'error' => 'API Key belum diisi. Buka Pengaturan admin → Integrasi API Co.id.',
             'data' => null,
             'raw' => '',
         ];
     }
 
-    $url = RAJAONGKIR_BASE_URL . $path;
-    $headers = ['key: ' . $key, 'Accept: application/json'];
-
-    $metode = strtoupper($metode);
+    $url = APICOID_BASE_URL . $path;
+    if ($query !== []) {
+        $url .= (strpos($url, '?') !== false ? '&' : '?') . http_build_query($query);
+    }
 
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-    curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 15,
+        CURLOPT_TIMEOUT => 45,
+        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+        CURLOPT_HTTPHEADER => [
+            'x-api-co-id: ' . $key,
+            'Accept: application/json',
+        ],
+    ]);
 
-    if ($metode === 'POST') {
+    if (strtoupper($metode) === 'POST') {
         curl_setopt($ch, CURLOPT_POST, true);
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($body));
-    } else {
-        if ($body !== []) {
-            $url .= (strpos($url, '?') !== false ? '&' : '?') . http_build_query($body);
-        }
     }
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
     $ca = ini_get('curl.cainfo') ?: ini_get('openssl.cafile');
     if ($ca && is_readable($ca)) {
@@ -120,15 +127,13 @@ function rajaongkir_request(string $metode, string $path, array $body = []): arr
     $raw = curl_exec($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $err_curl = (string) curl_error($ch);
-    // curl_close() removed: deprecated and no-op since PHP 8.0 (handles are auto-closed)
-
     $raw_str = is_string($raw) ? $raw : '';
 
     if ($raw === false) {
         return [
             'ok' => false,
             'http' => $http,
-            'error' => $err_curl !== '' ? $err_curl : 'Tidak ada respons dari RajaOngkir.',
+            'error' => $err_curl !== '' ? $err_curl : 'Tidak ada respons dari API Co.id.',
             'data' => null,
             'raw' => $raw_str,
         ];
@@ -145,75 +150,94 @@ function rajaongkir_request(string $metode, string $path, array $body = []): arr
         ];
     }
 
-    // Format baru (Komerce): {"meta":{"code":200,...},"data":[...]}
-    if (isset($json['meta']) && is_array($json['meta'])) {
-        $meta = $json['meta'];
-        $code = (int) ($meta['code'] ?? 0);
-        $msg = (string) ($meta['message'] ?? $meta['status'] ?? '');
-        if ($code !== 200) {
-            return [
-                'ok' => false,
-                'http' => $http,
-                'error' => $msg !== '' ? $msg : ('Kode RajaOngkir: ' . $code),
-                'data' => null,
-                'raw' => $raw_str,
-            ];
-        }
+    if (isset($json['is_success']) && $json['is_success'] === false) {
         return [
-            'ok' => true,
+            'ok' => false,
             'http' => $http,
-            'error' => '',
-            'data' => $json['data'] ?? null,
+            'error' => trim((string) ($json['message'] ?? 'Permintaan ditolak API Co.id.')),
+            'data' => null,
             'raw' => $raw_str,
         ];
     }
 
-    // Format lama (fallback): {"rajaongkir":{"status":{"code":200},"results":...}}
-    if (isset($json['rajaongkir']) && is_array($json['rajaongkir'])) {
-        $ro = $json['rajaongkir'];
-        $st = is_array($ro['status'] ?? null) ? $ro['status'] : [];
-        $code = (int) ($st['code'] ?? 0);
-        $desk = (string) ($st['description'] ?? '');
-        if ($code !== 200) {
-            return [
-                'ok' => false,
-                'http' => $http,
-                'error' => $desk !== '' ? $desk : ('Kode RajaOngkir: ' . $code),
-                'data' => null,
-                'raw' => $raw_str,
-            ];
-        }
+    if ($http >= 400) {
         return [
-            'ok' => true,
+            'ok' => false,
             'http' => $http,
-            'error' => '',
-            'data' => $ro['results'] ?? null,
+            'error' => trim((string) ($json['message'] ?? 'HTTP ' . $http)),
+            'data' => null,
             'raw' => $raw_str,
         ];
+    }
+
+    $data = $json['data'] ?? $json['result'] ?? $json;
+    if (($json['status'] ?? '') === 'success' && isset($json['result'])) {
+        $data = $json['result'];
     }
 
     return [
-        'ok' => false,
+        'ok' => true,
         'http' => $http,
-        'error' => 'Format respons tidak dikenali. HTTP ' . $http . '. Cek raw response untuk detail.',
-        'data' => null,
+        'error' => '',
+        'data' => $data,
         'raw' => $raw_str,
     ];
 }
 
 /**
- * Ambil daftar semua provinsi (untuk validasi koneksi & info umum).
+ * Tes koneksi: ambil daftar provinsi.
  *
  * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
  */
 function rajaongkir_daftar_provinsi(): array
 {
-    return rajaongkir_request('GET', '/destination/province');
+    return apicoid_request('GET', '/regional/indonesia/provinces', ['page' => 1]);
 }
 
 /**
- * Cari destinasi domestik berdasar kata kunci. Hasil sampai level subdistrict/district.
- * Endpoint baru menggantikan listing per province di API lama.
+ * @return list<array<string, mixed>>
+ */
+function apicoid_normalisasi_baris_desa(mixed $data): array
+{
+    $rows = [];
+    if (!is_array($data)) {
+        return $rows;
+    }
+    foreach ($data as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $code = rajaongkir_normalisasi_kode_desa((string) ($row['code'] ?? ''));
+        if ($code === '') {
+            continue;
+        }
+        $nama = trim((string) ($row['name'] ?? ''));
+        $kec = trim((string) ($row['district'] ?? ''));
+        $kab = trim((string) ($row['regency'] ?? ''));
+        $prov = trim((string) ($row['province'] ?? ''));
+        $label = implode(', ', array_filter([$nama, $kec, $kab, $prov]));
+        $pos = '';
+        if (isset($row['postal_codes']) && is_array($row['postal_codes']) && $row['postal_codes'] !== []) {
+            $pos = trim((string) $row['postal_codes'][0]);
+        }
+        $rows[] = [
+            'id' => $code,
+            'label' => $label,
+            'zip_code' => $pos,
+            'postal_code' => $pos,
+            'subdistrict_name' => $nama,
+            'district_name' => $kec,
+            'city_name' => $kab,
+            'province_name' => $prov,
+            'is_courier_support' => !empty($row['is_courier_support']),
+        ];
+    }
+
+    return $rows;
+}
+
+/**
+ * Cari desa/kelurahan (kode 10 digit) untuk destinasi ongkir.
  *
  * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
  */
@@ -232,55 +256,45 @@ function rajaongkir_cari_destinasi(string $kata, int $limit = 20, int $offset = 
     if ($limit < 1 || $limit > 100) {
         $limit = 20;
     }
-    if ($offset < 0) {
-        $offset = 0;
-    }
-    return rajaongkir_request('GET', '/destination/domestic-destination', [
-        'search' => $kata,
-        'limit' => $limit,
-        'offset' => $offset,
+    $page = (int) floor(max(0, $offset) / 100) + 1;
+
+    $res = apicoid_request('GET', '/regional/indonesia/villages', [
+        'name' => $kata,
+        'page' => $page,
     ]);
+    if (!$res['ok']) {
+        return $res;
+    }
+
+    $rows = apicoid_normalisasi_baris_desa($res['data']);
+    if ($limit < count($rows)) {
+        $rows = array_slice($rows, 0, $limit);
+    }
+
+    return [
+        'ok' => true,
+        'http' => $res['http'],
+        'error' => '',
+        'data' => $rows,
+        'raw' => $res['raw'],
+    ];
 }
 
 /**
- * Hitung ongkos kirim domestik level district.
- *
- * $courier dapat berisi satu kurir ("jne") atau beberapa dipisah titik dua ("jne:pos:tiki").
+ * Hitung ongkos kirim antar kode desa (berat dalam gram).
  *
  * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
  */
-function rajaongkir_cek_ongkir(int $origin_id, int $destination_id, int $weight_gram, string $courier = 'jne'): array
+function rajaongkir_cek_ongkir(string|int $origin, string|int $destination, int $weight_gram, string $courier = ''): array
 {
-    $courier = strtolower(trim($courier));
-    if ($courier === '') {
+    $origin_kode = rajaongkir_normalisasi_kode_desa($origin);
+    $dest_kode = rajaongkir_normalisasi_kode_desa($destination);
+
+    if ($origin_kode === '' || $dest_kode === '') {
         return [
             'ok' => false,
             'http' => 0,
-            'error' => 'Kurir wajib diisi (mis. "jne" atau "jne:pos:tiki").',
-            'data' => null,
-            'raw' => '',
-        ];
-    }
-
-    $kurir_valid = rajaongkir_kurir_didukung();
-    foreach (explode(':', $courier) as $k) {
-        $k = trim($k);
-        if ($k !== '' && !array_key_exists($k, $kurir_valid)) {
-            return [
-                'ok' => false,
-                'http' => 0,
-                'error' => 'Kurir "' . $k . '" tidak ada di daftar yang didukung.',
-                'data' => null,
-                'raw' => '',
-            ];
-        }
-    }
-
-    if ($origin_id <= 0 || $destination_id <= 0) {
-        return [
-            'ok' => false,
-            'http' => 0,
-            'error' => 'origin_id dan destination_id wajib > 0.',
+            'error' => 'Kode desa asal dan tujuan wajib 10 digit (dari API Regional).',
             'data' => null,
             'raw' => '',
         ];
@@ -295,14 +309,85 @@ function rajaongkir_cek_ongkir(int $origin_id, int $destination_id, int $weight_
         ];
     }
 
-    // Endpoint search-based: terima ID dari /destination/domestic-destination apa adanya
-    // (level kecamatan/kelurahan, tanpa konversi). Berbeda dari /calculate/district/...
-    // yang dipakai oleh alur lama province → city → district.
-    return rajaongkir_request('POST', '/calculate/domestic-cost', [
-        'origin' => (string) $origin_id,
-        'destination' => (string) $destination_id,
-        'weight' => $weight_gram,
-        'courier' => $courier,
-        'price' => 'lowest',
+    $berat_kg = max(0.01, round($weight_gram / 1000, 2));
+
+    $res = apicoid_request('GET', '/expedition/shipping-cost', [
+        'origin_village_code' => $origin_kode,
+        'destination_village_code' => $dest_kode,
+        'weight' => $berat_kg,
     ]);
+    if (!$res['ok']) {
+        return $res;
+    }
+
+    $couriers = [];
+    $payload = $res['data'];
+    if (is_array($payload)) {
+        if (isset($payload['couriers']) && is_array($payload['couriers'])) {
+            $couriers = $payload['couriers'];
+        } elseif (isset($payload[0]['courier_code'])) {
+            $couriers = $payload;
+        }
+    }
+
+    $filter = [];
+    if ($courier !== '') {
+        foreach (explode(':', strtolower($courier)) as $k) {
+            $k = trim($k);
+            if ($k !== '') {
+                $filter[] = $k;
+            }
+        }
+    }
+
+    $opsi = [];
+    foreach ($couriers as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $harga = (int) ($row['price'] ?? 0);
+        if ($harga <= 0) {
+            continue;
+        }
+        $kode = (string) ($row['courier_code'] ?? '');
+        $nama = (string) ($row['courier_name'] ?? $kode);
+        $kode_lc = strtolower($kode);
+        if ($filter !== []) {
+            $cocok = false;
+            foreach ($filter as $f) {
+                if ($kode_lc === $f || str_contains($kode_lc, $f)) {
+                    $cocok = true;
+                    break;
+                }
+            }
+            if (!$cocok) {
+                continue;
+            }
+        }
+        $opsi[] = [
+            'code' => $kode_lc,
+            'service' => $nama,
+            'description' => $nama,
+            'cost' => $harga,
+            'etd' => (string) ($row['estimation'] ?? ''),
+        ];
+    }
+
+    if ($opsi === [] && $couriers !== []) {
+        return [
+            'ok' => false,
+            'http' => $res['http'],
+            'error' => 'Tidak ada kurir dengan harga untuk filter ini.',
+            'data' => null,
+            'raw' => $res['raw'],
+        ];
+    }
+
+    return [
+        'ok' => true,
+        'http' => $res['http'],
+        'error' => '',
+        'data' => $opsi,
+        'raw' => $res['raw'],
+    ];
 }
