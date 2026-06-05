@@ -12,7 +12,7 @@ if ($nama_sapa === '') {
 $bilah_pembeli_aktif = 'beranda';
 $tautan_produk = aplikasi_url('produk');
 $u_artikel_rawat = aplikasi_url('cara-membersihkan');
-$logo_toko = aplikasi_url('assets/images/logo.png');
+$logo_toko = aplikasi_url('assets/images/logo-easenikers.svg');
 $merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
@@ -62,7 +62,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
         <div class="hero-toko__isi">
             <div class="hero-toko__teks">
                 <p class="hero-toko__logo-wrap">
-                    <strong style="font-size:1.4rem; letter-spacing:1px; color:#D4B483;">EA SENIKERS</strong>
+                    <img class="hero-toko__logo" src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" width="300" height="56" alt="EA SENIKERS" decoding="async" fetchpriority="high">
                 </p>
                 <p class="hero-toko__meta"><?php echo htmlspecialchars($merek_ringkas['hero_meta_satu_baris'], ENT_QUOTES, 'UTF-8'); ?></p>
                 <h1 id="hero-judul" class="hero-toko__judul"><?php echo htmlspecialchars($merek_ringkas['hero_judul'], ENT_QUOTES, 'UTF-8'); ?></h1>
@@ -77,7 +77,6 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                 </div>
             </div>
         </div>
-        <img class="hero-toko__watermark" src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" alt="" aria-hidden="true">
     </section>
 
     <main class="kontainer-toko" id="utama">
@@ -173,11 +172,8 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
     <footer class="beranda-toko__footer" id="kontak-toko">
         <div class="beranda-toko__footer-isi">
             <div class="beranda-toko__footer-merek">
-                <img class="beranda-toko__footer-logo" src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" width="120" height="120" alt="EA SENIKERS" loading="lazy" decoding="async">
-                <div>
-                    <strong style="font-size:1.15rem; letter-spacing:0.5px; display:block; color:#D4B483;">EA SENIKERS</strong>
-                    <p class="beranda-toko__footer-tagline">Toko sepatu branded dan preloved terpercaya.</p>
-                </div>
+                <img class="beranda-toko__footer-logo" src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" width="220" height="42" alt="" role="presentation" loading="lazy" decoding="async">
+                <p class="beranda-toko__footer-tagline">Belanja sepatu nyaman dan terpercaya.</p>
             </div>
             <div class="beranda-toko__footer-kolom">
                 <h2 class="beranda-toko__footer-judul">Tips &amp; Panduan</h2>
