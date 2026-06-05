@@ -206,7 +206,7 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                             <h2 id="judul-bayar">Pembayaran &amp; pengiriman</h2>
                         </div>
                         <div class="admin-form-konten">
-                            <p class="admin-form-keterangan">Pengaturan sementara sebelum integrasi <strong>RajaOngkir</strong> &amp; <strong>Tripay</strong>. Setelah Tahap 2 aktif, ongkir akan dihitung otomatis berdasar berat &amp; alamat pembeli, dan metode pembayaran akan diatur lewat gateway.</p>
+                            <p class="admin-form-keterangan">Ongkir dihitung lewat <strong>JNE</strong> (jne.co.id). <strong>Tripay</strong> untuk pembayaran digital menyusul saat kredensial siap.</p>
                             <div class="admin-form-grid">
                                 <div class="admin-field">
                                     <label for="metode-pembayaran">Metode pembayaran utama</label>

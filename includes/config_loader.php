@@ -14,7 +14,7 @@
  *   SUPABASE_URL, SUPABASE_ANON_KEY,
  *   URL_APLIKASI,
  *   PAYMENT_CALLBACK_SECRET (optional),
- *   APICOID_API_KEY (optional, ongkir api.co.id),
+ *   JNE_ORIGIN_CODE (optional, kode asal toko — contoh PDG21100),
  *   EMAIL_DRIVER, EMAIL_PENGIRIM (optional)
  */
 

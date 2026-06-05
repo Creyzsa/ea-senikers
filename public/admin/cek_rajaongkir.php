@@ -100,7 +100,7 @@ if ($aksi === 'cek_ongkir') {
                 <?php if ($res_test !== null): ?>
                     <div class="admin-alert admin-alert--<?php echo $res_test['ok'] ? 'sukses' : 'error'; ?>">
                         <?php if ($res_test['ok'] && is_array($res_test['data'])): ?>
-                            Koneksi berhasil · <?php echo (int) count($res_test['data']); ?> provinsi
+                            Koneksi JNE berhasil · <?php echo (int) count($res_test['data']); ?> lokasi contoh
                         <?php else: ?>
                             Gagal: <?php echo htmlspecialchars((string) ($res_test['error'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
                         <?php endif; ?>
@@ -109,8 +109,8 @@ if ($aksi === 'cek_ongkir') {
 
                 <section class="admin-kartu admin-status-rajaongkir">
                     <div class="admin-status-kartu">
-                        <span>API Key</span>
-                        <strong><span class="admin-lencana admin-lencana--sukses">Terisi</span></strong>
+                        <span>Sumber tarif</span>
+                        <strong>jne.co.id <span class="admin-lencana admin-lencana--sukses">publik</span></strong>
                     </div>
                     <div class="admin-status-kartu">
                         <span>Lokasi asal</span>
