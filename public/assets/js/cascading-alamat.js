@@ -1,19 +1,6 @@
 /**
  * Cascading dropdown alamat Indonesia (provinsi → kota → kecamatan).
  * Sumber data: https://www.emsifa.com/api-wilayah-indonesia (BPS, tanpa API key).
- *
- * Cara pakai di HTML:
- *   <select data-cascading="provinsi" data-saved="Jawa Timur" name="provinsi">...</select>
- *   <select data-cascading="kota" data-saved="Surabaya" name="kota">...</select>
- *   <select data-cascading="kecamatan" data-saved="Sukolilo" name="kecamatan">...</select>
- *
- * Saat halaman dimuat:
- *   1. Ambil daftar provinsi → isi dropdown.
- *   2. Bila ada data tersimpan, otomatis pilih + ambil kota → otomatis pilih + ambil kecamatan.
- *
- * Saat user ganti pilihan:
- *   - Ganti provinsi → kosongkan kota & kecamatan, ambil daftar kota baru.
- *   - Ganti kota     → kosongkan kecamatan, ambil daftar kecamatan baru.
  */
 (function () {
     'use strict';
@@ -31,6 +18,20 @@
     const savedProvinsi = (selProvinsi.dataset.saved || '').trim();
     const savedKota = (selKota.dataset.saved || '').trim();
     const savedKecamatan = (selKecamatan.dataset.saved || '').trim();
+
+    let resolveWilayahSiap = null;
+    window.aplikasiWilayahSiap = new Promise(function (resolve) {
+        resolveWilayahSiap = resolve;
+    });
+
+    let antrianPeta = Promise.resolve();
+
+    function tandaiWilayahSiap() {
+        if (resolveWilayahSiap) {
+            resolveWilayahSiap();
+            resolveWilayahSiap = null;
+        }
+    }
 
     function setPlaceholder(sel, teks, nonAktif) {
         sel.disabled = !!nonAktif;
@@ -50,22 +51,23 @@
         opsiKosong.textContent = placeholder;
         sel.appendChild(opsiKosong);
 
-        const targetLower = savedValue ? savedValue.toLowerCase() : '';
-        let cocok = false;
-
         daftar.forEach(function (item) {
             const opt = document.createElement('option');
             opt.value = item.name;
             opt.dataset.id = item.id;
             opt.textContent = item.name;
-            if (targetLower && item.name.toLowerCase() === targetLower) {
-                opt.selected = true;
-                cocok = true;
-            }
             sel.appendChild(opt);
         });
 
-        return cocok;
+        if (savedValue) {
+            const opt = cariOpsiTerbaik(sel, [savedValue]);
+            if (opt) {
+                opt.selected = true;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     async function ambilJSON(url) {
@@ -89,6 +91,7 @@
         const data = await ambilJSON(API_BASE + '/provinces.json');
         if (!data) {
             setPlaceholder(selProvinsi, 'Gagal memuat — refresh halaman', true);
+            tandaiWilayahSiap();
             return;
         }
 
@@ -97,6 +100,7 @@
             const id = selProvinsi.selectedOptions[0].dataset.id;
             await muatKota(id, savedKota, savedKecamatan);
         }
+        tandaiWilayahSiap();
     }
 
     async function muatKota(provinsiId, savedKotaTarget, savedKecamatanTarget) {
@@ -149,74 +153,267 @@
         }
     });
 
-    /**
-     * Cari opsi <select> yang labelnya cocok dengan target nama.
-     * Exact match (case-insensitive) didahulukan, fallback ke substring.
-     */
-    function cariOpsi(sel, target) {
-        if (!target) return null;
-        const t = String(target).toLowerCase().trim();
-        // Exact match
-        for (let i = 0; i < sel.options.length; i++) {
-            const opt = sel.options[i];
-            if (!opt.value) continue;
-            if (opt.value.toLowerCase().trim() === t) return opt;
-        }
-        // Substring match (dua arah, mis. emsifa "KABUPATEN TANAH DATAR" vs "Tanah Datar")
-        for (let i = 0; i < sel.options.length; i++) {
-            const opt = sel.options[i];
-            if (!opt.value) continue;
-            const v = opt.value.toLowerCase().trim();
-            if (v.indexOf(t) !== -1 || t.indexOf(v) !== -1) return opt;
-        }
-        return null;
+    /** Normalisasi nama wilayah agar cocok Nominatim ↔ data emsifa (BPS). */
+    function normalisasiWilayah(nama) {
+        return String(nama || '')
+            .toLowerCase()
+            .replace(/\./g, '')
+            .replace(/^(provinsi|prov)\s+/i, '')
+            .replace(/^(kabupaten|kab|kota administrasi|kota|kecamatan|kec|kelurahan|kel|desa)\s+/i, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function daftarUnik(arr) {
+        const seen = {};
+        const out = [];
+        arr.forEach(function (item) {
+            const s = String(item || '').trim();
+            if (!s) return;
+            const key = normalisasiWilayah(s);
+            if (seen[key]) return;
+            seen[key] = true;
+            out.push(s);
+        });
+        return out;
+    }
+
+    function skorCocok(namaOpsi, target) {
+        const a = normalisasiWilayah(namaOpsi);
+        const b = normalisasiWilayah(target);
+        if (!a || !b) return 0;
+        if (a === b) return 100;
+        if (a.indexOf(b) !== -1 || b.indexOf(a) !== -1) return 85;
+
+        const tokenA = a.split(' ').filter(Boolean);
+        const tokenB = b.split(' ').filter(Boolean);
+        let hit = 0;
+        tokenB.forEach(function (tb) {
+            if (tokenA.some(function (ta) { return ta === tb || ta.indexOf(tb) !== -1 || tb.indexOf(ta) !== -1; })) {
+                hit += 1;
+            }
+        });
+        if (hit === 0) return 0;
+        return Math.round((hit / Math.max(tokenA.length, tokenB.length)) * 75);
     }
 
     /**
-     * Isi cascading dropdown + kode pos dari hasil reverse-geocode peta.
-     * Dipanggil oleh peta-alamat.js saat marker dipindah.
-     *
-     * @param {Object} addr Field hasil Nominatim (state, county, city, municipality, ...)
+     * Pilih opsi terbaik dari beberapa kandidat nama (urutan prioritas tetap).
      */
-    window.aplikasiAlamatDariPeta = async function (addr) {
-        if (!addr || typeof addr !== 'object') return;
+    function cariOpsiTerbaik(sel, kandidat, ambang) {
+        const batas = typeof ambang === 'number' ? ambang : 55;
+        const list = daftarUnik(kandidat);
+        let terbaik = null;
+        let skorTerbaik = 0;
 
-        const targetProvinsi = addr.state || '';
-        const optProvinsi = cariOpsi(selProvinsi, targetProvinsi);
-        if (!optProvinsi) return;
-        selProvinsi.value = optProvinsi.value;
+        list.forEach(function (target) {
+            for (let i = 0; i < sel.options.length; i++) {
+                const opt = sel.options[i];
+                if (!opt.value) continue;
+                const skor = skorCocok(opt.value, target);
+                if (skor > skorTerbaik) {
+                    skorTerbaik = skor;
+                    terbaik = opt;
+                }
+            }
+        });
 
-        const provinsiId = optProvinsi.dataset.id;
-        if (!provinsiId) return;
-        await muatKota(provinsiId, '', '');
+        return skorTerbaik >= batas ? terbaik : null;
+    }
 
-        // Kabupaten/kota: Nominatim taruh di county atau city, kadang region
-        const targetKota = addr.county || addr.city || addr.region || '';
-        const optKota = cariOpsi(selKota, targetKota);
-        if (!optKota) return;
-        selKota.value = optKota.value;
+    function cariOpsi(sel, target) {
+        return cariOpsiTerbaik(sel, [target]);
+    }
 
-        const kotaId = optKota.dataset.id;
-        if (!kotaId) return;
-        await muatKecamatan(kotaId, '');
+    /** Kandidat nama kota/kab — jangan masukkan city_district (itu level kecamatan). */
+    function kandidatKotaDariAddr(addr) {
+        return daftarUnik([
+            addr.city,
+            addr.county,
+            addr.town,
+            addr.municipality,
+        ]);
+    }
 
-        // Kecamatan: bisa di municipality/town/subdistrict/suburb tergantung lokasi
-        const targetKec = addr.municipality
-            || addr.subdistrict
-            || addr.town
-            || addr.suburb
-            || addr.village
-            || '';
-        const optKec = cariOpsi(selKecamatan, targetKec);
-        if (optKec) {
-            selKecamatan.value = optKec.value;
+    /**
+     * Kandidat kecamatan: prioritas field level kecamatan dari Nominatim + cuplikan display_name.
+     */
+    function kandidatKecamatanDariAddr(addr, displayName) {
+        const prioritas = daftarUnik([
+            addr.city_district,
+            addr.municipality,
+            addr.state_district,
+            addr.subdistrict,
+            addr.district,
+        ]);
+        const kelurahan = daftarUnik([
+            addr.suburb,
+            addr.neighbourhood,
+            addr.quarter,
+            addr.hamlet,
+            addr.village,
+            addr.residential,
+        ]);
+
+        if (displayName) {
+            const abaikan = /^(indonesia|sumatra|sumatera|jawa|bali|kalimantan|sulawesi|papua|maluku|riau|aceh|lampung|bengkulu|jambi|ntb|ntt|banten|yogyakarta|jakarta)$/i;
+            displayName.split(',').forEach(function (potong) {
+                const p = potong.trim();
+                if (!p || abaikan.test(normalisasiWilayah(p))) return;
+                if (/^\d{5}$/.test(p)) return;
+                if (prioritas.indexOf(p) === -1 && kelurahan.indexOf(p) === -1) {
+                    prioritas.push(p);
+                }
+            });
         }
 
-        // Kode pos
+        return prioritas.concat(kelurahan);
+    }
+
+    /** Pilih kecamatan — ambang lebih rendah + cocok token agar nama emsifa/BPS terpilih. */
+    function cariOpsiKecamatan(sel, kandidat) {
+        const opt = cariOpsiTerbaik(sel, kandidat, 50);
+        if (opt) return opt;
+
+        const list = daftarUnik(kandidat);
+        let terbaik = null;
+        let skorTerbaik = 0;
+
+        list.forEach(function (target) {
+            const tokenTarget = normalisasiWilayah(target).split(' ').filter(function (t) {
+                return t.length > 2;
+            });
+            if (tokenTarget.length === 0) return;
+
+            for (let i = 0; i < sel.options.length; i++) {
+                const optItem = sel.options[i];
+                if (!optItem.value) continue;
+                const tokenOpsi = normalisasiWilayah(optItem.value).split(' ').filter(function (t) {
+                    return t.length > 2;
+                });
+                let hit = 0;
+                tokenTarget.forEach(function (tb) {
+                    if (tokenOpsi.some(function (ta) {
+                        return ta === tb || ta.indexOf(tb) !== -1 || tb.indexOf(ta) !== -1;
+                    })) {
+                        hit += 1;
+                    }
+                });
+                const skor = Math.round((hit / tokenTarget.length) * 90);
+                if (skor > skorTerbaik) {
+                    skorTerbaik = skor;
+                    terbaik = optItem;
+                }
+            }
+        });
+
+        return skorTerbaik >= 40 ? terbaik : null;
+    }
+
+    function bangunAlamatDetail(addr) {
+        const jalan = [];
+        if (addr.road) {
+            jalan.push(addr.road);
+        } else if (addr.pedestrian) {
+            jalan.push(addr.pedestrian);
+        } else if (addr.footway) {
+            jalan.push(addr.footway);
+        }
+        if (addr.house_number) {
+            if (jalan.length) {
+                jalan[0] = jalan[0] + ' No. ' + addr.house_number;
+            } else {
+                jalan.push('No. ' + addr.house_number);
+            }
+        }
+        const lingkungan = [
+            addr.neighbourhood,
+            addr.quarter,
+            addr.hamlet,
+            addr.residential,
+            addr.suburb,
+        ].filter(Boolean);
+        lingkungan.forEach(function (x) {
+            if (jalan.indexOf(x) === -1) {
+                jalan.push(x);
+            }
+        });
+        return jalan.join(', ').trim();
+    }
+
+    async function isiDariPeta(addr, displayName) {
+        await window.aplikasiWilayahSiap;
+
+        if (!addr || typeof addr !== 'object') {
+            return { ok: false, pesan: 'Data alamat peta tidak valid.' };
+        }
+
+        const kandidatProvinsi = daftarUnik([addr.state, addr.region]);
+        const optProvinsi = cariOpsiTerbaik(selProvinsi, kandidatProvinsi);
+        if (!optProvinsi || !optProvinsi.dataset.id) {
+            return { ok: false, pesan: 'Provinsi tidak ditemukan di daftar. Pilih manual di dropdown.' };
+        }
+
+        selProvinsi.value = optProvinsi.value;
+        const provinsiId = optProvinsi.dataset.id;
+
+        const kandidatKota = kandidatKotaDariAddr(addr);
+        const kandidatKec = kandidatKecamatanDariAddr(addr, displayName || '');
+
+        const targetKota = kandidatKota[0] || '';
+        await muatKota(provinsiId, targetKota, '');
+
+        const optKota = cariOpsiTerbaik(selKota, kandidatKota);
+        if (optKota && optKota.dataset.id) {
+            selKota.value = optKota.value;
+            await muatKecamatan(optKota.dataset.id, '');
+            const optKec = cariOpsiKecamatan(selKecamatan, kandidatKec);
+            if (optKec) {
+                selKecamatan.value = optKec.value;
+            }
+        }
+
         const inputKodePos = document.querySelector('input[name="kode_pos"]');
         if (inputKodePos && addr.postcode) {
-            inputKodePos.value = String(addr.postcode);
+            inputKodePos.value = String(addr.postcode).replace(/\D/g, '').slice(0, 6);
         }
+
+        const textareaDetail = document.querySelector('textarea[name="alamat_detail"]');
+        const detailBaru = bangunAlamatDetail(addr);
+        if (textareaDetail && detailBaru) {
+            textareaDetail.value = detailBaru;
+        }
+
+        document.dispatchEvent(new CustomEvent('alamat-peta-diisi', {
+            bubbles: true,
+            detail: {
+                provinsi: selProvinsi.value,
+                kota: selKota.value,
+                kecamatan: selKecamatan.value,
+                kode_pos: inputKodePos ? inputKodePos.value : '',
+                alamat_detail: textareaDetail ? textareaDetail.value : '',
+            },
+        }));
+
+        return {
+            ok: true,
+            provinsi: !!selProvinsi.value,
+            kota: !!selKota.value,
+            kecamatan: !!selKecamatan.value,
+        };
+    }
+
+    /**
+     * Isi cascading dropdown + kode pos + alamat detail dari reverse-geocode peta.
+     */
+    window.aplikasiAlamatDariPeta = function (addr, displayName) {
+        antrianPeta = antrianPeta
+            .then(function () { return isiDariPeta(addr, displayName); })
+            .catch(function (err) {
+                console.error('Gagal isi alamat dari peta:', err);
+                return { ok: false, pesan: 'Gagal mengisi formulir dari peta.' };
+            });
+        return antrianPeta;
     };
 
     muatProvinsi();
