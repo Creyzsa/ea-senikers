@@ -281,6 +281,33 @@ function supabase_auth_masuk(string $email, string $password): array
 }
 
 /**
+ * Perbarui access_token memakai refresh_token (penting di hosting serverless/Vercel).
+ *
+ * @return array{access_token:string, refresh_token:string}|null
+ */
+function supabase_auth_refresh_session(string $refresh_token): ?array
+{
+    $refresh_token = trim($refresh_token);
+    if ($refresh_token === '' || supabase_url_dasar() === '') {
+        return null;
+    }
+
+    $json = json_encode(['refresh_token' => $refresh_token], JSON_UNESCAPED_UNICODE);
+    $hasil = supabase_auth_request('POST', '/auth/v1/token?grant_type=refresh_token', $json, null);
+    if (!$hasil['ok'] || !is_array($hasil['data'])) {
+        return null;
+    }
+
+    $at = trim((string) ($hasil['data']['access_token'] ?? ''));
+    $rt = trim((string) ($hasil['data']['refresh_token'] ?? $refresh_token));
+    if ($at === '') {
+        return null;
+    }
+
+    return ['access_token' => $at, 'refresh_token' => $rt];
+}
+
+/**
  * c) Lupa password — POST /auth/v1/recover
  * Supabase mengirim email berisi tautan reset (atur redirect_to di Dashboard jika perlu).
  *

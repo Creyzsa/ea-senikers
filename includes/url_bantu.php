@@ -25,11 +25,11 @@ function easenikers_apakah_domain_produksi(): bool
 }
 
 /**
- * Domain cookie sesi di produksi supaya www dan non-www berbagi login.
+ * Domain cookie — kosong (host-only). Host diselaraskan lewat redirect kanonikal.
  */
 function easenikers_cookie_domain(): string
 {
-    return easenikers_apakah_domain_produksi() ? '.easenikers.shop' : '';
+    return '';
 }
 
 /**

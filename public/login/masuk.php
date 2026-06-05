@@ -95,10 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             sesi_setelah_login_supabase($data_sesi, $ingat_saya);
 
-            $kembali = '';
-            if (!empty($_SESSION['login_redirect']) && is_string($_SESSION['login_redirect'])) {
+            $kembali = trim((string) ($_GET['kembali'] ?? ''));
+            if ($kembali === '' && !empty($_SESSION['login_redirect']) && is_string($_SESSION['login_redirect'])) {
                 $kembali = (string) $_SESSION['login_redirect'];
-                unset($_SESSION['login_redirect']);
+            }
+            unset($_SESSION['login_redirect']);
+            if ($kembali !== '' && $kembali[0] !== '/') {
+                $kembali = '';
             }
             if ($peran === 'admin') {
                 header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
