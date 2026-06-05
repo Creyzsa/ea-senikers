@@ -8,6 +8,7 @@ $u_beranda = aplikasi_url(''); // clean root homepage
 $daftar_produk = katalog_ambil_semua_produk();
 
 $q = trim(is_string($_GET['q'] ?? null) ? (string) $_GET['q'] : '');
+$bilah_cari_q = $q;
 $brand_filter = trim(is_string($_GET['brand'] ?? null) ? (string) $_GET['brand'] : '');
 $kondisi_filter = trim(is_string($_GET['kondisi'] ?? null) ? (string) $_GET['kondisi'] : '');
 $sort = trim(is_string($_GET['sort'] ?? null) ? (string) $_GET['sort'] : 'terbaru');
