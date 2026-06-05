@@ -13,7 +13,7 @@ body.halaman-daftar {
     margin: 0;
     min-height: 100vh;
     min-height: 100dvh;
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-family: var(--font-body);
     color: var(--teks-utama);
     background-color: var(--abu-latar);
     background-image:
@@ -56,12 +56,12 @@ body.halaman-daftar::before {
     padding: 0;
     border-radius: clamp(18px, 4vw, 24px);
     overflow: hidden;
-    background: linear-gradient(145deg, #0a0a0a 0%, #151515 38%, #050505 100%);
+    background: linear-gradient(145deg, var(--brand-black) 0%, #1a1a1a 45%, var(--brand-black-pure) 100%);
     color: #fff;
     box-shadow:
         0 20px 50px rgba(0, 0, 0, 0.28),
         0 0 0 1px rgba(255, 255, 255, 0.06) inset,
-        inset 0 1px 0 rgba(168, 144, 95, 0.18);
+        inset 0 1px 0 rgba(214, 40, 40, 0.2);
     min-height: 0;
 }
 
@@ -101,8 +101,8 @@ body.halaman-daftar::before {
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.95);
-    background: rgba(168, 144, 95, 0.2);
-    border: 1px solid rgba(168, 144, 95, 0.45);
+    background: rgba(214, 40, 40, 0.2);
+    border: 1px solid rgba(214, 40, 40, 0.45);
     border-radius: 999px;
 }
 
@@ -127,19 +127,8 @@ body.halaman-daftar::before {
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #fafafa;
+    color: var(--teks-aksen);
     text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
-}
-
-@supports ((-webkit-background-clip: text) or (background-clip: text)) {
-    .panel-tentang__nama-merek {
-        background: linear-gradient(120deg, #ffffff 0%, rgba(255, 255, 255, 0.9) 40%, rgba(201, 184, 150, 0.98) 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        text-shadow: none;
-        filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.35));
-    }
 }
 
 .panel-tentang__teks {
@@ -178,7 +167,7 @@ body.halaman-daftar::before {
 }
 
 .panel-tentang__fitur-item:hover {
-    background: rgba(168, 144, 95, 0.12);
+    background: rgba(214, 40, 40, 0.12);
     transform: translateY(-2px);
 }
 
@@ -186,7 +175,7 @@ body.halaman-daftar::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(168, 144, 95, 0.95);
+    color: rgba(214, 40, 40, 0.95);
 }
 
 .panel-tentang__fitur-ikon svg {
@@ -261,7 +250,7 @@ body.halaman-daftar::before {
     height: 3px;
     margin: 0.65rem auto 0;
     border-radius: 3px;
-    background: linear-gradient(90deg, var(--oranye-cta), rgba(168, 144, 95, 0.2));
+    background: var(--oranye-cta);
 }
 
 .merek__tagline {
@@ -450,7 +439,7 @@ body.halaman-daftar::before {
 
 .bungkus-isian:focus-within .isian-input {
     outline: none;
-    border-color: var(--oranye-cta);
+    border-color: var(--teks-aksen);
 }
 
 .pesan-error {
@@ -501,15 +490,12 @@ body.halaman-daftar::before {
     padding: 0.82rem 1rem;
     font-size: 1rem;
     font-weight: 700;
-    color: #fafafa;
-    background: linear-gradient(165deg, #2a2a2a 0%, var(--merek-biru-redup) 55%, #000000 100%);
+    color: var(--brand-white);
+    background: var(--oranye-cta);
     border: none;
-    border-radius: 11px;
+    border-radius: 12px;
     cursor: pointer;
-    box-shadow:
-        0 4px 0 #050505,
-        0 10px 26px rgba(0, 0, 0, 0.35),
-        inset 0 1px 0 rgba(168, 144, 95, 0.22);
+    box-shadow: 0 6px 20px rgba(214, 40, 40, 0.32);
     transition:
         background var(--transisi-tombol),
         box-shadow var(--transisi-tombol),
@@ -518,11 +504,8 @@ body.halaman-daftar::before {
 }
 
 .tombol-masuk:hover {
-    background: linear-gradient(165deg, #3a3a3a 0%, #1a1a1a 50%, #0a0a0a 100%);
-    box-shadow:
-        0 6px 0 #111111,
-        0 14px 32px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(168, 144, 95, 0.28);
+    background: var(--oranye-cta-hover);
+    box-shadow: 0 8px 24px rgba(214, 40, 40, 0.38);
     transform: translateY(-2px);
     filter: none;
 }
@@ -571,7 +554,7 @@ body.halaman-daftar::before {
 }
 
 .tautan-lupa-sandi:hover {
-    color: var(--oranye-cta);
+    color: var(--teks-aksen);
     text-decoration: underline;
 }
 
@@ -581,7 +564,7 @@ body.halaman-daftar::before {
     border-radius: 4px;
 }
 
-/* Masuk: footer daftar — satu baris tengah, abu + emas */
+/* Masuk: footer daftar — satu baris tengah */
 .kaki-halaman--masuk-daftar {
     text-align: center;
 }
@@ -604,7 +587,7 @@ body.halaman-daftar::before {
 
 .kaki-halaman__tautan-emas {
     font-weight: 700;
-    color: var(--oranye-cta);
+    color: var(--teks-aksen);
     text-decoration: none;
     border-bottom: 2px solid transparent;
     transition:
@@ -613,7 +596,7 @@ body.halaman-daftar::before {
 }
 
 .kaki-halaman__tautan-emas:hover {
-    color: var(--oranye-cta-hover);
+    color: var(--teks-aksen-hover);
     border-bottom-color: currentColor;
 }
 
@@ -632,7 +615,7 @@ body.halaman-daftar::before {
 
 .tautan-sekunder:hover {
     text-decoration: underline;
-    color: var(--oranye-cta);
+    color: var(--teks-aksen);
 }
 
 .tautan-daftar {
@@ -640,14 +623,14 @@ body.halaman-daftar::before {
     margin-top: 0.15rem;
     font-size: 1.05rem;
     font-weight: 700;
-    color: var(--oranye-cta);
+    color: var(--teks-aksen);
     text-decoration: none;
     border-bottom: 2px solid transparent;
     transition: color var(--transisi-cepat), border-color var(--transisi-cepat), transform 0.15s;
 }
 
 .tautan-daftar:hover {
-    color: var(--oranye-cta-hover);
+    color: var(--teks-aksen-hover);
     border-bottom-color: currentColor;
     text-decoration: none;
 }
