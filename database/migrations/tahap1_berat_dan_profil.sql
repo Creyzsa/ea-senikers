@@ -11,9 +11,19 @@
 ALTER TABLE produk
     ADD COLUMN IF NOT EXISTS berat_gram INTEGER NOT NULL DEFAULT 1000;
 
-ALTER TABLE produk
-    ADD CONSTRAINT produk_berat_gram_positif
-    CHECK (berat_gram > 0);
+-- Guard the constraint so the migration is safe to re-run (idempotent)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'produk_berat_gram_positif' 
+          AND conrelid = 'produk'::regclass
+    ) THEN
+        ALTER TABLE produk
+            ADD CONSTRAINT produk_berat_gram_positif
+            CHECK (berat_gram > 0);
+    END IF;
+END $$;
 
 COMMENT ON COLUMN produk.berat_gram IS 'Berat produk dalam gram, dipakai untuk perhitungan ongkir.';
 
