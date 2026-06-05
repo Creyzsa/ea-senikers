@@ -95,10 +95,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             sesi_setelah_login_supabase($data_sesi, $ingat_saya);
 
+            $kembali = '';
+            if (!empty($_SESSION['login_redirect']) && is_string($_SESSION['login_redirect'])) {
+                $kembali = (string) $_SESSION['login_redirect'];
+                unset($_SESSION['login_redirect']);
+            }
             if ($peran === 'admin') {
                 header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
+            } elseif ($kembali !== '' && $kembali[0] === '/' && stripos($kembali, '/admin/') === false) {
+                $dasar = easenikers_url_dasar_untuk_link();
+                header('Location: ' . ($dasar !== '' ? rtrim($dasar, '/') . $kembali : aplikasi_url(ltrim($kembali, '/'))));
             } else {
-                header('Location: ' . aplikasi_url('')); // go to clean homepage root after login
+                header('Location: ' . aplikasi_url(''));
             }
             exit;
         }

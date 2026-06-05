@@ -13,6 +13,67 @@ require_once __DIR__ . '/config_loader.php';
 /**
  * Scheme + host dari permintaan HTTP saat ini.
  */
+/** Host produksi easenikers.shop (www atau tanpa www). */
+function easenikers_apakah_domain_produksi(): bool
+{
+    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    if ($host === '') {
+        return false;
+    }
+
+    return $host === 'easenikers.shop' || str_ends_with($host, '.easenikers.shop');
+}
+
+/**
+ * Domain cookie sesi di produksi supaya www dan non-www berbagi login.
+ */
+function easenikers_cookie_domain(): string
+{
+    return easenikers_apakah_domain_produksi() ? '.easenikers.shop' : '';
+}
+
+/**
+ * Alihkan ke host di URL_APLIKASI bila pengunjung pakai host lain (mis. easenikers.shop vs www).
+ */
+function easenikers_redirect_kanonikal_jika_perlu(): void
+{
+    if (PHP_SAPI === 'cli' || headers_sent()) {
+        return;
+    }
+    if (!easenikers_apakah_domain_produksi()) {
+        return;
+    }
+    $cfg = aplikasi_url_konfigurasi();
+    if ($cfg === '') {
+        return;
+    }
+    $host_cfg = strtolower((string) (parse_url($cfg, PHP_URL_HOST) ?? ''));
+    $host_now = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    if ($host_cfg === '' || $host_now === '' || $host_now === $host_cfg) {
+        return;
+    }
+
+    $scheme = (string) (parse_url($cfg, PHP_URL_SCHEME) ?: 'https');
+    $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+    header('Location: ' . $scheme . '://' . $host_cfg . $uri, true, 301);
+    exit;
+}
+
+/**
+ * URL dasar untuk link/form di produksi — selalu dari URL_APLIKASI agar host konsisten.
+ */
+function easenikers_url_dasar_untuk_link(): string
+{
+    if (easenikers_apakah_domain_produksi()) {
+        $cfg = aplikasi_url_konfigurasi();
+        if ($cfg !== '') {
+            return $cfg;
+        }
+    }
+
+    return easenikers_url_dasar_runtime() !== '' ? easenikers_url_dasar_runtime() : aplikasi_url_konfigurasi();
+}
+
 function easenikers_skema_permintaan(): string
 {
     $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
@@ -199,6 +260,13 @@ function aplikasi_url_aset(string $jalur = ''): string
 
 function aplikasi_url(string $jalur = ''): string
 {
+    if (easenikers_apakah_domain_produksi()) {
+        $dasar_prod = easenikers_url_dasar_untuk_link();
+        if ($dasar_prod !== '') {
+            return easenikers_gabung_url($dasar_prod, $jalur);
+        }
+    }
+
     if (PHP_SAPI === 'cli-server') {
         $efektif = aplikasi_url_konfigurasi_efektif();
         if ($efektif !== '') {
@@ -244,6 +312,10 @@ function aplikasi_url_auth(string $jalur = ''): string
  */
 function easenikers_path_cookie_sesi(): string
 {
+    if (easenikers_apakah_domain_produksi()) {
+        return '/';
+    }
+
     $path = easenikers_path_dasar_aplikasi();
     if ($path !== '') {
         return $path . '/';

@@ -26,7 +26,12 @@ require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
 require_once __DIR__ . '/../../includes/integrasi/rajaongkir.php';
 
 wajib_sudah_masuk();
-if (ambil_peran() !== 'pembeli') {
+$peran_checkout = ambil_peran();
+if ($peran_checkout === 'admin') {
+    header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
+    exit;
+}
+if ($peran_checkout !== null && $peran_checkout !== '' && $peran_checkout !== 'pembeli') {
     header('HTTP/1.1 403 Forbidden');
     echo 'Halaman ini khusus pembeli.';
     exit;

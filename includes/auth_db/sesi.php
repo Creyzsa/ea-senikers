@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../url_bantu.php';
 
+easenikers_redirect_kanonikal_jika_perlu();
+
 /**
  * Sesi dipakai untuk menyimpan status masuk (siapa yang sedang login).
  * Nama fungsi pakai bahasa Indonesia supaya mudah dibaca.
@@ -56,7 +58,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([
         'lifetime' => $lifetime,
         'path' => $path_sesi,
-        'domain' => '',
+        'domain' => easenikers_cookie_domain(),
         'secure' => $secure_cookie,
         'httponly' => true,
         'samesite' => 'Lax',
@@ -107,7 +109,7 @@ function sesi_terapkan_tetap_masuk(bool $ingat): void
 function sesi_ganti_ke_mode_sementara(array $data): void
 {
     $path = easenikers_path_cookie_sesi();
-    $domain = '';
+    $domain = easenikers_cookie_domain();
     $secure = easenikers_konfirmasi_https() || (isset($_SERVER['HTTP_HOST']) && strpos((string)$_SERVER['HTTP_HOST'], 'easenikers.shop') !== false);
     $httponly = true;
     $opts_hapus = [
@@ -142,8 +144,8 @@ function sesi_ganti_ke_mode_sementara(array $data): void
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => easenikers_path_cookie_sesi(),
-        'domain' => '',
-        'secure' => easenikers_konfirmasi_https(),
+        'domain' => easenikers_cookie_domain(),
+        'secure' => $secure,
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
@@ -244,10 +246,14 @@ function ambil_id_pengguna_efektif(bool $perbarui_sesi = true): int
     return 0;
 }
 
-/** Kalau belum login, tendang ke halaman masuk. */
+/** Kalau belum login, tendang ke halaman masuk (simpan URL tujuan untuk redirect setelah login). */
 function wajib_sudah_masuk(): void
 {
     if (!sudah_masuk()) {
+        $uri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+        if ($uri !== '' && $uri[0] === '/') {
+            $_SESSION['login_redirect'] = $uri;
+        }
         header('Location: ' . aplikasi_url('login/masuk.php'));
         exit;
     }
