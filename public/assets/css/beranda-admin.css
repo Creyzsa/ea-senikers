@@ -11,9 +11,9 @@ body.halaman-admin {
     margin: 0;
     min-height: 100vh;
     min-height: 100dvh;
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-family: var(--font-body);
     color: var(--teks-utama);
-    background: var(--abu-latar);
+    background: var(--abu-latar-alt);
 }
 
 /* ——— Layout ——— */
@@ -49,10 +49,7 @@ body.halaman-admin {
 
 .admin-sisi__nama {
     margin: 0;
-    font-size: 1.1rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    color: #fff;
+    line-height: 1;
 }
 
 .admin-sisi__sub {
@@ -92,12 +89,14 @@ body.halaman-admin {
 }
 
 .admin-nav__tautan:hover {
-    background: rgba(255, 255, 255, 0.12);
+    color: var(--brand-white);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .admin-nav__tautan--aktif {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: var(--oranye-cta);
+    border-color: var(--teks-aksen);
+    color: var(--brand-white);
     pointer-events: none;
 }
 
@@ -206,7 +205,7 @@ body.halaman-admin {
 }
 
 .admin-salam strong {
-    color: var(--oranye-cta);
+    color: var(--teks-aksen);
     font-weight: 600;
 }
 
@@ -252,13 +251,13 @@ body.halaman-admin {
 }
 
 .admin-stat--biru::before {
-    background: linear-gradient(90deg, var(--biru-header), var(--oranye-cta));
+    background: var(--oranye-cta);
 }
 .admin-stat--hijau::before {
     background: linear-gradient(90deg, #1e4d3a, var(--hijau-sukses));
 }
 .admin-stat--kuning::before {
-    background: linear-gradient(90deg, #8a7a62, var(--oranye-cta));
+    background: var(--oranye-cta);
 }
 .admin-stat--ungu::before {
     background: linear-gradient(90deg, #2a2a2a, var(--ungu-aksen));
@@ -291,15 +290,15 @@ body.halaman-admin {
 
 .admin-stat--biru .admin-stat__ikon {
     background: var(--aksen-emas-lembut);
-    color: var(--oranye-cta-hover);
+    color: var(--teks-aksen-hover);
 }
 .admin-stat--hijau .admin-stat__ikon {
     background: var(--hijau-sukses-lembut);
     color: var(--hijau-sukses);
 }
 .admin-stat--kuning .admin-stat__ikon {
-    background: var(--kuning-lembut);
-    color: var(--kuning-aksen);
+    background: var(--ikon-aksen-latar);
+    color: var(--teks-aksen);
 }
 .admin-stat--ungu .admin-stat__ikon {
     background: var(--ungu-lembut);
@@ -412,7 +411,7 @@ body.halaman-admin {
 .admin-grafik__batang {
     flex: 1;
     border-radius: 6px 6px 0 0;
-    background: linear-gradient(180deg, var(--biru-tombol), rgba(168, 144, 95, 0.55));
+    background: linear-gradient(180deg, var(--biru-tombol), rgba(214, 40, 40, 0.35));
     min-height: 20%;
     transition: opacity 0.2s;
 }
@@ -485,8 +484,8 @@ body.halaman-admin {
 }
 
 .admin-aktivitas__teks a:hover {
-    color: var(--oranye-cta-hover);
-    border-bottom-color: var(--oranye-cta-hover);
+    color: var(--teks-aksen-hover);
+    border-bottom-color: var(--teks-aksen-hover);
 }
 
 .admin-aktivitas__teks {
@@ -553,8 +552,8 @@ body.halaman-admin {
 }
 
 .admin-lencana--tunda {
-    color: var(--kuning-aksen);
-    background: var(--kuning-lembut);
+    color: var(--teks-utama);
+    background: var(--brand-gray-light);
 }
 
 @media (max-width: 880px) {
@@ -939,7 +938,7 @@ body.halaman-admin {
 
 .admin-cari input:focus {
     outline: none;
-    border-color: var(--oranye-cta);
+    border-color: var(--teks-aksen);
     box-shadow: 0 0 0 3px var(--fokus-ring);
 }
 
@@ -974,7 +973,7 @@ body.halaman-admin {
 .admin-form .admin-field select:focus,
 .admin-form .admin-field textarea:focus {
     outline: none;
-    border-color: var(--oranye-cta);
+    border-color: var(--teks-aksen);
     box-shadow: 0 0 0 3px var(--fokus-ring);
 }
 
@@ -1037,7 +1036,7 @@ body.halaman-admin {
 .admin-field select:focus,
 .admin-field textarea:focus {
     outline: none;
-    border-color: var(--oranye-cta);
+    border-color: var(--teks-aksen);
     box-shadow: 0 0 0 3px var(--fokus-ring);
 }
 
@@ -1171,8 +1170,8 @@ body.halaman-admin {
 }
 
 .pesanan-badge--kuning {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--brand-gray-light);
+    color: var(--teks-utama);
 }
 
 .pesanan-badge--biru {
@@ -1186,8 +1185,8 @@ body.halaman-admin {
 }
 
 .pesanan-badge--oranye {
-    background: #ffedd5;
-    color: #c2410c;
+    background: rgba(214, 40, 40, 0.1);
+    color: var(--brand-red);
 }
 
 .pesanan-badge--hijau {
@@ -1213,8 +1212,8 @@ body.halaman-admin {
 }
 
 .status--pending {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--brand-gray-light);
+    color: var(--teks-utama);
 }
 
 .status--paid {
@@ -1228,8 +1227,8 @@ body.halaman-admin {
 }
 
 .status--shipped {
-    background: #ffedd5;
-    color: #c2410c;
+    background: rgba(214, 40, 40, 0.1);
+    color: var(--brand-red);
 }
 
 .status--completed {
@@ -1293,13 +1292,13 @@ body.halaman-admin {
 }
 
 .admin-chip:hover {
-    border-color: var(--oranye-cta);
+    border-color: var(--teks-aksen);
     color: var(--teks-utama);
 }
 
 .admin-chip--aktif {
     background: linear-gradient(135deg, rgba(249, 250, 251, 1), #fff);
-    border-color: var(--oranye-cta);
+    border-color: var(--teks-aksen);
     color: var(--teks-utama);
     pointer-events: none;
 }
@@ -1307,7 +1306,7 @@ body.halaman-admin {
 .admin-chip span {
     font-weight: 800;
     font-size: 0.74rem;
-    color: var(--oranye-cta-hover);
+    color: var(--teks-aksen-hover);
 }
 
 .admin-pil-strip {
@@ -1331,7 +1330,7 @@ body.halaman-admin {
 .admin-pil-dat strong {
     margin-right: 0.35rem;
     font-weight: 800;
-    color: var(--oranye-cta-hover);
+    color: var(--teks-aksen-hover);
 }
 
 .admin-form-status {
@@ -1380,7 +1379,7 @@ body.halaman-admin {
 }
 
 .admin-laporan-bukti {
-    color: var(--oranye-cta-hover);
+    color: var(--teks-aksen-hover);
     font-weight: 700;
     text-decoration: none;
 }
