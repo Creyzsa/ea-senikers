@@ -195,6 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
         'size' => (string) $sesi['ukuran'],
         'quantity' => 1,
         'product_image' => $gambar_simpan,
+        'id_produk' => (string) ($sesi['id_produk'] ?? ''),
     ]];
 
     $order_id = pesanan_buat(

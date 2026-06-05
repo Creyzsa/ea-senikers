@@ -54,6 +54,11 @@ $u_keluar = aplikasi_url('login/keluar.php');
                 <?php else: ?>
                     <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_pesanan, ENT_QUOTES, 'UTF-8'); ?>">Pesanan</a>
                 <?php endif; ?>
+                <?php if ($bp_aktif === 'wishlist'): ?>
+                    <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Wishlist</span>
+                <?php else: ?>
+                    <a class="nav-toko__tautan" href="<?php echo htmlspecialchars(aplikasi_url('wishlist'), ENT_QUOTES, 'UTF-8'); ?>">Wishlist</a>
+                <?php endif; ?>
             <?php endif; ?>
             <?php if ($bp_aktif === 'tentang'): ?>
                 <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Tentang</span>

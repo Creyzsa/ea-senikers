@@ -1,15 +1,62 @@
 <?php
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
+require_once __DIR__ . '/../../includes/url_bantu.php';
 
 $flash_keranjang_error = $_SESSION['flash_keranjang_error'] ?? null;
 if ($flash_keranjang_error !== null) {
     unset($_SESSION['flash_keranjang_error']);
 }
 
+$flash_wishlist = $_SESSION['flash_wishlist'] ?? null;
+if ($flash_wishlist !== null) {
+    unset($_SESSION['flash_wishlist']);
+}
+
+$sudah_login = sudah_masuk();
+$id_pengguna = $sudah_login ? (int)($_SESSION['id_pengguna'] ?? 0) : 0;
+
 $id = isset($_GET['id']) ? trim((string) $_GET['id']) : '';
 $produk = $id !== '' ? katalog_ambil_produk_ber_id($id) : null;
 $urls_gambar = [];
+
+// Handle POST ulasan & wishlist (hanya jika login & produk ada)
+// Ulasan hanya untuk yang pernah beli (verified purchase)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $produk !== null && $sudah_login) {
+    $aksi = (string)($_POST['aksi'] ?? '');
+    if ($aksi === 'tambah_ulasan') {
+        if ($id_pengguna > 0 && user_pernah_beli_produk($id_pengguna, $id)) {
+            $rating = (int)($_POST['rating'] ?? 0);
+            $kom = trim((string)($_POST['komentar'] ?? ''));
+            if (ulasan_tambah($id_pengguna, $id, $rating, $kom)) {
+                $qs = strpos($_SERVER['REQUEST_URI'], '?') !== false ? '&' : '?';
+                header('Location: ' . $_SERVER['REQUEST_URI'] . $qs . 'ulasan_ok=1');
+                exit;
+            } else {
+                $_SESSION['flash_keranjang_error'] = 'Gagal mengirim ulasan (mungkin koneksi database bermasalah atau data invalid).';
+            }
+        }
+        header('Location: ' . $_SERVER['REQUEST_URI']);
+        exit;
+    } elseif ($aksi === 'tambah_wishlist' || $aksi === 'hapus_wishlist') {
+        $ok = false;
+        if ($aksi === 'tambah_wishlist') {
+            $ok = wishlist_tambah($id_pengguna, $id);
+        } else {
+            $ok = wishlist_hapus($id_pengguna, $id);
+        }
+        if ($ok) {
+            $_SESSION['flash_wishlist'] = ($aksi === 'tambah_wishlist')
+                ? 'Produk ditambahkan ke wishlist.'
+                : 'Produk dihapus dari wishlist.';
+        } else {
+            $_SESSION['flash_keranjang_error'] = 'Gagal memperbarui wishlist (mungkin koneksi database lokal bermasalah). Coba lagi.';
+        }
+        header('Location: ' . $_SERVER['REQUEST_URI']);
+        exit;
+    }
+}
+
 
 $bilah_pembeli_aktif = 'produk';
 $u_katalog = aplikasi_url('produk');
@@ -97,6 +144,15 @@ $u_checkout = aplikasi_url('checkout');
                 <p class="detail-panel__harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga), ENT_QUOTES, 'UTF-8'); ?></p>
                 <span class="detail-panel__chip <?php echo htmlspecialchars($chip_kondisi, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(kondisi_label_pembeli($kondisi), ENT_QUOTES, 'UTF-8'); ?></span>
 
+                <div class="detail-extra-info">
+                    <?php if (($produk['terjual'] ?? 0) > 0): ?>
+                        <span class="info-badge sold-badge"><?= (int)$produk['terjual'] ?>+ terjual</span>
+                    <?php endif; ?>
+                    <?php if (($produk['jumlah_ulasan'] ?? 0) > 0): ?>
+                        <span class="info-badge rating-badge">★ <?= number_format((float)($produk['rating_rata'] ?? 0), 1) ?> (<?= (int)$produk['jumlah_ulasan'] ?> ulasan)</span>
+                    <?php endif; ?>
+                </div>
+
                 <?php if (is_string($flash_keranjang_error) && $flash_keranjang_error !== ''): ?>
                     <p class="detail-flash-error" role="alert"><?php echo htmlspecialchars($flash_keranjang_error, ENT_QUOTES, 'UTF-8'); ?></p>
                 <?php endif; ?>
@@ -146,6 +202,25 @@ $u_checkout = aplikasi_url('checkout');
                     </div>
                 </form>
 
+                <div class="detail-wishlist-row">
+                    <?php if ($sudah_login): ?>
+                        <form method="post" style="display:inline;">
+                            <input type="hidden" name="id_produk" value="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php $sudah_wish = wishlist_ada($id_pengguna, $id); ?>
+                            <button type="submit" name="aksi" value="<?= $sudah_wish ? 'hapus_wishlist' : 'tambah_wishlist' ?>" class="detail-wishlist-btn">
+                                <?= $sudah_wish ? '❤️ Hapus dari Wishlist' : '♡ Tambah ke Wishlist' ?>
+                            </button>
+                        </form>
+                    <?php else: ?>
+                        <a href="<?php echo htmlspecialchars(aplikasi_url('login/masuk.php'), ENT_QUOTES, 'UTF-8'); ?>" class="detail-wishlist-btn">Login untuk Wishlist</a>
+                    <?php endif; ?>
+                    <a href="<?php echo htmlspecialchars(aplikasi_url('chat?produk=' . rawurlencode($id)), ENT_QUOTES, 'UTF-8'); ?>" class="detail-chat-btn">💬 Chat Penjual</a>
+                </div>
+
+                <?php if ($flash_wishlist): ?>
+                    <p class="flash-success" style="margin:0.25rem 0 0.5rem; font-size:0.8rem;"><?= htmlspecialchars($flash_wishlist, ENT_QUOTES, 'UTF-8') ?></p>
+                <?php endif; ?>
+
                 <h2 class="detail-panel__subjudul">Deskripsi</h2>
                 <?php if (strcasecmp($kondisi, 'Baru') !== 0 && $kondisi !== ''): ?>
                     <p class="detail-panel__catatan-kondisi">Foto adalah produk asli. Kondisi dijelaskan apa adanya.</p>
@@ -154,7 +229,87 @@ $u_checkout = aplikasi_url('checkout');
             </div>
         </div>
     </article>
+
+    <!-- Ulasan & Rating -->
+    <section class="detail-ulasan">
+        <h2 class="detail-panel__subjudul">Ulasan & Rating</h2>
+        <div class="detail-rating-summary">
+            <?php $rata = (float)($produk['rating_rata'] ?? 0); $jml = (int)($produk['jumlah_ulasan'] ?? 0); ?>
+            <div class="rating-big">★ <?= number_format($rata, 1) ?></div>
+            <div class="rating-meta">
+                <div><?= $jml ?> ulasan</div>
+                <div><?= (int)($produk['terjual'] ?? 0) ?>+ terjual</div>
+            </div>
+        </div>
+
+        <?php
+        $ulasan_list = ulasan_ambil_untuk_produk($id, 5);
+        if ($ulasan_list):
+        ?>
+        <div class="ulasan-list">
+            <?php foreach ($ulasan_list as $u): ?>
+            <div class="ulasan-item">
+                <div class="ulasan-head">
+                    <strong><?= htmlspecialchars( is_array($u['users'] ?? null) ? ($u['users']['nama_pengguna'] ?? 'Pembeli') : 'Pembeli' ) ?></strong>
+                    <span class="stars"><?= str_repeat('★', (int)($u['rating'] ?? 0)) ?></span>
+                    <time><?= date('d M Y', strtotime($u['created_at'] ?? 'now')) ?></time>
+                </div>
+                <p class="ulasan-text"><?= nl2br(htmlspecialchars($u['komentar'] ?? '')) ?></p>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php else: ?>
+            <p class="no-review">Belum ada ulasan. Jadilah yang pertama setelah beli!</p>
+        <?php endif; ?>
+
+        <?php if ($sudah_login && user_pernah_beli_produk($id_pengguna, $id)): ?>
+        <form method="post" class="form-ulasan">
+            <input type="hidden" name="id_produk" value="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
+            <div class="form-row">
+                <label>Rating</label>
+                <select name="rating" required>
+                    <option value="5">5 ★ Sangat Puas</option>
+                    <option value="4">4 ★ Puas</option>
+                    <option value="3">3 ★ Cukup</option>
+                    <option value="2">2 ★ Kurang</option>
+                    <option value="1">1 ★ Kecewa</option>
+                </select>
+            </div>
+            <textarea name="komentar" placeholder="Bagaimana kondisi & pengalaman Anda dengan produk ini?" required rows="3"></textarea>
+            <button type="submit" name="aksi" value="tambah_ulasan" class="btn-ulasan">Kirim Ulasan</button>
+        </form>
+        <?php elseif ($sudah_login): ?>
+            <p class="no-review">Ulasan hanya bisa diberikan setelah Anda membeli dan menyelesaikan pesanan untuk produk ini.</p>
+        <?php else: ?>
+            <p><a href="<?php echo htmlspecialchars(aplikasi_url('login/masuk.php'), ENT_QUOTES, 'UTF-8'); ?>">Login</a> untuk memberikan ulasan (setelah pembelian).</p>
+        <?php endif; ?>
+        <?php if (isset($_GET['ulasan_ok'])): ?>
+            <p class="flash-success">Terima kasih! Ulasan Anda telah dikirim.</p>
+        <?php endif; ?>
+    </section>
+
+    <!-- Rekomendasi -->
+    <?php
+    $rekom = katalog_rekomendasi_untuk_produk($id, 4);
+    if ($rekom):
+    ?>
+    <section class="detail-rekom">
+        <h2 class="detail-panel__subjudul">Rekomendasi untuk Anda</h2>
+        <div class="rekom-grid">
+            <?php foreach ($rekom as $r): ?>
+            <a href="<?php echo htmlspecialchars(aplikasi_url('detail-produk?id=' . rawurlencode((string)$r['id_produk'])), ENT_QUOTES, 'UTF-8'); ?>" class="rekom-card">
+                <img src="<?php echo htmlspecialchars(katalog_url_gambar_utama($r), ENT_QUOTES, 'UTF-8'); ?>" alt="<?= htmlspecialchars($r['nama_produk'] ?? '') ?>" loading="lazy">
+                <div class="rekom-info">
+                    <div class="rekom-brand"><?= htmlspecialchars($r['brand'] ?? '') ?></div>
+                    <div class="rekom-nama"><?= htmlspecialchars($r['nama_produk'] ?? '') ?></div>
+                    <div class="rekom-harga"><?= htmlspecialchars(katalog_format_rupiah((int)($r['harga'] ?? 0)), ENT_QUOTES, 'UTF-8') ?></div>
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
     <?php endif; ?>
+<?php endif; ?>
 </div>
 
 <?php if ($produk !== null): ?>

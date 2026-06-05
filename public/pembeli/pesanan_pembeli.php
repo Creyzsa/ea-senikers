@@ -17,8 +17,15 @@ if (ambil_peran() !== 'pembeli') {
 
 $bilah_pembeli_aktif = 'pesanan';
 $id_pengguna = ambil_id_pengguna_efektif();
-$tabel_ada = pesanan_cek_tabel_ada();
-$daftar = $tabel_ada && $id_pengguna > 0 ? pesanan_ambil_oleh_user($id_pengguna) : [];
+$tabel_ada = false;
+$daftar = [];
+try {
+    $tabel_ada = pesanan_cek_tabel_ada();
+    $daftar = $tabel_ada && $id_pengguna > 0 ? pesanan_ambil_oleh_user($id_pengguna) : [];
+} catch (Throwable $e) {
+    error_log('[DB graceful pesanan list] ' . $e->getMessage());
+    $daftar = [];
+}
 
 $labels = pesanan_status_label_id();
 $badgeClass = pesanan_status_kelas_badge();

@@ -18,12 +18,16 @@ if (ambil_peran() !== 'pembeli') {
 $id_pengguna = ambil_id_pengguna_efektif();
 $order_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
-if ($order_id <= 0 || !pesanan_cek_tabel_ada()) {
-    header('Location: ' . aplikasi_url('pesanan'));
-    exit;
+$order = null;
+try {
+    if ($order_id <= 0 || !pesanan_cek_tabel_ada()) {
+        header('Location: ' . aplikasi_url('pesanan'));
+        exit;
+    }
+    $order = pesanan_ambil_detail_untuk_user($order_id, $id_pengguna);
+} catch (Throwable $e) {
+    error_log('[DB graceful detail pesanan] ' . $e->getMessage());
 }
-
-$order = pesanan_ambil_detail_untuk_user($order_id, $id_pengguna);
 if ($order === null) {
     header('Location: ' . aplikasi_url('pesanan'));
     exit;
@@ -153,6 +157,12 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                                     · Qty: <?php echo (int) $qty; ?>
                                 </p>
                                 <p class="pesanan-item-baris__kecil" style="margin-top:0.35rem;font-weight:700;color:var(--oranye-cta-hover);"><?php echo htmlspecialchars(katalog_format_rupiah($pr), ENT_QUOTES, 'UTF-8'); ?></p>
+                                <?php if (in_array($status, ['shipped', 'completed'])): ?>
+                                    <?php $pid = (string) ($it['id_produk'] ?? ''); ?>
+                                    <?php if ($pid): ?>
+                                        <a href="<?php echo htmlspecialchars(aplikasi_url('detail-produk?id=' . rawurlencode($pid)), ENT_QUOTES, 'UTF-8'); ?>" style="font-size:0.75rem; display:inline-block; margin-top:0.2rem; color:var(--accent);">Beri Ulasan →</a>
+                                    <?php endif; ?>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
