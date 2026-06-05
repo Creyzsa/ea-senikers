@@ -124,7 +124,7 @@ function sesi_ganti_ke_mode_sementara(array $data): void
         $nama_sesi = session_name();
         $p = session_get_cookie_params();
         $path = $p['path'] !== '' ? $p['path'] : '/';
-        $domain = $p['domain'] ?? '';
+        $domain = easenikers_cookie_domain() !== '' ? easenikers_cookie_domain() : (string) ($p['domain'] ?? '');
         $secure = !empty($p['secure']) ? (bool) $p['secure'] : easenikers_konfirmasi_https();
         $httponly = (bool) ($p['httponly'] ?? true);
         $opts_hapus = [
@@ -280,7 +280,7 @@ function sesi_hancurkan_total(): void
     if (ini_get('session.use_cookies')) {
         $p = session_get_cookie_params();
         $path = $p['path'] !== '' ? $p['path'] : '/';
-        $domain = $p['domain'] ?? '';
+        $domain = easenikers_cookie_domain() !== '' ? easenikers_cookie_domain() : (string) ($p['domain'] ?? '');
         $secure = !empty($p['secure']) ? (bool) $p['secure'] : easenikers_konfirmasi_https();
         $httponly = (bool) ($p['httponly'] ?? true);
         $opts = [
