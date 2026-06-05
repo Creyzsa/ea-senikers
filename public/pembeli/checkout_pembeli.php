@@ -321,6 +321,7 @@ if ($profil_lengkap && $api_key_toko !== '' && $asal_kode_toko !== '') {
     // looping auto-pick attempt di setiap render.
     $kode_pos_profil = trim((string) ($profil['kode_pos'] ?? ''));
     $auto_no_match = false;
+    $kode_pos_api_tidak_tersedia = false;
     if ($cari_otomatis
         && $destination_kode_pilih === ''
         && empty($_SESSION['checkout_destinasi_auto'])
@@ -330,10 +331,15 @@ if ($profil_lengkap && $api_key_toko !== '' && $asal_kode_toko !== '') {
         && $hasil_cari['data'] !== []
     ) {
         $top = null;
+        $ada_kode_pos_di_api = false;
         if ($kode_pos_profil !== '') {
             foreach ($hasil_cari['data'] as $row) {
                 if (!is_array($row)) continue;
                 $z = trim((string) ($row['zip_code'] ?? $row['postal_code'] ?? ''));
+                if (preg_match('/^\d{5}$/', $z) !== 1) {
+                    continue;
+                }
+                $ada_kode_pos_di_api = true;
                 if ($z === $kode_pos_profil) {
                     $top = $row;
                     break;
@@ -359,9 +365,30 @@ if ($profil_lengkap && $api_key_toko !== '' && $asal_kode_toko !== '') {
                 header('Location: ' . $u_self);
                 exit;
             }
-        } else {
-            // Tidak ada hasil yang kode posnya match — minta pembeli pilih manual
+        } elseif ($kode_pos_profil !== '' && $ada_kode_pos_di_api) {
+            // API mengembalikan kode pos, tapi tidak ada yang sama dengan profil
             $auto_no_match = true;
+        }
+    }
+
+    $kode_pos_api_tidak_tersedia = $cari_otomatis
+        && $kode_pos_profil !== ''
+        && $hasil_cari !== null
+        && $hasil_cari['ok']
+        && is_array($hasil_cari['data'])
+        && $hasil_cari['data'] !== []
+        && !$auto_no_match
+        && $destination_kode_pilih === '';
+    if ($kode_pos_api_tidak_tersedia) {
+        foreach ($hasil_cari['data'] as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $z = trim((string) ($row['zip_code'] ?? ''));
+            if (preg_match('/^\d{5}$/', $z) === 1) {
+                $kode_pos_api_tidak_tersedia = false;
+                break;
+            }
         }
     }
 
@@ -546,8 +573,13 @@ $total_final = $harga_produk + $ongkir_pilih;
                 <?php else: ?>
                     <?php if ($auto_no_match): ?>
                         <p class="checkout-auto-cari checkout-auto-cari--peringatan">
-                            Kode pos profil kamu (<strong><?php echo htmlspecialchars($kode_pos_profil, ENT_QUOTES, 'UTF-8'); ?></strong>) tidak persis cocok dengan desa/kelurahan di API Co.id.
-                            Pilih kelurahan terdekat di bawah agar ongkir akurat.
+                            Kode pos profil kamu (<strong><?php echo htmlspecialchars($kode_pos_profil, ENT_QUOTES, 'UTF-8'); ?></strong>) tidak cocok dengan desa/kelurahan di daftar.
+                            Pilih lokasi yang paling sesuai alamat pengiriman di bawah.
+                        </p>
+                    <?php elseif (!empty($kode_pos_api_tidak_tersedia)): ?>
+                        <p class="checkout-auto-cari">
+                            Pencarian otomatis dari profil: <strong><?php echo htmlspecialchars($cari, ENT_QUOTES, 'UTF-8'); ?></strong>.
+                            Kode pos tidak bisa dicocokkan otomatis di paket API saat ini — pilih desa/kelurahan yang sesuai alamat Anda (mis. yang dekat <strong><?php echo htmlspecialchars($kode_pos_profil, ENT_QUOTES, 'UTF-8'); ?></strong>).
                         </p>
                     <?php elseif ($cari_otomatis && $hasil_cari !== null && $hasil_cari['ok'] && is_array($hasil_cari['data']) && $hasil_cari['data'] !== []): ?>
                         <p class="checkout-auto-cari">Dicari otomatis dari alamat profil: <strong><?php echo htmlspecialchars($cari, ENT_QUOTES, 'UTF-8'); ?></strong>. Pilih salah satu di bawah, atau cari ulang.</p>
@@ -583,7 +615,10 @@ $total_final = $harga_produk + $ongkir_pilih;
                                             $label = implode(', ', $parts);
                                         }
                                         $zip_row = trim((string) ($r['zip_code'] ?? $r['postal_code'] ?? ''));
-                                        $zip_match = ($kode_pos_profil !== '' && $zip_row === $kode_pos_profil);
+                                        if (preg_match('/^\d{5}$/', $zip_row) !== 1) {
+                                            $zip_row = '';
+                                        }
+                                        $zip_match = ($kode_pos_profil !== '' && $zip_row !== '' && $zip_row === $kode_pos_profil);
                                     ?>
                                         <li>
                                             <form method="post" action="<?php echo htmlspecialchars($u_self, ENT_QUOTES, 'UTF-8'); ?>" class="checkout-destinasi-form">

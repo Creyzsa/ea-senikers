@@ -195,6 +195,24 @@ function rajaongkir_daftar_provinsi(): array
 }
 
 /**
+ * Ambil kode pos 5 digit dari respons API; abaikan placeholder paket non-premium.
+ */
+function apicoid_kode_pos_valid(?array $postal_codes): string
+{
+    if (!is_array($postal_codes)) {
+        return '';
+    }
+    foreach ($postal_codes as $pc) {
+        $pc = trim((string) $pc);
+        if (preg_match('/^\d{5}$/', $pc) === 1) {
+            return $pc;
+        }
+    }
+
+    return '';
+}
+
+/**
  * @return list<array<string, mixed>>
  */
 function apicoid_normalisasi_baris_desa(mixed $data): array
@@ -216,10 +234,7 @@ function apicoid_normalisasi_baris_desa(mixed $data): array
         $kab = trim((string) ($row['regency'] ?? ''));
         $prov = trim((string) ($row['province'] ?? ''));
         $label = implode(', ', array_filter([$nama, $kec, $kab, $prov]));
-        $pos = '';
-        if (isset($row['postal_codes']) && is_array($row['postal_codes']) && $row['postal_codes'] !== []) {
-            $pos = trim((string) $row['postal_codes'][0]);
-        }
+        $pos = apicoid_kode_pos_valid(isset($row['postal_codes']) && is_array($row['postal_codes']) ? $row['postal_codes'] : null);
         $rows[] = [
             'id' => $code,
             'label' => $label,
