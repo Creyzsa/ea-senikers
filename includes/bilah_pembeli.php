@@ -2,8 +2,9 @@
 /**
  * Bilah navigasi area pembeli (header sticky).
  * Set sebelum include:
- *   $bilah_pembeli_aktif — 'beranda' | 'produk' | 'kategori' | 'pesanan' | 'tentang' | 'keranjang' | 'akun'
+ *   $bilah_pembeli_aktif — 'beranda' | 'produk' | 'kategori' | 'pesanan' | 'tentang' | 'keranjang' | 'akun' | 'wishlist'
  *   $bilah_keranjang_jumlah — int (opsional; bila tidak di-set dipakai jumlah item dari sesi keranjang)
+ *   $bilah_cari_q — string kata kunci di search bar (opsional)
  */
 require_once __DIR__ . '/url_bantu.php';
 require_once __DIR__ . '/keranjang_sesi.php';
@@ -17,74 +18,93 @@ if ($bp_kj < 0) {
 
 $sudah_login = sudah_masuk();
 
-$u_logo = aplikasi_url_aset('assets/images/logo-easenikers.svg');
-$u_beranda = aplikasi_url(''); // homepage at root for clean URL
+$u_beranda = aplikasi_url('');
 $u_produk = aplikasi_url('produk');
 $u_kategori = aplikasi_url('kategori');
 $u_pesanan = aplikasi_url('pesanan');
 $u_tentang = aplikasi_url('tentang');
 $u_keranjang = aplikasi_url('keranjang');
 $u_akun = aplikasi_url('akun');
+$u_wishlist = aplikasi_url('wishlist');
 $u_masuk = aplikasi_url('login/masuk.php');
-$u_keluar = aplikasi_url('login/keluar.php');
+$u_akun_tujuan = $sudah_login ? $u_akun : $u_masuk;
+$u_wishlist_tujuan = $sudah_login ? $u_wishlist : $u_masuk;
+
+$bp_cari_q = isset($bilah_cari_q)
+    ? trim((string) $bilah_cari_q)
+    : trim((string) ($_GET['q'] ?? ''));
+
+$bp_label_keranjang = $bp_kj > 99 ? '99+' : (string) (int) $bp_kj;
+
+/**
+ * @param list<array{0: string, 1: string, 2: string}> $item Menu: [id aktif, label, url]
+ */
+$bp_render_tautan = static function (array $item) use ($bp_aktif): void {
+    [$id, $label, $url] = $item;
+    if ($bp_aktif === $id) {
+        echo '<span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">';
+        echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+        echo '</span>';
+        return;
+    }
+    echo '<a class="nav-toko__tautan" href="';
+    echo htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+    echo '">';
+    echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+    echo '</a>';
+};
 ?>
     <header class="bilah-toko">
         <a class="bilah-toko__merek" href="<?php echo htmlspecialchars($u_beranda, ENT_QUOTES, 'UTF-8'); ?>">
-            <img class="bilah-toko__logo" src="<?php echo htmlspecialchars($u_logo, ENT_QUOTES, 'UTF-8'); ?>" width="200" height="38" alt="EA SENIKERS" decoding="async" fetchpriority="high">
+            <?php $ukuran_logo = 'nav'; include __DIR__ . '/komponen/logo_teks_merek.php'; ?>
         </a>
         <nav class="nav-toko" aria-label="Menu utama">
-            <?php if ($bp_aktif === 'beranda'): ?>
-                <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Beranda</span>
-            <?php else: ?>
-                <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_beranda, ENT_QUOTES, 'UTF-8'); ?>">Beranda</a>
-            <?php endif; ?>
-            <?php if ($bp_aktif === 'produk'): ?>
-                <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Produk</span>
-            <?php else: ?>
-                <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">Produk</a>
-            <?php endif; ?>
-            <?php if ($bp_aktif === 'kategori'): ?>
-                <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Kategori</span>
-            <?php else: ?>
-                <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_kategori, ENT_QUOTES, 'UTF-8'); ?>">Kategori</a>
-            <?php endif; ?>
-            <?php if ($sudah_login): ?>
-                <?php if ($bp_aktif === 'pesanan'): ?>
-                    <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Pesanan</span>
-                <?php else: ?>
-                    <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_pesanan, ENT_QUOTES, 'UTF-8'); ?>">Pesanan</a>
-                <?php endif; ?>
-                <?php if ($bp_aktif === 'wishlist'): ?>
-                    <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Wishlist</span>
-                <?php else: ?>
-                    <a class="nav-toko__tautan" href="<?php echo htmlspecialchars(aplikasi_url('wishlist'), ENT_QUOTES, 'UTF-8'); ?>">Wishlist</a>
-                <?php endif; ?>
-            <?php endif; ?>
-            <?php if ($bp_aktif === 'tentang'): ?>
-                <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Tentang</span>
-            <?php else: ?>
-                <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_tentang, ENT_QUOTES, 'UTF-8'); ?>">Tentang</a>
-            <?php endif; ?>
-            <?php if ($sudah_login): ?>
-                <?php if ($bp_aktif === 'akun'): ?>
-                    <span class="nav-toko__tautan nav-toko__tautan--aktif" aria-current="page">Akun</span>
-                <?php else: ?>
-                    <a class="nav-toko__tautan" href="<?php echo htmlspecialchars($u_akun, ENT_QUOTES, 'UTF-8'); ?>">Akun</a>
-                <?php endif; ?>
-            <?php endif; ?>
+            <div class="nav-toko__menu">
+                <?php
+                $bp_render_tautan(['beranda', 'Beranda', $u_beranda]);
+                $bp_render_tautan(['produk', 'Produk', $u_produk]);
+                $bp_render_tautan(['kategori', 'Kategori', $u_kategori]);
+                $bp_render_tautan(['pesanan', 'Pesanan', $u_pesanan]);
+                $bp_render_tautan(['tentang', 'Tentang', $u_tentang]);
+                ?>
+            </div>
+
+            <form class="nav-toko__cari" method="get" action="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>" role="search">
+                <label class="nav-toko__cari-label" for="nav-toko-cari">Cari produk</label>
+                <span class="nav-toko__cari-ikon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/>
+                    </svg>
+                </span>
+                <input type="search" id="nav-toko-cari" name="q" value="<?php echo htmlspecialchars($bp_cari_q, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari sneakers, merek..." autocomplete="off">
+            </form>
+
+            <div class="nav-toko__ikon-grup" aria-label="Aksi cepat">
+                <a class="nav-toko__ikon<?php echo $bp_aktif === 'akun' ? ' nav-toko__ikon--aktif' : ''; ?>"
+                   href="<?php echo htmlspecialchars($u_akun_tujuan, ENT_QUOTES, 'UTF-8'); ?>"
+                   aria-label="<?php echo $sudah_login ? 'Akun saya' : 'Masuk ke akun'; ?>"
+                   title="<?php echo $sudah_login ? 'Akun' : 'Masuk'; ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </a>
+                <a class="nav-toko__ikon<?php echo $bp_aktif === 'wishlist' ? ' nav-toko__ikon--aktif' : ''; ?>"
+                   href="<?php echo htmlspecialchars($u_wishlist_tujuan, ENT_QUOTES, 'UTF-8'); ?>"
+                   aria-label="Wishlist"
+                   title="Wishlist">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                </a>
+                <a class="nav-toko__ikon nav-toko__ikon--keranjang<?php echo $bp_aktif === 'keranjang' ? ' nav-toko__ikon--aktif' : ''; ?>"
+                   href="<?php echo htmlspecialchars($u_keranjang, ENT_QUOTES, 'UTF-8'); ?>"
+                   aria-label="Keranjang, <?php echo htmlspecialchars($bp_label_keranjang, ENT_QUOTES, 'UTF-8'); ?> item"
+                   title="Keranjang">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span class="nav-toko__badge" aria-hidden="true"><?php echo htmlspecialchars($bp_label_keranjang, ENT_QUOTES, 'UTF-8'); ?></span>
+                </a>
+            </div>
         </nav>
-        <div class="bilah-toko__aksi">
-            <a class="tombol-keranjang-oranye<?php echo $bp_aktif === 'keranjang' ? ' tombol-keranjang-oranye--aktif' : ''; ?>"
-               href="<?php echo htmlspecialchars($u_keranjang, ENT_QUOTES, 'UTF-8'); ?>">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                Keranjang (<?php echo $bp_kj > 99 ? '99+' : (string) (int) $bp_kj; ?>)
-            </a>
-            <?php if ($sudah_login): ?>
-                <a class="tautan-keluar-kecil" href="<?php echo htmlspecialchars($u_keluar, ENT_QUOTES, 'UTF-8'); ?>">Keluar</a>
-            <?php else: ?>
-                <a class="tautan-keluar-kecil" href="<?php echo htmlspecialchars($u_masuk, ENT_QUOTES, 'UTF-8'); ?>">Masuk</a>
-            <?php endif; ?>
-        </div>
     </header>
