@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" role="img" aria-label="Vans">
+  <rect width="400" height="300" fill="#1e1e1e"/>
+  <text x="200" y="44" text-anchor="middle" fill="#d43f2d" font-family="Segoe UI,sans-serif" font-size="22" font-weight="800">VANS</text>
+  <rect x="80" y="140" width="240" height="70" rx="14" fill="#2a2a2a" stroke="#fff" stroke-width="2" opacity="0.9"/>
+  <rect x="95" y="155" width="180" height="10" rx="2" fill="#d43f2d"/>
+  <path fill="none" stroke="#fafafa" stroke-width="4" stroke-linecap="round" d="M70 200c45-35 120-40 200-20s120 35 140 65H75z"/>
+  <text x="200" y="275" text-anchor="middle" fill="#888" font-size="12" font-family="Segoe UI,sans-serif">Old Skool</text>
+</svg>
