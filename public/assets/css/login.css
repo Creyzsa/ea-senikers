@@ -554,12 +554,12 @@ body.halaman-daftar::before {
 }
 
 .tautan-lupa-sandi:hover {
-    color: var(--teks-aksen);
+    color: var(--brand-red);
     text-decoration: underline;
 }
 
 .tautan-lupa-sandi:focus-visible {
-    outline: 2px solid var(--merek-biru);
+    outline: 2px solid var(--brand-red);
     outline-offset: 2px;
     border-radius: 4px;
 }
