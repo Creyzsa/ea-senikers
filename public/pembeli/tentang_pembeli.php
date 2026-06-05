@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 $bilah_pembeli_aktif = 'tentang';
 $u_beranda = aplikasi_url(''); // clean root homepage
 $u_produk = aplikasi_url('produk');
-$logo_toko = aplikasi_url_aset('assets/images/logo-easenikers.svg');
+
 $merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
@@ -38,18 +38,17 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
     <main class="kontainer-toko halaman-tentang" id="utama">
         <section class="tentang-hero" aria-labelledby="judul-tentang">
             <div class="tentang-hero__brand">
-                <img src="<?php echo htmlspecialchars($logo_toko, ENT_QUOTES, 'UTF-8'); ?>" width="260" height="50" alt="EA SENIKERS" decoding="async">
-                <p class="section-eyebrow"><?php echo htmlspecialchars((string) $merek_ringkas['badge_toko'], ENT_QUOTES, 'UTF-8'); ?></p>
+                <?php $ukuran_logo = 'tentang'; include __DIR__ . '/../../includes/komponen/logo_teks_merek.php'; ?>
             </div>
-            <div class="tentang-hero__teks">
+            <div class="tentang-hero__salin">
                 <h1 id="judul-tentang">Sneakers baru dan preloved yang dipilih dengan lebih teliti.</h1>
                 <p>EA SENIKERS adalah toko sepatu online yang berfokus pada sneakers multi-merek, produk baru, dan pilihan preloved terkurasi. Setiap produk ditampilkan dengan harga jelas, foto produk, serta informasi kondisi yang mudah dipahami.</p>
-                <div class="tentang-hero__aksi">
-                    <a class="tombol-page-utama" href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">Jelajahi katalog</a>
-                    <?php if ($wa_utama !== ''): ?>
-                        <a class="tombol-page-sekunder" href="<?php echo htmlspecialchars($wa_utama, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">Hubungi WhatsApp</a>
-                    <?php endif; ?>
-                </div>
+            </div>
+            <div class="tentang-hero__aksi">
+                <a class="tombol-page-utama" href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">Jelajahi katalog</a>
+                <?php if ($wa_utama !== ''): ?>
+                    <a class="tombol-page-sekunder" href="<?php echo htmlspecialchars($wa_utama, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">Hubungi WhatsApp</a>
+                <?php endif; ?>
             </div>
         </section>
 
