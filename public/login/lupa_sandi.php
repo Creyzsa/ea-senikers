@@ -64,7 +64,8 @@ $kelas_error = 'pesan-error' . ($pesan_kesalahan !== '' ? ' pesan-error--goyang'
             <strong>⚠️ PENTING untuk email link:</strong> Redirect yang akan dikirim ke Supabase sekarang: <code><?= htmlspecialchars($configured_redirect) ?></code><br>
             <strong>Harus match dengan URL yang kamu buka di browser + yang didaftarkan di Supabase Redirect URLs.</strong><br>
             <?php if ($mismatch): ?>
-            <strong style="color:#721c24;">WARNING: Kamu membuka halaman ini via <?= htmlspecialchars($current_base) ?> tapi config pakai <?= htmlspecialchars(URL_APLIKASI) ?>. Buka via URL config, lalu submit lagi!</strong><br>
+            <strong style="color:#721c24; font-size:1.05em;">⚠️ MISMATCH TERDETEKSI! Kamu membuka via <code><?= htmlspecialchars($current_base) ?></code> tapi config pakai <code><?= htmlspecialchars(URL_APLIKASI) ?></code>.<br>
+            <strong>Buka ulang halaman ini di <a href="<?= htmlspecialchars(URL_APLIKASI . '/login/lupa_sandi.php') ?>">URL config yang benar</a>, lalu submit form lagi untuk dapat email dengan link yang benar!</strong></strong><br>
             <?php endif; ?>
             Jika salah, buka halaman ini lewat URL yang sesuai dengan config.php, lalu submit lagi untuk minta tautan baru.
         </div>
