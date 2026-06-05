@@ -59,7 +59,7 @@ if ($aksi === 'cek_ongkir') {
     <div class="admin-cangkang">
         <aside class="admin-sisi" aria-label="Navigasi admin">
             <a class="admin-sisi__merek" href="beranda_admin.php">
-                <p class="admin-sisi__nama">EA SENIKERS</p>
+                <p class="admin-sisi__nama"><?php $ukuran_logo = 'admin'; include __DIR__ . '/../../includes/komponen/logo_teks_merek.php'; ?></p>
                 <p class="admin-sisi__sub">Panel Admin</p>
             </a>
             <nav class="admin-nav">

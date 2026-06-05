@@ -30,11 +30,11 @@ $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
     <title>Mengonfirmasi akun — EA SENIKERS</title>
     <style>
         body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 2rem auto; padding: 1rem; text-align: center; color: #222; }
-        a { color: #27ae60; }
+        a { color: #D62828; }
         .kotak { text-align: left; background: #f8f9fa; border-radius: 8px; padding: 1rem 1.1rem; margin-top: 1rem; font-size: 0.95rem; line-height: 1.45; }
         .tombol {
             display: inline-block; margin-top: 1rem; padding: 0.65rem 1.2rem;
-            background: #27ae60; color: #fff; border: none; border-radius: 6px;
+            background: #D62828; color: #fff; border: none; border-radius: 6px;
             font-size: 1rem; cursor: pointer; font-weight: 600;
         }
         .tombol:hover { filter: brightness(0.95); }

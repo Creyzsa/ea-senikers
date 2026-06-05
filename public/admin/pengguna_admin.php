@@ -37,7 +37,7 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('admin/pengguna_admin.php'), $q_nila
     <div class="admin-cangkang">
         <aside class="admin-sisi" aria-label="Navigasi admin">
             <a class="admin-sisi__merek" href="beranda_admin.php">
-                <p class="admin-sisi__nama">EA SENIKERS</p>
+                <p class="admin-sisi__nama"><?php $ukuran_logo = 'admin'; include __DIR__ . '/../../includes/komponen/logo_teks_merek.php'; ?></p>
                 <p class="admin-sisi__sub">Panel Admin</p>
             </a>
             <nav class="admin-nav">

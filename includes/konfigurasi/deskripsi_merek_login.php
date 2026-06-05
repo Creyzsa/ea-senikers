@@ -13,7 +13,7 @@ $merek_ringkas = require __DIR__ . '/merek_ringkas.php';
         </header>
 
         <h2 id="panel-tentang-judul" class="panel-tentang__nama">
-            <span class="panel-tentang__nama-merek">EA SENIKERS</span>
+            <?php $ukuran_logo = 'besar'; include __DIR__ . '/../komponen/logo_teks_merek.php'; ?>
         </h2>
 
         <p class="panel-tentang__teks">
