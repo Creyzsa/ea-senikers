@@ -104,3 +104,8 @@ function keranjang_total_rupiah(): int
     }
     return $t;
 }
+
+function keranjang_kosongkan(): void
+{
+    unset($_SESSION[EASENIKERS_KERANJANG_SESI]);
+}

@@ -971,6 +971,21 @@ body.halaman-detail-produk {
     border: 1px solid #bfdbfe;
 }
 
+.keranjang-flash--error {
+    color: #991b1b;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+
+.keranjang-lanjut form {
+    margin: 0;
+}
+
+.keranjang-lanjut .tombol-oranye-besar {
+    border: none;
+    cursor: pointer;
+}
+
 .keranjang-kosong {
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -1341,6 +1356,12 @@ body.halaman-detail-produk {
     margin: 0;
     font-size: 0.82rem;
     color: var(--teks-redup);
+}
+
+.checkout-produk-meta--total-berat {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e5e7eb;
 }
 
 .checkout-berat-anomali {

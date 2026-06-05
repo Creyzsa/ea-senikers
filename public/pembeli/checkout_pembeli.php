@@ -19,6 +19,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 require_once __DIR__ . '/../../includes/keranjang_sesi.php';
+require_once __DIR__ . '/../../includes/checkout_sesi.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
 require_once __DIR__ . '/../../includes/repositori/profil_pembeli_repositori.php';
 require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
@@ -39,6 +40,7 @@ $csrf = $_SESSION['csrf_checkout'];
 $id_pengguna = ambil_id_pengguna_efektif();
 $u_self = aplikasi_url('checkout');
 $u_katalog = aplikasi_url('produk');
+$u_keranjang = aplikasi_url('keranjang');
 $u_akun = aplikasi_url('akun');
 $u_pengaturan_toko = aplikasi_url('admin/pengaturan_admin.php');
 
@@ -47,10 +49,27 @@ $u_pengaturan_toko = aplikasi_url('admin/pengaturan_admin.php');
 //    simpan ke session lalu redirect (post-redirect-get).
 // =========================================================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_produk'], $_POST['ukuran']) && !isset($_POST['aksi'])) {
-    $_SESSION['checkout_pesanan'] = [
-        'id_produk' => trim((string) $_POST['id_produk']),
-        'ukuran' => trim((string) $_POST['ukuran']),
-    ];
+    $id_beli = trim((string) $_POST['id_produk']);
+    $uk_beli = trim((string) $_POST['ukuran']);
+    if ($id_beli !== '' && $uk_beli !== '') {
+        checkout_set_sesi_baris([
+            ['id_produk' => $id_beli, 'ukuran' => $uk_beli, 'qty' => 1],
+        ]);
+    }
+    header('Location: ' . $u_self);
+    exit;
+}
+
+// =========================================================================
+// 0b. ENTRY dari keranjang: POST aksi=dari_keranjang
+// =========================================================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') === 'dari_keranjang') {
+    $err_keranjang = checkout_siapkan_dari_keranjang();
+    if ($err_keranjang !== null) {
+        $_SESSION['flash_checkout_error'] = $err_keranjang;
+        header('Location: ' . $u_keranjang);
+        exit;
+    }
     header('Location: ' . $u_self);
     exit;
 }
@@ -128,32 +147,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
     }
 
     $sesi = $_SESSION['checkout_pesanan'] ?? null;
-    if (!is_array($sesi) || empty($sesi['id_produk']) || empty($sesi['ukuran'])) {
-        header('Location: ' . $u_katalog);
+    $baris_konfirm = checkout_baris_dari_sesi(is_array($sesi) ? $sesi : null);
+    if ($baris_konfirm === []) {
+        header('Location: ' . $u_keranjang);
         exit;
     }
 
-    $produk_db = katalog_ambil_produk_ber_id((string) $sesi['id_produk']);
-    if ($produk_db === null) {
+    $err_stok = checkout_validasi_stok_baris($baris_konfirm);
+    if ($err_stok !== null) {
+        $_SESSION['flash_checkout_error'] = $err_stok;
+        unset($_SESSION['checkout_pesanan']);
+        header('Location: ' . $u_keranjang);
+        exit;
+    }
+
+    $detail_konfirm = checkout_muat_detail_baris($baris_konfirm);
+    if ($detail_konfirm === []) {
         $_SESSION['flash_checkout_error'] = 'Produk sudah tidak tersedia.';
         unset($_SESSION['checkout_pesanan']);
         header('Location: ' . $u_katalog);
         exit;
     }
 
-    $stok_ok = false;
-    foreach ($produk_db['produk_ukuran'] ?? [] as $u) {
-        if ((string) ($u['ukuran'] ?? '') === (string) $sesi['ukuran'] && (int) ($u['stok'] ?? 0) > 0) {
-            $stok_ok = true;
-            break;
-        }
-    }
-    if (!$stok_ok) {
-        $_SESSION['flash_checkout_error'] = 'Stok ukuran yang dipilih sudah habis.';
-        unset($_SESSION['checkout_pesanan']);
-        header('Location: ' . aplikasi_url('detail-produk?id=' . rawurlencode((string) $sesi['id_produk'])));
-        exit;
-    }
 
     $profil = profil_pembeli_ambil($id_pengguna);
     $alamat_lengkap = trim($profil['nama_penerima']) !== ''
@@ -179,24 +194,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
         exit;
     }
 
-    $harga = (int) ($produk_db['harga'] ?? 0);
+    $subtotal_produk = 0;
+    $items = [];
+    foreach ($detail_konfirm as $d) {
+        $subtotal_produk += (int) $d['subtotal'];
+        $items[] = [
+            'product_name' => (string) $d['nama_produk'],
+            'price' => (int) $d['harga'],
+            'size' => (string) $d['ukuran'],
+            'quantity' => (int) $d['qty'],
+            'product_image' => (string) $d['nama_file'],
+            'id_produk' => (string) $d['id_produk'],
+        ];
+    }
+
     $alamat_kirim_full = $profil['nama_penerima'] . ' (' . $profil['no_hp'] . ")\n"
         . $profil['alamat_detail'] . "\n"
         . trim($profil['kecamatan'] . ', ' . $profil['kota'] . ', ' . $profil['provinsi'] . ' ' . $profil['kode_pos'])
         . ($destination_label !== '' ? "\nDestinasi: " . $destination_label : '');
-
-    $gambar_utama = katalog_url_gambar_utama($produk_db);
-    // Simpan nama file saja kalau URL absolut (untuk konsistensi dengan order_items.product_image)
-    $gambar_simpan = (string) ($produk_db['produk_gambar'][0]['nama_file'] ?? '');
-
-    $items = [[
-        'product_name' => (string) ($produk_db['nama_produk'] ?? ''),
-        'price' => $harga,
-        'size' => (string) $sesi['ukuran'],
-        'quantity' => 1,
-        'product_image' => $gambar_simpan,
-        'id_produk' => (string) ($sesi['id_produk'] ?? ''),
-    ]];
 
     $order_id = pesanan_buat(
         $id_pengguna,
@@ -207,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
             'ongkir' => $ongkir,
             'destination_id' => $destination_id,
         ],
-        $harga,
+        $subtotal_produk,
         $items
     );
 
@@ -218,6 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
     }
 
     unset($_SESSION['checkout_pesanan'], $_SESSION['checkout_destinasi'], $_SESSION['checkout_kurir']);
+    keranjang_kosongkan();
     $_SESSION['flash_pesanan_baru'] = 'Pesanan #' . $order_id . ' berhasil dibuat. Selanjutnya menunggu pembayaran.';
     header('Location: ' . aplikasi_url('detail-pesanan?id=' . $order_id));
     exit;
@@ -227,27 +243,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
 // 2. GET render: tampilkan checkout berdasar state session + query string.
 // =========================================================================
 $sesi_pesanan = $_SESSION['checkout_pesanan'] ?? null;
-if (!is_array($sesi_pesanan) || empty($sesi_pesanan['id_produk']) || empty($sesi_pesanan['ukuran'])) {
-    header('Location: ' . $u_katalog);
+$baris_checkout = checkout_baris_dari_sesi(is_array($sesi_pesanan) ? $sesi_pesanan : null);
+if ($baris_checkout === []) {
+    header('Location: ' . $u_keranjang);
     exit;
 }
 
-$id_produk = (string) $sesi_pesanan['id_produk'];
-$ukuran = (string) $sesi_pesanan['ukuran'];
-$produk = katalog_ambil_produk_ber_id($id_produk);
-
-if ($produk === null) {
+$detail_checkout = checkout_muat_detail_baris($baris_checkout);
+if ($detail_checkout === []) {
     unset($_SESSION['checkout_pesanan']);
     header('Location: ' . $u_katalog);
     exit;
 }
 
-$nama_produk = (string) ($produk['nama_produk'] ?? '');
-$brand = (string) ($produk['brand'] ?? '');
-$kondisi = (string) ($produk['kondisi'] ?? '');
-$harga_produk = (int) ($produk['harga'] ?? 0);
-$berat_produk = max(100, (int) ($produk['berat_gram'] ?? 1000));
-$gambar_produk = katalog_url_gambar_utama($produk);
+$harga_produk = 0;
+$berat_produk = 0;
+foreach ($detail_checkout as $d) {
+    $harga_produk += (int) $d['subtotal'];
+    $berat_produk += (int) $d['berat_gram'] * (int) $d['qty'];
+}
+$berat_produk = max(100, $berat_produk);
 
 $profil = profil_pembeli_ambil($id_pengguna);
 $profil_lengkap = trim($profil['nama_penerima']) !== ''
@@ -424,21 +439,26 @@ $total_final = $harga_produk + $ongkir_pilih;
 
             <section class="checkout-kartu">
                 <h2 class="checkout-kartu__judul">Produk yang dibeli</h2>
+                <?php foreach ($detail_checkout as $d): ?>
                 <div class="checkout-produk-baris">
-                    <img class="checkout-produk-gambar" src="<?php echo htmlspecialchars($gambar_produk, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="84" height="84">
+                    <img class="checkout-produk-gambar" src="<?php echo htmlspecialchars((string) $d['gambar'], ENT_QUOTES, 'UTF-8'); ?>" alt="" width="84" height="84">
                     <div>
-                        <p class="checkout-produk-brand"><?php echo htmlspecialchars($brand, ENT_QUOTES, 'UTF-8'); ?> · <?php echo htmlspecialchars(kondisi_label_pembeli($kondisi), ENT_QUOTES, 'UTF-8'); ?></p>
-                        <p class="checkout-produk-nama"><?php echo htmlspecialchars($nama_produk, ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p class="checkout-produk-brand"><?php echo htmlspecialchars((string) $d['brand'], ENT_QUOTES, 'UTF-8'); ?> · <?php echo htmlspecialchars(kondisi_label_pembeli((string) $d['kondisi']), ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p class="checkout-produk-nama"><?php echo htmlspecialchars((string) $d['nama_produk'], ENT_QUOTES, 'UTF-8'); ?></p>
                         <p class="checkout-produk-meta">
-                            Ukuran <strong><?php echo htmlspecialchars($ukuran, ENT_QUOTES, 'UTF-8'); ?></strong>
-                            · Berat <?php echo (int) $berat_produk; ?> g
-                            <?php if ($berat_produk > 3000): ?>
-                                <span class="checkout-berat-anomali">⚠ berat tidak wajar</span>
-                            <?php endif; ?>
+                            Ukuran <strong><?php echo htmlspecialchars((string) $d['ukuran'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                            · Qty <strong><?php echo (int) $d['qty']; ?></strong>
                         </p>
                     </div>
-                    <p class="checkout-produk-harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga_produk), ENT_QUOTES, 'UTF-8'); ?></p>
+                    <p class="checkout-produk-harga"><?php echo htmlspecialchars(katalog_format_rupiah((int) $d['subtotal']), ENT_QUOTES, 'UTF-8'); ?></p>
                 </div>
+                <?php endforeach; ?>
+                <p class="checkout-produk-meta checkout-produk-meta--total-berat">
+                    Total berat kirim: <strong><?php echo (int) $berat_produk; ?> g</strong>
+                    <?php if ($berat_produk > 15000): ?>
+                        <span class="checkout-berat-anomali">⚠ berat tidak wajar</span>
+                    <?php endif; ?>
+                </p>
             </section>
 
             <section class="checkout-kartu">
