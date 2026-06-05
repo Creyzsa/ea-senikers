@@ -2,6 +2,11 @@
 /**
  * Safe config loader for local (config.php) and serverless like Vercel (env vars).
  * 
+ * LOCAL LARAGON (Windows):
+ *   Copy config.example.php → config.php (root)
+ *   Gunakan "Direct connection" dari Supabase (bukan pooler) agar tidak kena "Unknown host pooler".
+ *   Lihat komentar di config.example.php untuk detail host/user.
+ *
  * On Vercel / production:
  * - Do NOT commit config.php
  * - Set these Environment Variables in Vercel Dashboard (Project > Settings > Environment Variables):

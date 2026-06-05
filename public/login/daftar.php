@@ -137,6 +137,14 @@ $kelas_error = 'pesan-error' . ($pesan_kesalahan !== '' ? ' pesan-error--goyang'
             <p class="merek__tagline">Buat akun untuk mulai belanja</p>
         </header>
 
+        <?php if (defined('URL_APLIKASI') && is_local_dev_url(URL_APLIKASI)): ?>
+        <div style="background:#fef3c7; border:1px solid #f59e0b; color:#92400e; padding:0.6rem 0.8rem; font-size:0.85rem; border-radius:6px; margin-bottom:1rem; text-align:left;">
+            <strong>⚠️ Test di localhost:</strong> Link konfirmasi di email akan pakai URL lokal.<br>
+            <strong>Tidak harus pakai ngrok</strong> kalau test di satu mesin yang sama: set URL_APLIKASI ke <code>http://localhost:8080/EASENIKERS/public</code>, tambahkan ke Supabase Redirect URLs, buka daftar via localhost, dan buka email di browser Gmail di komputer yang sama.<br>
+            Kalau butuh dari HP/jaringan lain → baru pakai ngrok.
+        </div>
+        <?php endif; ?>
+
         <?php if ($pesan_kesalahan !== ''): ?>
             <p class="<?php echo htmlspecialchars($kelas_error); ?>" role="alert"><?php echo htmlspecialchars($pesan_kesalahan); ?></p>
         <?php endif; ?>

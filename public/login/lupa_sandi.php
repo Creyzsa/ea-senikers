@@ -21,7 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($hasil['ok']) {
             // Pesan generik agar tidak membocorkan apakah email terdaftar
-            $pesan_sukses = 'Jika alamat ini terdaftar, kami mengirim tautan reset ke email Anda. Periksa kotak masuk atau spam.';
+            $redirect_for_email = (defined('URL_APLIKASI') && URL_APLIKASI !== '') ? rtrim(URL_APLIKASI, '/') . '/login/konfirmasi_email.php' : 'NOT SET';
+            $pesan_sukses = 'Jika alamat ini terdaftar, kami mengirim tautan reset ke email Anda. Periksa kotak masuk atau spam. <strong>Request tautan baru setelah perubahan config/template!</strong>';
+            $pesan_sukses .= ' <span style="font-size:0.8em;color:#b45309;">(Redirect yang dikirim: ' . htmlspecialchars($redirect_for_email) . ' — minta tautan BARU dari sini setelah update. Email lama masih pakai 192.)</span>';
         } else {
             $pesan_kesalahan = $hasil['pesan'] ?? 'Permintaan gagal. Coba lagi.';
         }
@@ -48,6 +50,34 @@ $kelas_error = 'pesan-error' . ($pesan_kesalahan !== '' ? ' pesan-error--goyang'
             <h1 id="judul-lupa" class="merek__nama">Lupa kata sandi</h1>
             <p class="merek__tagline">Kami kirim tautan reset ke email Anda</p>
         </header>
+
+        <?php
+        $configured_redirect = (defined('URL_APLIKASI') && URL_APLIKASI !== '') ? rtrim(URL_APLIKASI, '/') . '/login/konfirmasi_email.php' : 'NOT SET';
+        // Compute current base from request
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $script_dir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
+        $current_base = $scheme . '://' . $host . $script_dir;
+        $mismatch = (defined('URL_APLIKASI') && URL_APLIKASI !== '' && strpos($current_base, rtrim(URL_APLIKASI, '/')) === false);
+        ?>
+        <div style="background:#fff3cd; border:2px solid #ffc107; color:#856404; padding:0.75rem 1rem; font-size:0.9rem; border-radius:6px; margin-bottom:1rem; text-align:left;">
+            <strong>⚠️ PENTING untuk email link:</strong> Redirect yang akan dikirim ke Supabase sekarang: <code><?= htmlspecialchars($configured_redirect) ?></code><br>
+            <strong>Harus match dengan URL yang kamu buka di browser + yang didaftarkan di Supabase Redirect URLs.</strong><br>
+            <?php if ($mismatch): ?>
+            <strong style="color:#721c24;">WARNING: Kamu membuka halaman ini via <?= htmlspecialchars($current_base) ?> tapi config pakai <?= htmlspecialchars(URL_APLIKASI) ?>. Buka via URL config, lalu submit lagi!</strong><br>
+            <?php endif; ?>
+            Jika salah, buka halaman ini lewat URL yang sesuai dengan config.php, lalu submit lagi untuk minta tautan baru.
+        </div>
+
+        <?php if (defined('URL_APLIKASI') && is_local_dev_url(URL_APLIKASI)): ?>
+        <div style="background:#fef3c7; border:1px solid #f59e0b; color:#92400e; padding:0.6rem 0.8rem; font-size:0.85rem; border-radius:6px; margin-bottom:1rem; text-align:left;">
+            <strong>⚠️ Untuk reset password di localhost:</strong><br>
+            - URL_APLIKASI harus persis <code>http://localhost:8080/EASENIKERS/public</code><br>
+            - Buka halaman ini lewat <strong>URL_APLIKASI + /login/lupa_sandi.php</strong><br>
+            - Template "Reset password" di Supabase WAJIB pakai token_hash + {{ .RedirectTo }}<br>
+            - <strong>Minta tautan YANG BARU</strong> setelah ganti config/template. Email lama di inbox tetap pakai URL 192 lama!
+        </div>
+        <?php endif; ?>
 
         <?php if ($pesan_sukses !== ''): ?>
             <p class="pesan-sukses" role="status"><?php echo htmlspecialchars($pesan_sukses); ?></p>

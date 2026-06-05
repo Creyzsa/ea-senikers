@@ -1,7 +1,8 @@
 <?php
 /**
  * Koneksi ke database Supabase (PostgreSQL) memakai PDO.
- * Bagian teknis (PDO, dsn) tetap bahasa Inggris karena nama resmi fitur PHP.
+ * Untuk local: pakai Direct connection (lihat config.example.php) supaya host resolve.
+ * Fitur2 di katalog_produk sudah punya graceful fallback jika konek gagal (local dev).
  */
 
 require_once __DIR__ . '/../config_loader.php';

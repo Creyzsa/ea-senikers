@@ -335,6 +335,65 @@ function supabase_auth_lupa_password(string $email): array
  *
  * {{ .RedirectTo }} mengikuti redirect_to dari aplikasi (harus sudah di Redirect URLs).
  *
+ * PENTING: Jangan pakai {{ .ConfirmationURL }} atau {{ .SiteURL }} langsung di template,
+ * karena email client (Gmail dll) sering pre-load link tersebut dan membuat token langsung expired (otp_expired).
+ *
+ * Contoh template HTML yang aman (copy-paste ke Supabase Email Templates):
+ *
+ * Untuk Confirm signup (ganti template "Confirm signup"):
+ * <div style="background:#f5f5f5; padding:40px 20px; font-family:Arial, sans-serif;">
+ *   <div style="max-width:420px; margin:auto; background:#ffffff; padding:32px; border-radius:10px;">
+ *     <h2 style="margin:0 0 10px; font-size:20px; color:#111;">Konfirmasi Email</h2>
+ *     <p style="font-size:14px; color:#555; line-height:1.6; margin-bottom:20px;">
+ *       Terima kasih sudah mendaftar di <b>EA SENIKERS</b>. Silakan konfirmasi email Anda.
+ *     </p>
+ *     <div style="margin:25px 0;">
+ *       <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=signup"
+ *          style="display:block; text-align:center; background:#111; color:#fff; padding:12px; border-radius:6px; text-decoration:none; font-size:14px;">
+ *         Konfirmasi Email
+ *       </a>
+ *     </div>
+ *     <p style="font-size:12px; color:#777;">Jika tombol tidak bisa diklik, buka link ini:</p>
+ *     <p style="font-size:12px; color:#333; word-break:break-all;">
+ *       {{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=signup
+ *     </p>
+ *     <p style="font-size:12px; color:#999; margin-top:20px;">
+ *       Jika Anda tidak merasa mendaftar, abaikan email ini.
+ *     </p>
+ *     <hr style="border:none; border-top:1px solid #eee; margin:25px 0;">
+ *     <p style="font-size:12px; color:#aaa; text-align:center;">
+ *       EA SENIKERS
+ *     </p>
+ *   </div>
+ * </div>
+ *
+ * Untuk Reset password (ganti template "Reset password"):
+ * <div style="background:#f5f5f5; padding:40px 20px; font-family:Arial, sans-serif;">
+ *   <div style="max-width:420px; margin:auto; background:#ffffff; padding:32px; border-radius:10px;">
+ *     <h2 style="margin:0 0 10px; font-size:20px; color:#111;">Reset Kata Sandi</h2>
+ *     <p style="font-size:14px; color:#555; line-height:1.6; margin-bottom:20px;">
+ *       Kami menerima permintaan reset kata sandi untuk akun EA SENIKERS Anda.
+ *     </p>
+ *     <div style="margin:25px 0;">
+ *       <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=recovery"
+ *          style="display:block; text-align:center; background:#111; color:#fff; padding:12px; border-radius:6px; text-decoration:none; font-size:14px;">
+ *         Reset Kata Sandi
+ *       </a>
+ *     </div>
+ *     <p style="font-size:12px; color:#777;">Jika tombol tidak bisa diklik, buka link ini:</p>
+ *     <p style="font-size:12px; color:#333; word-break:break-all;">
+ *       {{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=recovery
+ *     </p>
+ *     <p style="font-size:12px; color:#999; margin-top:20px;">
+ *       Jika Anda tidak meminta reset, abaikan email ini.
+ *     </p>
+ *     <hr style="border:none; border-top:1px solid #eee; margin:25px 0;">
+ *     <p style="font-size:12px; color:#aaa; text-align:center;">
+ *       EA SENIKERS
+ *     </p>
+ *   </div>
+ * </div>
+ *
  * @param string $tipe recovery | signup | email | invite | magiclink
  * @return array{ok: bool, pesan?: string, access_token?: string, refresh_token?: string}
  */

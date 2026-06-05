@@ -139,10 +139,12 @@ $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
                 var kotak = document.createElement('div');
                 kotak.className = 'kotak';
                 kotak.style.marginTop = '0.5rem';
-                kotak.innerHTML = '<p style="margin:0 0 0.5rem 0;"><strong>Penyebab umum:</strong> (1) Gmail/Outlook memeriksa tautan otomatis sebelum Anda klik. (2) Anda menunggu layar &quot;Memverifikasi&quot; lalu <strong>mengklik tautan yang sama lagi</strong> — klik pertama sebenarnya sudah memakai token; klik kedua pasti gagal.</p>' +
-                    '<p style="margin:0 0 0.5rem 0;"><strong>Yang bisa dilakukan:</strong></p><ul style="margin:0;padding-left:1.2rem;">' +
-                    '<li>Minta tautan <strong>baru</strong> sekali, buka dari browser (gmail.com), lalu <strong>tunggu</strong> sampai halaman ganti sandi terbuka (bisa 30–90 detik di WiFi) tanpa klik ulang tautan email.</li>' +
-                    '<li>Lebih aman: ubah template email Supabase ke tautan <code>token_hash</code> — lihat komentar di <code>includes/auth_db/supabase_auth.php</code> pada fungsi <code>supabase_auth_verifikasi_token_hash</code>.</li></ul>';
+                kotak.innerHTML = '<p style="margin:0 0 0.5rem 0;"><strong>Penyebab paling umum:</strong> Gmail/Outlook (dan banyak email client) otomatis "mengklik" / pre-load tautan konfirmasi untuk scan spam. Ini langsung menghabiskan token sekali-pakai Supabase, sehingga saat Anda klik linknya muncul "invalid or has expired".</p>' +
+                    '<p style="margin:0 0 0.5rem 0;"><strong>Fix permanen (lakukan sekali):</strong></p><ul style="margin:0;padding-left:1.2rem;">' +
+                    '<li>Di Supabase Dashboard → Authentication → <strong>Email Templates</strong>, ganti template "Confirm signup" dan "Reset password" supaya pakai token_hash (lihat contoh persis di komentar fungsi <code>supabase_auth_verifikasi_token_hash</code> di <code>includes/auth_db/supabase_auth.php</code>).</li>' +
+                    '<li>Minta tautan <strong>baru</strong> (ulangi daftar / lupa sandi).</li>' +
+                    '<li>Buka email di browser, klik link baru → akan muncul tombol "Verifikasi", klik tombol itu (bukan link email lagi).</li></ul>' +
+                    '<p style="margin:0 0 0.5rem 0;">Sementara ini: minta tautan baru, buka dari gmail.com di browser, dan klik <strong>sekali saja</strong> cepat.</p>';
                 otpErrEl.appendChild(kotak);
             }
 

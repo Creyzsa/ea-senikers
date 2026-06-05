@@ -150,6 +150,13 @@ $pesan_konfirmasi_gagal = isset($_GET['konfirmasi']) && $_GET['konfirmasi'] === 
         <?php endif; ?>
         <?php if (!empty($pesan_daftar_cek_email)): ?>
             <p class="pesan-sukses" role="status">Hampir selesai. Buka email Anda, klik tautan konfirmasi, lalu kembali ke sini untuk masuk. Periksa folder spam bila perlu.</p>
+            <?php if (defined('URL_APLIKASI') && is_local_dev_url(URL_APLIKASI)): ?>
+                <p style="font-size:0.8rem; color:#b45309; margin-top:0.5rem;">
+                    <strong>Dev note:</strong> Link di email pakai URL lokal (<?php echo htmlspecialchars(URL_APLIKASI); ?>). 
+                    <strong>Tidak harus pakai ngrok</strong> kalau test di satu mesin: set ke <code>http://localhost:8080/EASENIKERS/public</code>, tambah ke Supabase Redirect URLs, buka email di browser di komputer yang sama.<br>
+                    Butuh dari HP/jaringan lain? Pakai ngrok atau test di production domain.
+                </p>
+            <?php endif; ?>
         <?php endif; ?>
         <?php if (!empty($pesan_konfirmasi_gagal)): ?>
             <p class="<?php echo htmlspecialchars($kelas_error); ?>" role="alert">Tautan tidak berlaku atau sudah kedaluwarsa. Daftar ulang atau gunakan Lupa kata sandi.</p>
