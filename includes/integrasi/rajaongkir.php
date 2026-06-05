@@ -184,6 +184,7 @@ function jne_normalisasi_baris_lokasi(mixed $data): array
         $rows[] = [
             'id' => $code,
             'label' => $label,
+            'label_tampilan' => rajaongkir_label_tampilan($label),
             'zip_code' => '',
             'postal_code' => '',
             'subdistrict_name' => $label,
@@ -219,7 +220,276 @@ function rajaongkir_daftar_provinsi(): array
 }
 
 /**
- * Cari lokasi tujuan (dan gabung asal bila kata kunci cocok).
+ * Label API JNE (CAPS) → tampilan ramah pembeli.
+ */
+function rajaongkir_label_tampilan(string $label): string
+{
+    $label = trim(preg_replace('/^\[Asal\]\s*/i', '', $label));
+    if ($label === '') {
+        return '';
+    }
+
+    $tanpa_spasi = strtoupper(preg_replace('/\s+/', '', $label) ?? '');
+    $khusus = [
+        'PADANGPANJANG' => 'Padang Panjang',
+        'JAKARTAPUSAT' => 'Jakarta Pusat',
+        'JAKARTAUTARA' => 'Jakarta Utara',
+        'JAKARTASELATAN' => 'Jakarta Selatan',
+        'JAKARTATIMUR' => 'Jakarta Timur',
+        'JAKARTABARAT' => 'Jakarta Barat',
+    ];
+    if (isset($khusus[$tanpa_spasi])) {
+        return $khusus[$tanpa_spasi];
+    }
+
+    if (str_contains($label, ' ')) {
+        return mb_convert_case(mb_strtolower($label, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+    }
+
+    return mb_convert_case(mb_strtolower($label, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+}
+
+/**
+ * Normalisasi teks untuk pencocokan kota/kecamatan (tanpa spasi & tanda baca).
+ */
+function rajaongkir_normalisasi_teks_cocok(string $teks): string
+{
+    $teks = mb_strtolower(trim($teks), 'UTF-8');
+    $teks = preg_replace('/^(kota|kabupaten|kab\.?)\s+/u', '', $teks) ?? $teks;
+
+    return preg_replace('/[^a-z0-9]+/u', '', $teks) ?? '';
+}
+
+/**
+ * Skor kecocokan baris JNE dengan alamat profil (semakin tinggi = semakin cocok).
+ */
+function rajaongkir_skor_cocok_lokasi(array $row, array $profil): int
+{
+    $label = rajaongkir_normalisasi_teks_cocok((string) ($row['label'] ?? ''));
+    if ($label === '') {
+        return 0;
+    }
+
+    $kec = rajaongkir_normalisasi_teks_cocok((string) ($profil['kecamatan'] ?? ''));
+    $kota = rajaongkir_normalisasi_teks_cocok((string) ($profil['kota'] ?? ''));
+    $prov = rajaongkir_normalisasi_teks_cocok((string) ($profil['provinsi'] ?? ''));
+    $skor = 0;
+
+    if ($kec !== '') {
+        if ($label === $kec) {
+            $skor += 80;
+        } elseif (str_contains($label, $kec) || str_contains($kec, $label)) {
+            $skor += 50;
+        }
+    }
+    if ($kota !== '') {
+        if ($label === $kota) {
+            $skor += 70;
+        } elseif (str_contains($label, $kota) || str_contains($kota, $label)) {
+            $skor += 45;
+        }
+    }
+    if ($prov !== '' && str_contains($label, $prov)) {
+        $skor += 10;
+    }
+
+    return $skor;
+}
+
+/**
+ * Pilih satu destinasi terbaik dari hasil pencarian + profil (null = pembeli pilih manual).
+ *
+ * @param list<array<string, mixed>> $rows
+ * @return array<string, mixed>|null
+ */
+function rajaongkir_pilih_destinasi_terbaik(array $rows, array $profil): ?array
+{
+    if ($rows === []) {
+        return null;
+    }
+
+    $terbaik = null;
+    $skor_terbaik = 0;
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $skor = rajaongkir_skor_cocok_lokasi($row, $profil);
+        if ($skor > $skor_terbaik) {
+            $skor_terbaik = $skor;
+            $terbaik = $row;
+        }
+    }
+
+    if ($skor_terbaik >= 45 && $terbaik !== null) {
+        return $terbaik;
+    }
+    if (count($rows) === 1) {
+        return $rows[0];
+    }
+
+    return null;
+}
+
+/**
+ * Urutkan hasil: yang paling cocok dengan profil di atas.
+ *
+ * @param list<array<string, mixed>> $rows
+ * @return list<array<string, mixed>>
+ */
+function rajaongkir_urutkan_hasil_profil(array $rows, array $profil): array
+{
+    usort($rows, static function (array $a, array $b) use ($profil): int {
+        return rajaongkir_skor_cocok_lokasi($b, $profil) <=> rajaongkir_skor_cocok_lokasi($a, $profil);
+    });
+
+    return $rows;
+}
+
+/**
+ * Cari tujuan pengiriman saja (tanpa lokasi asal) — untuk checkout pembeli.
+ *
+ * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
+ */
+function rajaongkir_cari_destinasi_tujuan(string $kata, int $limit = 20): array
+{
+    $kata = trim($kata);
+    if ($kata === '') {
+        return [
+            'ok' => false,
+            'http' => 0,
+            'error' => 'Kata kunci pencarian kosong.',
+            'data' => null,
+            'raw' => '',
+        ];
+    }
+    if ($limit < 1 || $limit > 50) {
+        $limit = 20;
+    }
+
+    $dest = jne_web_request('/api-destination', ['search' => $kata]);
+    if (!$dest['ok']) {
+        return $dest;
+    }
+    $rows = jne_normalisasi_baris_lokasi($dest['data']);
+    if ($limit < count($rows)) {
+        $rows = array_slice($rows, 0, $limit);
+    }
+
+    return [
+        'ok' => true,
+        'http' => $dest['http'],
+        'error' => '',
+        'data' => $rows,
+        'raw' => $dest['raw'],
+    ];
+}
+
+/**
+ * Cari beberapa kata kunci dari profil (kecamatan, kota) lalu gabungkan hasil unik.
+ *
+ * @param array{kecamatan?:string,kota?:string,provinsi?:string} $profil
+ * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
+ */
+function rajaongkir_cari_untuk_profil(array $profil, int $limit = 30): array
+{
+    $terms = [];
+    foreach (['kecamatan', 'kota'] as $k) {
+        $t = trim((string) ($profil[$k] ?? ''));
+        if ($t === '') {
+            continue;
+        }
+        if (!in_array($t, $terms, true)) {
+            $terms[] = $t;
+        }
+        $tanpa_prefiks = trim((string) (preg_replace('/^(kota|kabupaten|kab\.?)\s+/iu', '', $t) ?? $t));
+        if ($tanpa_prefiks !== '' && !in_array($tanpa_prefiks, $terms, true)) {
+            $terms[] = $tanpa_prefiks;
+        }
+    }
+
+    if ($terms === []) {
+        return [
+            'ok' => false,
+            'http' => 0,
+            'error' => 'Alamat profil belum memiliki kota/kecamatan.',
+            'data' => null,
+            'raw' => '',
+        ];
+    }
+
+    $rows = [];
+    $seen = [];
+    $raw = '';
+    $http = 200;
+    $err = '';
+
+    $kata_cari = [];
+    foreach ($terms as $term) {
+        $kata_cari[] = $term;
+        $kata_utama = trim((string) (preg_split('/\s+/u', $term)[0] ?? $term));
+        if ($kata_utama !== '' && $kata_utama !== $term && !in_array($kata_utama, $kata_cari, true)) {
+            $kata_cari[] = $kata_utama;
+        }
+    }
+
+    foreach ($kata_cari as $term) {
+        $res = rajaongkir_cari_destinasi_tujuan($term, $limit);
+        $raw = $res['raw'] !== '' ? $res['raw'] : $raw;
+        $http = $res['http'] ?? $http;
+        if (!$res['ok']) {
+            $err = (string) ($res['error'] ?? $err);
+            continue;
+        }
+        foreach ((array) $res['data'] as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $id = (string) ($row['id'] ?? '');
+            if ($id === '' || isset($seen[$id])) {
+                continue;
+            }
+            $seen[$id] = true;
+            $rows[] = $row;
+        }
+    }
+
+    if ($rows === []) {
+        return [
+            'ok' => false,
+            'http' => $http,
+            'error' => $err !== '' ? $err : 'Wilayah pengiriman tidak ditemukan. Coba ketik nama kota di kolom pencarian.',
+            'data' => null,
+            'raw' => $raw,
+        ];
+    }
+
+    $rows = rajaongkir_urutkan_hasil_profil($rows, $profil);
+
+    return [
+        'ok' => true,
+        'http' => $http,
+        'error' => '',
+        'data' => $rows,
+        'raw' => $raw,
+    ];
+}
+
+/**
+ * Label tampilan untuk baris hasil (fallback bila field belum ada).
+ */
+function rajaongkir_baris_label_tampilan(array $row): string
+{
+    $tampilan = trim((string) ($row['label_tampilan'] ?? ''));
+    if ($tampilan !== '') {
+        return $tampilan;
+    }
+
+    return rajaongkir_label_tampilan((string) ($row['label'] ?? ''));
+}
+
+/**
+ * Cari lokasi tujuan (dan gabung asal bila kata kunci cocok) — untuk admin.
  *
  * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
  */

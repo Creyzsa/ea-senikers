@@ -9,7 +9,7 @@ declare(strict_types=1);
  *   1. Pembeli klik "Beli" di detail produk (POST: id_produk, ukuran).
  *      Sistem simpan ke session, redirect ke GET.
  *   2. Tampilkan ringkasan produk + alamat pembeli (dari profil).
- *      Pembeli cari kecamatan tujuan (search RajaOngkir).
+ *      Sistem cocokkan wilayah tujuan dari alamat profil (nama kota/kecamatan, tanpa kode).
  *   3. Pembeli pilih destinasi → fetch daftar kurir+layanan+ongkir.
  *   4. Pembeli pilih layanan kurir → tampil review final.
  *   5. Pembeli klik "Konfirmasi pesanan" (POST + CSRF) → create order
@@ -129,7 +129,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
     unset(
         $_SESSION['checkout_destinasi'],
         $_SESSION['checkout_kurir'],
-        $_SESSION['checkout_destinasi_auto']
+        $_SESSION['checkout_destinasi_auto'],
+        $_SESSION['checkout_destinasi_auto_attempted']
     );
     header('Location: ' . $u_self);
     exit;
@@ -291,110 +292,53 @@ $kurir_pilih = is_array($sesi_kurir) ? trim((string) ($sesi_kurir['kurir'] ?? ''
 $layanan_pilih = is_array($sesi_kurir) ? trim((string) ($sesi_kurir['layanan'] ?? '')) : '';
 $ongkir_pilih = is_array($sesi_kurir) ? (int) ($sesi_kurir['ongkir'] ?? 0) : 0;
 
-// Auto-search: kalau pembeli belum apa-apa & profil ada kecamatan/kota,
-// otomatis cari pakai data profil sebagai default. Hemat 1 langkah ngetik.
-$cari_otomatis = false;
-if ($cari === '' && $destination_kode_pilih === '' && $profil_lengkap) {
-    $kecamatan_profil = trim($profil['kecamatan']);
-    $kota_profil = trim($profil['kota']);
-    if ($kecamatan_profil !== '') {
-        $cari = $kecamatan_profil;
-        $cari_otomatis = true;
-    } elseif ($kota_profil !== '') {
-        $cari = $kota_profil;
-        $cari_otomatis = true;
-    }
-}
-
 $hasil_cari = null;
 $hasil_ongkir = null;
+$cari_dari_profil = false;
+$wilayah_butuh_pilih = false;
+$skor_rekomendasi_min = 45;
 
 if ($profil_lengkap && $asal_kode_toko !== '') {
-    if ($cari !== '') {
-        $hasil_cari = rajaongkir_cari_destinasi($cari, 30);
-    }
-
-    // Auto-pick HANYA kalau kode pos profil EXACT MATCH dengan kode pos
-    // salah satu hasil pencarian. Kalau tidak match, pembeli pilih manual
-    // dari daftar (di-render normal di bawah) — supaya tidak salah anter.
-    // Flag checkout_destinasi_auto_attempted dipasang sekali agar tidak
-    // looping auto-pick attempt di setiap render.
-    $kode_pos_profil = trim((string) ($profil['kode_pos'] ?? ''));
-    $auto_no_match = false;
-    $kode_pos_api_tidak_tersedia = false;
-    if ($cari_otomatis
-        && $destination_kode_pilih === ''
-        && empty($_SESSION['checkout_destinasi_auto'])
-        && $hasil_cari !== null
-        && $hasil_cari['ok']
-        && is_array($hasil_cari['data'])
-        && $hasil_cari['data'] !== []
-    ) {
-        $top = null;
-        $ada_kode_pos_di_api = false;
-        if ($kode_pos_profil !== '') {
-            foreach ($hasil_cari['data'] as $row) {
-                if (!is_array($row)) continue;
-                $z = trim((string) ($row['zip_code'] ?? $row['postal_code'] ?? ''));
-                if (preg_match('/^\d{5}$/', $z) !== 1) {
-                    continue;
-                }
-                $ada_kode_pos_di_api = true;
-                if ($z === $kode_pos_profil) {
-                    $top = $row;
-                    break;
-                }
-            }
+    if ($destination_kode_pilih === '') {
+        if ($cari !== '') {
+            $hasil_cari = rajaongkir_cari_destinasi_tujuan($cari, 30);
+        } else {
+            $hasil_cari = rajaongkir_cari_untuk_profil($profil, 30);
+            $cari_dari_profil = true;
         }
 
-        if ($top !== null) {
-            $top_id = rajaongkir_normalisasi_kode_desa((string) ($top['id'] ?? ''));
-            $top_label = (string) ($top['label'] ?? '');
-            if ($top_label === '') {
-                $parts = array_filter([
-                    (string) ($top['subdistrict_name'] ?? ''),
-                    (string) ($top['district_name'] ?? ''),
-                    (string) ($top['city_name'] ?? ''),
-                    (string) ($top['province_name'] ?? ''),
-                ]);
-                $top_label = implode(', ', $parts);
-            }
-            if ($top_id !== '' && $top_label !== '') {
-                $_SESSION['checkout_destinasi'] = ['id' => $top_id, 'label' => $top_label];
-                $_SESSION['checkout_destinasi_auto'] = true;
-                header('Location: ' . $u_self);
-                exit;
-            }
-        } elseif ($kode_pos_profil !== '' && $ada_kode_pos_di_api) {
-            // API mengembalikan kode pos, tapi tidak ada yang sama dengan profil
-            $auto_no_match = true;
-        }
-    }
+        if ($hasil_cari !== null && $hasil_cari['ok'] && is_array($hasil_cari['data']) && $hasil_cari['data'] !== []) {
+            $hasil_cari['data'] = rajaongkir_urutkan_hasil_profil($hasil_cari['data'], $profil);
 
-    $kode_pos_api_tidak_tersedia = $cari_otomatis
-        && $kode_pos_profil !== ''
-        && $hasil_cari !== null
-        && $hasil_cari['ok']
-        && is_array($hasil_cari['data'])
-        && $hasil_cari['data'] !== []
-        && !$auto_no_match
-        && $destination_kode_pilih === '';
-    if ($kode_pos_api_tidak_tersedia) {
-        foreach ($hasil_cari['data'] as $row) {
-            if (!is_array($row)) {
-                continue;
+            if (empty($_SESSION['checkout_destinasi_auto_attempted'])) {
+                $top = rajaongkir_pilih_destinasi_terbaik($hasil_cari['data'], $profil);
+                if ($top !== null) {
+                    $top_id = rajaongkir_normalisasi_kode_desa((string) ($top['id'] ?? ''));
+                    $top_label = rajaongkir_baris_label_tampilan($top);
+                    if ($top_id !== '' && $top_label !== '') {
+                        $_SESSION['checkout_destinasi'] = ['id' => $top_id, 'label' => $top_label];
+                        $_SESSION['checkout_destinasi_auto'] = true;
+                        $_SESSION['checkout_destinasi_auto_attempted'] = true;
+                        header('Location: ' . $u_self);
+                        exit;
+                    }
+                }
+                $_SESSION['checkout_destinasi_auto_attempted'] = true;
             }
-            $z = trim((string) ($row['zip_code'] ?? ''));
-            if (preg_match('/^\d{5}$/', $z) === 1) {
-                $kode_pos_api_tidak_tersedia = false;
-                break;
-            }
+
+            $wilayah_butuh_pilih = true;
+        } elseif ($cari_dari_profil) {
+            $_SESSION['checkout_destinasi_auto_attempted'] = true;
         }
     }
 
     if ($destination_kode_pilih !== '') {
         $hasil_ongkir = rajaongkir_cek_ongkir($asal_kode_toko, $destination_kode_pilih, $berat_produk, '');
     }
+}
+
+if ($destination_label_pilih !== '') {
+    $destination_label_pilih = rajaongkir_label_tampilan($destination_label_pilih);
 }
 
 function checkout_url(string $base, array $params): string
@@ -460,7 +404,7 @@ $total_final = $harga_produk + $ongkir_pilih;
     <?php elseif (!$ongkir_siap): ?>
         <div class="checkout-alert checkout-alert--peringatan">
             <strong>Toko belum siap menerima pesanan.</strong>
-            Admin perlu mengisi <strong>kode asal JNE</strong> di Pengaturan (contoh <code>PDG21100</code> untuk Padang Panjang).
+            Admin perlu mengatur <strong>lokasi asal toko</strong> di Pengaturan agar ongkir bisa dihitung.
             Sementara waktu, silakan hubungi admin lewat WhatsApp.
         </div>
     <?php else: ?>
@@ -505,7 +449,7 @@ $total_final = $harga_produk + $ongkir_pilih;
             <section class="checkout-kartu">
                 <h2 class="checkout-kartu__judul">
                     <?php if ($destination_kode_pilih !== ''): ?>Kurir &amp; layanan
-                    <?php else: ?>Cari kecamatan tujuan
+                    <?php else: ?>Wilayah pengiriman
                     <?php endif; ?>
                 </h2>
 
@@ -513,7 +457,7 @@ $total_final = $harga_produk + $ongkir_pilih;
                     $auto_picked = !empty($_SESSION['checkout_destinasi_auto']);
                 ?>
                     <p class="checkout-destinasi-aktif">
-                        <span><?php echo $auto_picked ? 'Tujuan otomatis dari profil:' : 'Tujuan terpilih:'; ?></span>
+                        <span><?php echo $auto_picked ? 'Wilayah dari alamat profil:' : 'Wilayah pengiriman:'; ?></span>
                         <strong><?php echo htmlspecialchars($destination_label_pilih, ENT_QUOTES, 'UTF-8'); ?></strong>
                         <form method="post" action="<?php echo htmlspecialchars($u_self, ENT_QUOTES, 'UTF-8'); ?>" class="checkout-inline-form">
                             <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
@@ -571,22 +515,18 @@ $total_final = $harga_produk + $ongkir_pilih;
                     <?php endif; ?>
 
                 <?php else: ?>
-                    <?php if ($auto_no_match): ?>
-                        <p class="checkout-auto-cari checkout-auto-cari--peringatan">
-                            Kode pos profil (<strong><?php echo htmlspecialchars($kode_pos_profil, ENT_QUOTES, 'UTF-8'); ?></strong>) tidak bisa dicocokkan otomatis.
-                            Cari dan pilih kota/kecamatan tujuan JNE yang paling sesuai alamat di bawah.
-                        </p>
-                    <?php elseif (!empty($kode_pos_api_tidak_tersedia)): ?>
+                    <?php if ($wilayah_butuh_pilih && $hasil_cari !== null && $hasil_cari['ok']): ?>
                         <p class="checkout-auto-cari">
-                            Pencarian otomatis dari profil: <strong><?php echo htmlspecialchars($cari, ENT_QUOTES, 'UTF-8'); ?></strong>.
-                            Pilih lokasi tujuan JNE yang sesuai alamat pengiriman (cari nama kota/kecamatan, mis. dekat kode pos <strong><?php echo htmlspecialchars($kode_pos_profil, ENT_QUOTES, 'UTF-8'); ?></strong>).
+                            Pilih wilayah yang paling sesuai alamat di atas. Yang paling cocok ditandai <strong>Rekomendasi</strong>.
                         </p>
-                    <?php elseif ($cari_otomatis && $hasil_cari !== null && $hasil_cari['ok'] && is_array($hasil_cari['data']) && $hasil_cari['data'] !== []): ?>
-                        <p class="checkout-auto-cari">Dicari otomatis dari alamat profil: <strong><?php echo htmlspecialchars($cari, ENT_QUOTES, 'UTF-8'); ?></strong>. Pilih salah satu di bawah, atau cari ulang.</p>
+                    <?php elseif ($cari_dari_profil && ($hasil_cari === null || !$hasil_cari['ok'])): ?>
+                        <p class="checkout-auto-cari checkout-auto-cari--peringatan">
+                            Wilayah dari profil belum ketemu otomatis. Ketik <strong>nama kota</strong> terdekat (mis. Batusangkar, Padang, Jakarta Utara).
+                        </p>
                     <?php endif; ?>
                     <form method="get" class="checkout-cari-form">
-                        <label for="cari" class="visually-hidden">Cari</label>
-                        <input type="search" id="cari" name="cari" value="<?php echo htmlspecialchars($cari, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Ketik kota/kecamatan tujuan, mis. Batusangkar atau Jakarta Utara" required<?php echo $cari_otomatis ? '' : ' autofocus'; ?>>
+                        <label for="cari" class="visually-hidden">Cari kota tujuan</label>
+                        <input type="search" id="cari" name="cari" value="<?php echo htmlspecialchars($cari, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari nama kota / kecamatan tujuan"<?php echo ($wilayah_butuh_pilih && $hasil_cari !== null && $hasil_cari['ok']) ? '' : ' required'; ?><?php echo $wilayah_butuh_pilih ? '' : ' autofocus'; ?>>
                         <button type="submit" class="tombol-page-utama">Cari</button>
                     </form>
 
@@ -603,21 +543,10 @@ $total_final = $harga_produk + $ongkir_pilih;
                                         if (!is_array($r)) continue;
                                         $rid = rajaongkir_normalisasi_kode_desa((string) ($r['id'] ?? ''));
                                         if ($rid === '') continue;
-                                        $label = (string) ($r['label'] ?? '');
-                                        if ($label === '') {
-                                            $parts = array_filter([
-                                                (string) ($r['subdistrict_name'] ?? ''),
-                                                (string) ($r['district_name'] ?? ''),
-                                                (string) ($r['city_name'] ?? ''),
-                                                (string) ($r['province_name'] ?? ''),
-                                            ]);
-                                            $label = implode(', ', $parts);
-                                        }
-                                        $zip_row = trim((string) ($r['zip_code'] ?? $r['postal_code'] ?? ''));
-                                        if (preg_match('/^\d{5}$/', $zip_row) !== 1) {
-                                            $zip_row = '';
-                                        }
-                                        $zip_match = ($kode_pos_profil !== '' && $zip_row !== '' && $zip_row === $kode_pos_profil);
+                                        $label = rajaongkir_baris_label_tampilan($r);
+                                        if ($label === '') continue;
+                                        $skor_baris = rajaongkir_skor_cocok_lokasi($r, $profil);
+                                        $rekomendasi = $skor_baris >= $skor_rekomendasi_min;
                                     ?>
                                         <li>
                                             <form method="post" action="<?php echo htmlspecialchars($u_self, ENT_QUOTES, 'UTF-8'); ?>" class="checkout-destinasi-form">
@@ -625,14 +554,11 @@ $total_final = $harga_produk + $ongkir_pilih;
                                                 <input type="hidden" name="aksi" value="pilih_destinasi">
                                                 <input type="hidden" name="destination_id" value="<?php echo htmlspecialchars($rid, ENT_QUOTES, 'UTF-8'); ?>">
                                                 <input type="hidden" name="destination_label" value="<?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>">
-                                                <button type="submit" class="checkout-destinasi-baris<?php echo $zip_match ? ' checkout-destinasi-baris--match' : ''; ?>">
+                                                <button type="submit" class="checkout-destinasi-baris<?php echo $rekomendasi ? ' checkout-destinasi-baris--match' : ''; ?>">
                                                     <span class="checkout-destinasi-isi">
                                                         <strong><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></strong>
-                                                        <?php if ($zip_row !== ''): ?>
-                                                            <small class="checkout-destinasi-zip<?php echo $zip_match ? ' checkout-destinasi-zip--match' : ''; ?>">
-                                                                Kode pos: <?php echo htmlspecialchars($zip_row, ENT_QUOTES, 'UTF-8'); ?>
-                                                                <?php if ($zip_match): ?> ✓ sama dengan profil<?php endif; ?>
-                                                            </small>
+                                                        <?php if ($rekomendasi): ?>
+                                                            <small class="checkout-destinasi-zip checkout-destinasi-zip--match">Rekomendasi · sesuai alamat profil</small>
                                                         <?php endif; ?>
                                                     </span>
                                                     <span class="checkout-destinasi-pilih">Pilih →</span>
