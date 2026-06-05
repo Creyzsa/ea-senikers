@@ -30,7 +30,7 @@ if ($produk_terlaris === [] && $semua_produk !== []) {
 }
 
 $u_ig = 'https://www.instagram.com/' . rawurlencode((string) ($kontak_toko['sosial']['instagram'] ?? 'easenikers')) . '/';
-$u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial']['tiktok'] ?? 'easenikers'));
+$u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial']['tiktok'] ?? 'easecondbrandofficial'));
 ?>
 <!DOCTYPE html>
 <html lang="id">
