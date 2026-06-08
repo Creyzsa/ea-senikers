@@ -161,8 +161,14 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
             </header>
 
             <main class="admin-isi">
-                <h1 class="admin-judul-besar">Pesanan</h1>
-                <p class="admin-salam">Saring pesanan menurut status atau cari nama / email pembeli.</p>
+                <div class="admin-judul-baris">
+                    <h1 class="admin-judul-besar">Pesanan</h1>
+                    <span class="admin-live-dot" id="admin-pesanan-live" aria-live="polite">
+                        <span class="admin-live-dot__label">Live</span>
+                        <span class="admin-live-dot__status" id="admin-pesanan-live-status" hidden></span>
+                    </span>
+                </div>
+                <p class="admin-salam">Saring pesanan menurut status atau cari nama / email pembeli. Daftar diperbarui otomatis setiap 10 detik.</p>
 
                 <?php if ($flash): ?>
                     <div class="admin-alert admin-alert--sukses"><?php echo htmlspecialchars((string) $flash, ENT_QUOTES, 'UTF-8'); ?></div>
@@ -172,7 +178,7 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
                     <div class="admin-alert admin-alert--error"><?php echo htmlspecialchars((string) $flash_error, ENT_QUOTES, 'UTF-8'); ?></div>
                 <?php endif; ?>
 
-                <div class="admin-chip-bar" aria-label="Filter status">
+                <div id="admin-chip-pesanan" class="admin-chip-bar" aria-label="Filter status">
                     <?php $chip_aktif_semua = $filter_status_kunci === ''; ?>
                     <a class="admin-chip<?php echo $chip_aktif_semua ? ' admin-chip--aktif' : ''; ?>" href="<?php echo htmlspecialchars($url_semua_filter, ENT_QUOTES, 'UTF-8'); ?>">
                         Semua<span><?php echo htmlspecialchars((string) $total_semua, ENT_QUOTES, 'UTF-8'); ?></span>
@@ -263,5 +269,6 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
         </div>
     </div>
 <script src="../assets/js/pencarian-langsung.js" defer></script>
+<script src="../assets/js/admin-pesanan-realtime.js" defer></script>
 </body>
 </html>
