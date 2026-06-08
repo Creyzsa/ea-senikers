@@ -42,10 +42,13 @@ foreach (array_keys($kondisi_map) as $kondisi) {
 $kondisi_baru = $kondisi_baru ?? 'Baru';
 $kondisi_preloved = $kondisi_preloved ?? 'Second';
 
+$total_produk = count($daftar_produk);
+$total_brand = count($brand_map);
+
 $koleksi_utama = [
     [
         'judul' => 'Semua sneakers',
-        'sub' => count($daftar_produk) . ' produk tersedia',
+        'sub' => $total_produk . ' produk tersedia',
         'url' => $u_produk,
         'gambar' => $daftar_produk !== [] ? katalog_url_gambar_utama($daftar_produk[0]) : katalog_url_gambar_placeholder(),
     ],
@@ -57,11 +60,18 @@ $koleksi_utama = [
     ],
     [
         'judul' => 'Preloved terkurasi',
-        'sub' => 'Kondisi dijelaskan transparan',
+        'sub' => (string) ($kondisi_map[$kondisi_preloved]['jumlah'] ?? 0) . ' produk · kondisi transparan',
         'url' => aplikasi_url('produk?kondisi=' . rawurlencode($kondisi_preloved)),
         'gambar' => (string) ($kondisi_map[$kondisi_preloved]['gambar'] ?? katalog_url_gambar_placeholder()),
     ],
 ];
+
+function kategori_kelas_kondisi(string $kondisi): string
+{
+    return strcasecmp($kondisi, 'Baru') === 0
+        ? 'kategori-kondisi-card--baru'
+        : 'kategori-kondisi-card--preloved';
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -71,18 +81,25 @@ $koleksi_utama = [
     <title>Kategori - EA SENIKERS</title>
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
 </head>
-<body class="halaman-toko">
+<body class="halaman-toko halaman-kategori">
 
 <?php include __DIR__ . '/../../includes/bilah_pembeli.php'; ?>
 
-    <main class="kontainer-toko halaman-kategori" id="utama">
-        <section class="pembeli-page-hero" aria-labelledby="judul-kategori">
-            <div>
+    <main class="kontainer-toko" id="utama">
+        <section class="kategori-hero" aria-labelledby="judul-kategori">
+            <div class="kategori-hero__salin">
                 <p class="section-eyebrow">Kategori</p>
-                <h1 id="judul-kategori">Belanja berdasarkan koleksi yang paling relevan.</h1>
-                <p>Susuri produk berdasarkan merek, kondisi, dan koleksi utama EA SENIKERS agar pilihan terasa lebih cepat dan terarah.</p>
+                <h1 id="judul-kategori">Temukan sneakers favoritmu lebih cepat</h1>
+                <p>Jelajahi koleksi berdasarkan merek, kondisi, dan kurasi utama EA SENIKERS — dari produk baru hingga preloved terpilih.</p>
+                <ul class="kategori-hero__stats" aria-label="Ringkasan katalog">
+                    <li><strong><?php echo (int) $total_produk; ?></strong> produk</li>
+                    <li><strong><?php echo (int) $total_brand; ?></strong> brand</li>
+                    <li><strong><?php echo (int) count($kondisi_map); ?></strong> kondisi</li>
+                </ul>
             </div>
-            <a class="tombol-page-utama" href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">Lihat semua produk</a>
+            <div class="kategori-hero__aksi">
+                <a class="tombol-page-utama" href="<?php echo htmlspecialchars($u_produk, ENT_QUOTES, 'UTF-8'); ?>">Lihat semua produk</a>
+            </div>
         </section>
 
         <section class="kategori-section" aria-labelledby="judul-koleksi">
@@ -98,6 +115,9 @@ $koleksi_utama = [
                         <img src="<?php echo htmlspecialchars((string) $koleksi['gambar'], ENT_QUOTES, 'UTF-8'); ?>" alt="" width="480" height="360" loading="lazy">
                         <span class="kategori-feature-card__label"><?php echo htmlspecialchars((string) $koleksi['sub'], ENT_QUOTES, 'UTF-8'); ?></span>
                         <strong><?php echo htmlspecialchars((string) $koleksi['judul'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                        <span class="kategori-feature-card__panah" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                        </span>
                     </a>
                 <?php endforeach; ?>
             </div>
@@ -107,47 +127,62 @@ $koleksi_utama = [
             <div class="section-heading">
                 <div>
                     <p class="section-eyebrow">Merek</p>
-                    <h2 id="judul-merek">Temukan berdasarkan brand</h2>
+                    <h2 id="judul-merek">Belanja berdasarkan brand</h2>
                 </div>
-                <span><?php echo (string) count($brand_map); ?> brand</span>
+                <span class="kategori-section__badge"><?php echo (string) $total_brand; ?> brand</span>
             </div>
 
             <?php if ($brand_map === []): ?>
-                <div class="panel-pembeli-teks">
-                    <h1>Belum ada kategori merek</h1>
-                    <p>Kategori akan muncul otomatis ketika katalog produk sudah terisi.</p>
+                <div class="kategori-kosong">
+                    <p class="kategori-kosong__judul">Belum ada kategori merek</p>
+                    <p class="kategori-kosong__teks">Kategori akan muncul otomatis ketika katalog produk sudah terisi.</p>
                 </div>
             <?php else: ?>
-                <div class="kategori-grid">
+                <div class="kategori-brand-grid">
                     <?php foreach ($brand_map as $brand => $meta): ?>
-                        <a class="kategori-card" href="<?php echo htmlspecialchars(aplikasi_url('produk?brand=' . rawurlencode((string) $brand)), ENT_QUOTES, 'UTF-8'); ?>">
-                            <img class="kategori-card__gambar" src="<?php echo htmlspecialchars((string) $meta['gambar'], ENT_QUOTES, 'UTF-8'); ?>" alt="" width="160" height="160" loading="lazy">
-                            <span class="kategori-card__meta"><?php echo (int) $meta['jumlah']; ?> produk</span>
-                            <strong><?php echo htmlspecialchars((string) $brand, ENT_QUOTES, 'UTF-8'); ?></strong>
+                        <a class="kategori-brand-card" href="<?php echo htmlspecialchars(aplikasi_url('produk?brand=' . rawurlencode((string) $brand)), ENT_QUOTES, 'UTF-8'); ?>">
+                            <div class="kategori-brand-card__media">
+                                <img class="kategori-brand-card__gambar" src="<?php echo htmlspecialchars((string) $meta['gambar'], ENT_QUOTES, 'UTF-8'); ?>" alt="" width="200" height="200" loading="lazy">
+                            </div>
+                            <div class="kategori-brand-card__isi">
+                                <strong><?php echo htmlspecialchars((string) $brand, ENT_QUOTES, 'UTF-8'); ?></strong>
+                                <span><?php echo (int) $meta['jumlah']; ?> produk</span>
+                            </div>
                         </a>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </section>
 
-        <section class="kategori-section" aria-labelledby="judul-kondisi">
+        <section class="kategori-section kategori-section--akhir" aria-labelledby="judul-kondisi">
             <div class="section-heading">
                 <div>
                     <p class="section-eyebrow">Kondisi</p>
                     <h2 id="judul-kondisi">Pilih sesuai kebutuhan</h2>
                 </div>
             </div>
-            <div class="kategori-chip-panel">
-                <?php foreach ($kondisi_map as $kondisi => $meta): ?>
-                    <a href="<?php echo htmlspecialchars(aplikasi_url('produk?kondisi=' . rawurlencode((string) $kondisi)), ENT_QUOTES, 'UTF-8'); ?>">
-                        <strong><?php echo htmlspecialchars(kondisi_label_pembeli((string) $kondisi), ENT_QUOTES, 'UTF-8'); ?></strong>
-                        <span><?php echo (int) $meta['jumlah']; ?> produk</span>
-                    </a>
-                <?php endforeach; ?>
-                <?php if ($kondisi_map === []): ?>
-                    <p>Data kondisi produk belum tersedia.</p>
-                <?php endif; ?>
-            </div>
+            <?php if ($kondisi_map === []): ?>
+                <div class="kategori-kosong">
+                    <p class="kategori-kosong__judul">Data kondisi belum tersedia</p>
+                    <p class="kategori-kosong__teks">Kondisi produk akan tampil setelah katalog terisi.</p>
+                </div>
+            <?php else: ?>
+                <div class="kategori-kondisi-grid">
+                    <?php foreach ($kondisi_map as $kondisi => $meta): ?>
+                        <a class="kategori-kondisi-card <?php echo htmlspecialchars(kategori_kelas_kondisi((string) $kondisi), ENT_QUOTES, 'UTF-8'); ?>"
+                           href="<?php echo htmlspecialchars(aplikasi_url('produk?kondisi=' . rawurlencode((string) $kondisi)), ENT_QUOTES, 'UTF-8'); ?>">
+                            <div class="kategori-kondisi-card__media">
+                                <img src="<?php echo htmlspecialchars((string) $meta['gambar'], ENT_QUOTES, 'UTF-8'); ?>" alt="" width="120" height="120" loading="lazy">
+                            </div>
+                            <div class="kategori-kondisi-card__isi">
+                                <strong><?php echo htmlspecialchars(kondisi_label_pembeli((string) $kondisi), ENT_QUOTES, 'UTF-8'); ?></strong>
+                                <span><?php echo (int) $meta['jumlah']; ?> produk</span>
+                                <span class="kategori-kondisi-card__cta">Lihat koleksi</span>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </section>
     </main>
 
