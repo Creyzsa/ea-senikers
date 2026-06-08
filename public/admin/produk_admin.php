@@ -96,17 +96,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!in_array($form['kondisi'], ['Baru', 'Second'], true)) {
             $errors[] = 'Kondisi produk tidak valid.';
         }
-        if (!ctype_digit($form['harga']) || (int) $form['harga'] < 0) {
-            $errors[] = 'Harga harus berupa angka non-negatif.';
+        $hargaAngka = admin_produk_parse_angka($form['harga']);
+        if ($hargaAngka === null || $hargaAngka <= 0) {
+            $errors[] = 'Harga harus berupa angka lebih dari 0.';
         }
-        if (!ctype_digit($form['berat_gram']) || (int) $form['berat_gram'] <= 0 || (int) $form['berat_gram'] > 50000) {
+        $beratAngka = admin_produk_parse_angka($form['berat_gram']);
+        if ($beratAngka === null || $beratAngka <= 0 || $beratAngka > 50000) {
             $errors[] = 'Berat (gram) wajib diisi, antara 1 sampai 50.000 gram.';
         }
 
         if ($errors === []) {
             $payload = $form;
-            $payload['harga'] = (int) $form['harga'];
-            $payload['berat_gram'] = (int) $form['berat_gram'];
+            $payload['harga'] = $hargaAngka;
+            $payload['berat_gram'] = $beratAngka;
 
             try {
                 if ($idProdukPost !== '') {
@@ -315,7 +317,7 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                         </label>
                         <label class="admin-field">
                             <span>Harga (Rp)</span>
-                            <input type="number" name="harga" value="<?php echo htmlspecialchars($form['harga'], ENT_QUOTES, 'UTF-8'); ?>" min="0" step="1" required>
+                            <input type="number" name="harga" value="<?php echo htmlspecialchars($form['harga'], ENT_QUOTES, 'UTF-8'); ?>" min="1" step="1" required>
                         </label>
                         <label class="admin-field">
                             <span>Berat (gram)</span>

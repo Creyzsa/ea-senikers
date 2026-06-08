@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /**
- * Repositori admin produk — operasi CRUD untuk panel admin.
+ * Repositori admin produk — operasi CRUD untuk panel admin (PDO langsung).
  */
-require_once __DIR__ . '/../auth_db/supabase_rest.php';
+require_once __DIR__ . '/../auth_db/database.php';
 require_once __DIR__ . '/../url_bantu.php';
 require_once __DIR__ . '/katalog_produk.php';
 
@@ -16,7 +16,25 @@ function admin_daftar_ukuran_default(): array
 }
 
 /**
+ * Ubah input angka (mis. "1.500.000") menjadi integer non-negatif.
+ */
+function admin_produk_parse_angka(string $raw): ?int
+{
+    $raw = trim($raw);
+    if ($raw === '') {
+        return null;
+    }
+    $normalized = preg_replace('/\D/', '', $raw);
+    if ($normalized === '' || !ctype_digit($normalized)) {
+        return null;
+    }
+
+    return (int) $normalized;
+}
+
+/**
  * Normalisasi array stok ukuran menjadi array dengan semua ukuran default.
+ *
  * @param array<string, mixed> $stok_input
  * @return array<string, int>
  */
@@ -27,6 +45,7 @@ function admin_normalisasi_stok_ukuran(array $stok_input): array
         $nilai = $stok_input[$uk] ?? 0;
         $hasil[$uk] = is_numeric($nilai) ? (int) $nilai : 0;
     }
+
     return $hasil;
 }
 
@@ -57,7 +76,88 @@ function admin_produk_ambil_semua(string $query = ''): array
             $hasil[] = $p;
         }
     }
+
     return $hasil;
+}
+
+/**
+ * @param array<string, mixed> $payload
+ */
+function admin_produk_validasi_payload(array $payload): array
+{
+    $nama = trim((string) ($payload['nama_produk'] ?? ''));
+    $brand = trim((string) ($payload['brand'] ?? ''));
+    $kategori = trim((string) ($payload['kategori'] ?? ''));
+    $kondisi = trim((string) ($payload['kondisi'] ?? ''));
+    $harga = (int) ($payload['harga'] ?? 0);
+    $berat_gram = (int) ($payload['berat_gram'] ?? 0);
+    $deskripsi = trim((string) ($payload['deskripsi'] ?? ''));
+
+    if ($nama === '') {
+        throw new RuntimeException('Nama produk wajib diisi.');
+    }
+    if ($brand === '') {
+        throw new RuntimeException('Brand wajib diisi.');
+    }
+    if ($kategori === '') {
+        throw new RuntimeException('Kategori wajib diisi.');
+    }
+    if (!in_array($kondisi, ['Baru', 'Second'], true)) {
+        throw new RuntimeException('Kondisi produk tidak valid.');
+    }
+    if ($harga <= 0) {
+        throw new RuntimeException('Harga harus lebih dari 0.');
+    }
+    if ($berat_gram <= 0 || $berat_gram > 50000) {
+        throw new RuntimeException('Berat produk wajib antara 1 sampai 50.000 gram.');
+    }
+
+    return [
+        'nama_produk' => $nama,
+        'brand' => $brand,
+        'kategori' => $kategori,
+        'kondisi' => $kondisi,
+        'harga' => $harga,
+        'berat_gram' => $berat_gram,
+        'deskripsi' => $deskripsi,
+    ];
+}
+
+function admin_produk_pastikan_id_valid(string $id_produk): void
+{
+    if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id_produk)) {
+        throw new RuntimeException('ID produk tidak valid.');
+    }
+}
+
+function admin_produk_folder_gambar(): string
+{
+    $folder = easenikers_folder_public() . '/' . KATALOG_FOLDER_GAMBAR;
+    if (!is_dir($folder) && !mkdir($folder, 0755, true) && !is_dir($folder)) {
+        throw new RuntimeException('Folder upload gambar produk tidak dapat dibuat.');
+    }
+
+    return $folder;
+}
+
+/**
+ * @param array<string, int> $stok_ukuran
+ */
+function admin_produk_simpan_stok_ukuran(PDO $pdo, string $id_produk, array $stok_ukuran): void
+{
+    $hapus = $pdo->prepare('DELETE FROM produk_ukuran WHERE id_produk = :id');
+    $hapus->execute(['id' => $id_produk]);
+
+    $insert = $pdo->prepare(
+        'INSERT INTO produk_ukuran (id_produk, ukuran, stok) VALUES (:id, :uk, :stok)'
+    );
+    foreach ($stok_ukuran as $ukuran => $stok) {
+        $insert->execute([
+            'id' => $id_produk,
+            'uk' => (string) $ukuran,
+            'stok' => max(0, (int) $stok),
+        ]);
+    }
 }
 
 /**
@@ -65,171 +165,160 @@ function admin_produk_ambil_semua(string $query = ''): array
  * @param array<string, int> $stok_ukuran
  * @param array<string, mixed> $files
  * @return string ID produk baru
- * @throws Exception
  */
 function admin_produk_tambah(array $payload, array $stok_ukuran, array $files): string
 {
-    // Validasi payload
-    $nama = trim((string) ($payload['nama_produk'] ?? ''));
-    $brand = trim((string) ($payload['brand'] ?? ''));
-    $kategori = trim((string) ($payload['kategori'] ?? ''));
-    $kondisi = trim((string) ($payload['kondisi'] ?? ''));
-    $harga = (int) ($payload['harga'] ?? 0);
-    $berat_gram = (int) ($payload['berat_gram'] ?? 0);
-    $deskripsi = trim((string) ($payload['deskripsi'] ?? ''));
+    $data = admin_produk_validasi_payload($payload);
+    $pdo = koneksi_database();
+    $pdo->beginTransaction();
 
-    if ($nama === '' || $harga <= 0) {
-        throw new Exception('Nama produk dan harga wajib diisi.');
-    }
-    if ($berat_gram <= 0) {
-        throw new Exception('Berat produk wajib diisi (gram, lebih dari 0).');
-    }
-
-    // Insert produk
-    $produk_data = [
-        'nama_produk' => $nama,
-        'brand' => $brand,
-        'kategori' => $kategori,
-        'kondisi' => $kondisi,
-        'harga' => $harga,
-        'berat_gram' => $berat_gram,
-        'deskripsi' => $deskripsi,
-    ];
-
-    $hasil = supabase_rest_request('POST', '/rest/v1/produk', [], $produk_data);
-    if (!$hasil['ok']) {
-        throw new Exception('Gagal menambah produk: ' . json_encode($hasil));
-    }
-
-    $data_baru = $hasil['data'];
-    if (is_array($data_baru) && isset($data_baru[0]) && is_array($data_baru[0])) {
-        $data_baru = $data_baru[0];
-    }
-    $id_produk = is_array($data_baru) ? (string) ($data_baru['id_produk'] ?? '') : '';
-    if ($id_produk === '') {
-        throw new Exception('ID produk tidak diterima dari database.');
-    }
-
-    // Insert stok ukuran (semua ukuran, termasuk stok 0)
-    foreach ($stok_ukuran as $ukuran => $stok) {
-        supabase_rest_request('POST', '/rest/v1/produk_ukuran', [], [
-            'id_produk' => $id_produk,
-            'ukuran' => $ukuran,
-            'stok' => max(0, (int) $stok),
+    try {
+        $stmt = $pdo->prepare(
+            'INSERT INTO produk (nama_produk, brand, kategori, kondisi, harga, berat_gram, deskripsi)
+             VALUES (:nama, :brand, :kat, :kond, :harga, :berat, :desk)
+             RETURNING id_produk'
+        );
+        $stmt->execute([
+            'nama' => $data['nama_produk'],
+            'brand' => $data['brand'],
+            'kat' => $data['kategori'],
+            'kond' => $data['kondisi'],
+            'harga' => $data['harga'],
+            'berat' => $data['berat_gram'],
+            'desk' => $data['deskripsi'],
         ]);
+        $row = $stmt->fetch();
+        $id_produk = is_array($row) ? (string) ($row['id_produk'] ?? '') : '';
+        if ($id_produk === '') {
+            throw new RuntimeException('ID produk tidak diterima dari database.');
+        }
+
+        admin_produk_simpan_stok_ukuran($pdo, $id_produk, $stok_ukuran);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        if ($e instanceof RuntimeException) {
+            throw $e;
+        }
+        throw new RuntimeException('Gagal menambah produk ke database.', 0, $e);
     }
 
-    // Upload gambar jika ada
     admin_produk_upload_gambar($id_produk, $files);
 
     return $id_produk;
 }
 
 /**
- * @param string $id_produk
  * @param array<string, mixed> $payload
  * @param array<string, int> $stok_ukuran
  * @param array<string, mixed> $files
- * @throws Exception
  */
 function admin_produk_update(string $id_produk, array $payload, array $stok_ukuran, array $files): void
 {
-    // Validasi
-    $nama = trim((string) ($payload['nama_produk'] ?? ''));
-    $brand = trim((string) ($payload['brand'] ?? ''));
-    $kategori = trim((string) ($payload['kategori'] ?? ''));
-    $kondisi = trim((string) ($payload['kondisi'] ?? ''));
-    $harga = (int) ($payload['harga'] ?? 0);
-    $berat_gram = (int) ($payload['berat_gram'] ?? 0);
-    $deskripsi = trim((string) ($payload['deskripsi'] ?? ''));
+    admin_produk_pastikan_id_valid($id_produk);
+    $data = admin_produk_validasi_payload($payload);
+    $pdo = koneksi_database();
+    $pdo->beginTransaction();
 
-    if ($nama === '' || $harga <= 0) {
-        throw new Exception('Nama produk dan harga wajib diisi.');
-    }
-    if ($berat_gram <= 0) {
-        throw new Exception('Berat produk wajib diisi (gram, lebih dari 0).');
-    }
-
-    // Update produk
-    $produk_data = [
-        'nama_produk' => $nama,
-        'brand' => $brand,
-        'kategori' => $kategori,
-        'kondisi' => $kondisi,
-        'harga' => $harga,
-        'berat_gram' => $berat_gram,
-        'deskripsi' => $deskripsi,
-    ];
-
-    $hasil = supabase_rest_request('PATCH', '/rest/v1/produk', ['id_produk' => 'eq.' . $id_produk], $produk_data);
-    if (!$hasil['ok']) {
-        throw new Exception('Gagal update produk: ' . json_encode($hasil));
-    }
-
-    // Update stok ukuran - hapus yang lama, insert yang baru
-    supabase_rest_request('DELETE', '/rest/v1/produk_ukuran', ['id_produk' => 'eq.' . $id_produk]);
-
-    foreach ($stok_ukuran as $ukuran => $stok) {
-        supabase_rest_request('POST', '/rest/v1/produk_ukuran', [], [
-            'id_produk' => $id_produk,
-            'ukuran' => $ukuran,
-            'stok' => max(0, (int) $stok),
+    try {
+        $stmt = $pdo->prepare(
+            'UPDATE produk
+             SET nama_produk = :nama, brand = :brand, kategori = :kat, kondisi = :kond,
+                 harga = :harga, berat_gram = :berat, deskripsi = :desk
+             WHERE id_produk = :id'
+        );
+        $stmt->execute([
+            'nama' => $data['nama_produk'],
+            'brand' => $data['brand'],
+            'kat' => $data['kategori'],
+            'kond' => $data['kondisi'],
+            'harga' => $data['harga'],
+            'berat' => $data['berat_gram'],
+            'desk' => $data['deskripsi'],
+            'id' => $id_produk,
         ]);
+        if ($stmt->rowCount() === 0) {
+            $cek = $pdo->prepare('SELECT 1 FROM produk WHERE id_produk = :id LIMIT 1');
+            $cek->execute(['id' => $id_produk]);
+            if (!$cek->fetch()) {
+                throw new RuntimeException('Produk tidak ditemukan.');
+            }
+        }
+
+        admin_produk_simpan_stok_ukuran($pdo, $id_produk, $stok_ukuran);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        if ($e instanceof RuntimeException) {
+            throw $e;
+        }
+        throw new RuntimeException('Gagal memperbarui produk.', 0, $e);
     }
 
-    // Upload gambar baru jika ada
     admin_produk_upload_gambar($id_produk, $files);
 }
 
-/**
- * @param string $id_produk
- * @throws Exception
- */
 function admin_produk_hapus(string $id_produk): void
 {
-    // Hapus gambar dulu
-    $gambar = supabase_rest_request('GET', '/rest/v1/produk_gambar', ['id_produk' => 'eq.' . $id_produk]);
-    if ($gambar['ok'] && is_array($gambar['data'])) {
-        foreach ($gambar['data'] as $g) {
-            admin_produk_hapus_gambar_file((string) ($g['nama_file'] ?? ''));
-        }
+    admin_produk_pastikan_id_valid($id_produk);
+    $pdo = koneksi_database();
+
+    $stmtG = $pdo->prepare('SELECT nama_file FROM produk_gambar WHERE id_produk = :id');
+    $stmtG->execute(['id' => $id_produk]);
+    foreach ($stmtG->fetchAll() as $g) {
+        admin_produk_hapus_gambar_file((string) ($g['nama_file'] ?? ''));
     }
 
-    // Hapus dari database
-    supabase_rest_request('DELETE', '/rest/v1/produk_gambar', ['id_produk' => 'eq.' . $id_produk]);
-    supabase_rest_request('DELETE', '/rest/v1/produk_ukuran', ['id_produk' => 'eq.' . $id_produk]);
-    $hasil = supabase_rest_request('DELETE', '/rest/v1/produk', ['id_produk' => 'eq.' . $id_produk]);
-
-    if (!$hasil['ok']) {
-        throw new Exception('Gagal hapus produk.');
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare('DELETE FROM produk_gambar WHERE id_produk = :id')->execute(['id' => $id_produk]);
+        $pdo->prepare('DELETE FROM produk_ukuran WHERE id_produk = :id')->execute(['id' => $id_produk]);
+        $stmt = $pdo->prepare('DELETE FROM produk WHERE id_produk = :id');
+        $stmt->execute(['id' => $id_produk]);
+        if ($stmt->rowCount() === 0) {
+            throw new RuntimeException('Produk tidak ditemukan.');
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        if ($e instanceof RuntimeException) {
+            throw $e;
+        }
+        throw new RuntimeException('Gagal menghapus produk.', 0, $e);
     }
 }
 
-/**
- * @param string $id_produk
- * @param string $id_gambar
- * @throws Exception
- */
 function admin_produk_hapus_gambar(string $id_produk, string $id_gambar): void
 {
-    // Ambil nama file
-    $hasil = supabase_rest_request('GET', '/rest/v1/produk_gambar', [
-        'id_gambar' => 'eq.' . $id_gambar,
-        'id_produk' => 'eq.' . $id_produk,
-    ]);
-
-    if ($hasil['ok'] && is_array($hasil['data']) && isset($hasil['data'][0])) {
-        $nama_file = (string) ($hasil['data'][0]['nama_file'] ?? '');
-        admin_produk_hapus_gambar_file($nama_file);
+    admin_produk_pastikan_id_valid($id_produk);
+    if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id_gambar)) {
+        throw new RuntimeException('ID gambar tidak valid.');
     }
 
-    // Hapus dari database
-    supabase_rest_request('DELETE', '/rest/v1/produk_gambar', ['id_gambar' => 'eq.' . $id_gambar]);
+    $pdo = koneksi_database();
+    $stmt = $pdo->prepare(
+        'SELECT nama_file FROM produk_gambar WHERE id_gambar = :gid AND id_produk = :pid LIMIT 1'
+    );
+    $stmt->execute(['gid' => $id_gambar, 'pid' => $id_produk]);
+    $row = $stmt->fetch();
+    if (!is_array($row)) {
+        throw new RuntimeException('Gambar produk tidak ditemukan.');
+    }
+
+    $nama_file = (string) ($row['nama_file'] ?? '');
+    $pdo->prepare('DELETE FROM produk_gambar WHERE id_gambar = :gid')->execute(['gid' => $id_gambar]);
+    admin_produk_hapus_gambar_file($nama_file);
 }
 
 /**
  * Upload gambar untuk produk.
- * @param string $id_produk
+ *
  * @param array<string, mixed> $files
  */
 function admin_produk_upload_gambar(string $id_produk, array $files): void
@@ -242,20 +331,37 @@ function admin_produk_upload_gambar(string $id_produk, array $files): void
     $names = (array) ($gambar_files['name'] ?? []);
     $tmp_names = (array) ($gambar_files['tmp_name'] ?? []);
     $errors = (array) ($gambar_files['error'] ?? []);
+    $sizes = (array) ($gambar_files['size'] ?? []);
+
+    $folder = admin_produk_folder_gambar();
+    $pdo = koneksi_database();
+    $stmtUrutan = $pdo->prepare('SELECT COALESCE(MAX(urutan), -1) AS maks FROM produk_gambar WHERE id_produk = :id');
+    $stmtUrutan->execute(['id' => $id_produk]);
+    $urutan = (int) (($stmtUrutan->fetch()['maks'] ?? -1));
+    $stmtInsert = $pdo->prepare(
+        'INSERT INTO produk_gambar (id_produk, nama_file, urutan) VALUES (:pid, :nama, :urut)'
+    );
 
     foreach ($names as $i => $name) {
-        if (($errors[$i] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($tmp_names[$i])) {
+        $err = (int) ($errors[$i] ?? UPLOAD_ERR_NO_FILE);
+        if ($err === UPLOAD_ERR_NO_FILE) {
             continue;
         }
+        if ($err !== UPLOAD_ERR_OK) {
+            throw new RuntimeException('Upload gambar gagal (kode error ' . $err . ').');
+        }
 
-        $tmp = (string) $tmp_names[$i];
-        if ((int) ($gambar_files['size'][$i] ?? 0) > 5 * 1024 * 1024) {
-            continue;
+        $tmp = (string) ($tmp_names[$i] ?? '');
+        if ($tmp === '' || !is_uploaded_file($tmp)) {
+            throw new RuntimeException('File gambar tidak valid.');
+        }
+        if ((int) ($sizes[$i] ?? 0) > 3 * 1024 * 1024) {
+            throw new RuntimeException('Ukuran gambar melebihi 3MB.');
         }
 
         $info = @getimagesize($tmp);
         if ($info === false) {
-            continue;
+            throw new RuntimeException('File bukan gambar yang didukung.');
         }
         $ext_map = [
             IMAGETYPE_JPEG => 'jpg',
@@ -264,34 +370,33 @@ function admin_produk_upload_gambar(string $id_produk, array $files): void
         ];
         $ext = $ext_map[$info[2]] ?? '';
         if ($ext === '') {
-            continue;
+            throw new RuntimeException('Format gambar harus JPG, PNG, atau WEBP.');
         }
 
         $nama_file = uniqid('produk_', true) . '.' . $ext;
-        $path = dirname(__DIR__, 2) . '/public/assets/images/produk/' . $nama_file;
+        $path = $folder . '/' . $nama_file;
 
-        if (move_uploaded_file($tmp_names[$i], $path)) {
-            supabase_rest_request('POST', '/rest/v1/produk_gambar', [], [
-                'id_produk' => $id_produk,
-                'nama_file' => $nama_file,
-                'urutan' => 0, // Sementara
-            ]);
+        if (!move_uploaded_file($tmp, $path)) {
+            throw new RuntimeException('Gagal menyimpan file gambar ke server.');
         }
+
+        ++$urutan;
+        $stmtInsert->execute([
+            'pid' => $id_produk,
+            'nama' => $nama_file,
+            'urut' => $urutan,
+        ]);
     }
 }
 
-/**
- * Hapus file gambar dari filesystem.
- * @param string $nama_file
- */
 function admin_produk_hapus_gambar_file(string $nama_file): void
 {
     $nama_file = basename($nama_file);
     if ($nama_file === '' || preg_match('/^[a-zA-Z0-9._-]+$/', $nama_file) !== 1) {
         return;
     }
-    $path = dirname(__DIR__, 2) . '/public/assets/images/produk/' . $nama_file;
-    if (file_exists($path)) {
+    $path = admin_produk_folder_gambar() . '/' . $nama_file;
+    if (is_file($path)) {
         unlink($path);
     }
 }
