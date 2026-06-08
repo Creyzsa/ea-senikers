@@ -216,8 +216,6 @@ function pakasir_http_json(string $method, string $url, ?array $body = null, ?ar
     if ($body !== null) {
         $json = json_encode($body, JSON_UNESCAPED_UNICODE);
         if (!is_string($json)) {
-            curl_close($ch);
-
             return ['ok' => false, 'error' => 'Payload tidak valid.'];
         }
         $opts[CURLOPT_POSTFIELDS] = $json;
@@ -238,7 +236,6 @@ function pakasir_http_json(string $method, string $url, ?array $body = null, ?ar
     $errno = curl_errno($ch);
     $err = curl_error($ch);
     $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
 
     if ($errno !== 0 || !is_string($raw)) {
         return ['ok' => false, 'error' => $err !== '' ? $err : 'Permintaan ke Pakasir gagal.'];
