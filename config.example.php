@@ -69,6 +69,7 @@ define('URL_APLIKASI', 'https://www.easenikers.shop');   // PROD. Untuk local de
  * - Saran: update juga Email Templates di Supabase supaya pakai token_hash (lihat komentar di includes/auth_db/supabase_auth.php).
  */
 
+/** Legacy — webhook Pakasir tidak memakai secret ini (verifikasi via API Pakasir). */
 define('PAYMENT_CALLBACK_SECRET', '');
 
 /** Kode asal JNE toko (3 huruf + 5 angka). EA Senikers Padang Panjang = PDG21100 */

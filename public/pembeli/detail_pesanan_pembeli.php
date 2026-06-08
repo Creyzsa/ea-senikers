@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../includes/auth_db/sesi.php';
 require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
 require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
+require_once __DIR__ . '/../../includes/integrasi/pakasir.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
@@ -31,6 +32,43 @@ try {
 if ($order === null) {
     header('Location: ' . aplikasi_url('pesanan'));
     exit;
+}
+
+$total_awal = (int) ($order['total_price'] ?? 0);
+$status_awal = (string) ($order['status'] ?? 'pending');
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') === 'bayar_pakasir') {
+    $metode_bayar = strtolower(trim((string) ($_POST['metode_pakasir'] ?? '')));
+    if ($metode_bayar === '') {
+        $metode_bayar = pakasir_konfigurasi()['metode_default'];
+    }
+    $hasil_bayar = pakasir_buat_pembayaran($metode_bayar, $order_id, $total_awal);
+    if (!$hasil_bayar['ok']) {
+        $_SESSION['flash_pesanan_bayar_error'] = (string) ($hasil_bayar['error'] ?? 'Gagal membuat pembayaran.');
+        header('Location: ' . aplikasi_url('detail-pesanan?id=' . $order_id));
+        exit;
+    }
+    $label = 'Pakasir · ' . pakasir_label_metode((string) ($hasil_bayar['payment_method'] ?? $metode_bayar));
+    pesanan_perbarui_metode_bayar($order_id, $label);
+    $url_bayar = trim((string) ($hasil_bayar['payment_url'] ?? ''));
+    if ($url_bayar === '') {
+        $_SESSION['flash_pesanan_bayar_error'] = 'URL pembayaran tidak tersedia.';
+        header('Location: ' . aplikasi_url('detail-pesanan?id=' . $order_id));
+        exit;
+    }
+    header('Location: ' . $url_bayar);
+    exit;
+}
+
+if ($status_awal === 'pending' && pakasir_siap() && $total_awal >= 500) {
+    $sinkron = pakasir_sinkronkan_pesanan_db($order_id, $total_awal, $status_awal);
+    if ($sinkron === 'paid') {
+        $order = pesanan_ambil_detail_untuk_user($order_id, $id_pengguna);
+        if ($order === null) {
+            header('Location: ' . aplikasi_url('pesanan'));
+            exit;
+        }
+    }
 }
 
 $bilah_pembeli_aktif = 'pesanan';
@@ -71,6 +109,12 @@ $u_list = aplikasi_url('pesanan');
 
 $flash_baru = $_SESSION['flash_pesanan_baru'] ?? null;
 unset($_SESSION['flash_pesanan_baru']);
+$flash_bayar_error = $_SESSION['flash_pesanan_bayar_error'] ?? null;
+unset($_SESSION['flash_pesanan_bayar_error']);
+$flash_bayar_kembali = isset($_GET['bayar']) && (string) $_GET['bayar'] === 'kembali';
+$pakasir_aktif = pakasir_siap();
+$pakasir_metode_opsi = pakasir_daftar_metode();
+$pakasir_metode_default = pakasir_konfigurasi()['metode_default'];
 
 $wa_pesanan = '';
 foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
@@ -109,6 +153,15 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
 
     <?php if (is_string($flash_baru) && $flash_baru !== ''): ?>
         <div class="pesanan-flash-sukses" role="status"><?php echo htmlspecialchars($flash_baru, ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
+    <?php if (is_string($flash_bayar_error) && $flash_bayar_error !== ''): ?>
+        <div class="pesanan-peringatan" role="alert"><?php echo htmlspecialchars($flash_bayar_error, ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
+    <?php if ($flash_bayar_kembali && $status === 'pending'): ?>
+        <div class="pesanan-peringatan" role="status">Pembayaran belum terkonfirmasi. Jika sudah bayar, tunggu beberapa saat atau klik <strong>Bayar sekarang</strong> lagi.</div>
+    <?php endif; ?>
+    <?php if ($flash_bayar_kembali && $status === 'paid'): ?>
+        <div class="pesanan-flash-sukses" role="status">Pembayaran berhasil dikonfirmasi. Pesanan sedang diproses.</div>
     <?php endif; ?>
 
     <?php if ($batal): ?>
@@ -201,8 +254,10 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                     <span class="pesanan-ringkasan-nilai">
                         <?php if ($bayar !== ''): ?>
                             <?php echo htmlspecialchars($bayar, ENT_QUOTES, 'UTF-8'); ?>
+                        <?php elseif ($pakasir_aktif && $status === 'pending'): ?>
+                            <em class="pesanan-ringkasan-kosong">Belum dibayar (Pakasir)</em>
                         <?php else: ?>
-                            <em class="pesanan-ringkasan-kosong">Menyusul (Tripay)</em>
+                            <em class="pesanan-ringkasan-kosong">—</em>
                         <?php endif; ?>
                     </span>
                 </div>
@@ -219,6 +274,25 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                     <span><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
             </div>
+
+            <?php if ($status === 'pending' && $pakasir_aktif && !$batal): ?>
+            <div class="pesanan-panel pesanan-panel--bayar">
+                <h2 class="pesanan-panel__judul">Pembayaran Pakasir</h2>
+                <p class="pesanan-bayar-teks">Total tagihan: <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong> (belum termasuk biaya admin channel).</p>
+                <form method="post" action="<?php echo htmlspecialchars(aplikasi_url('detail-pesanan?id=' . $order_id), ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="hidden" name="aksi" value="bayar_pakasir">
+                    <label class="pesanan-bayar-label" for="metode-pakasir">Metode pembayaran</label>
+                    <select id="metode-pakasir" name="metode_pakasir" class="pesanan-bayar-select">
+                        <?php foreach ($pakasir_metode_opsi as $kode => $label_metode): ?>
+                            <option value="<?php echo htmlspecialchars($kode, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $kode === $pakasir_metode_default ? ' selected' : ''; ?>><?php echo htmlspecialchars($label_metode, ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="submit" class="tombol-page-utama pesanan-bayar-tombol">Bayar sekarang</button>
+                </form>
+            </div>
+            <?php elseif ($status === 'pending' && !$pakasir_aktif && !$batal): ?>
+            <div class="pesanan-peringatan" role="status">Pembayaran online belum aktif. Hubungi toko via WhatsApp untuk konfirmasi transfer.</div>
+            <?php endif; ?>
 
             <?php if ($wa_pesanan !== ''): ?>
                 <a class="pesanan-bantuan-wa" href="<?php echo htmlspecialchars($wa_pesanan, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">

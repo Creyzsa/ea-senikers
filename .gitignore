@@ -2,7 +2,7 @@
 config.php
 .env
 
-# Pengaturan admin (berisi API key RajaOngkir & Tripay, nomor WA, dll)
+# Pengaturan admin (berisi API key Pakasir, nomor WA, dll)
 # File ini dibuat otomatis oleh panel Pengaturan admin saat disimpan.
 includes/pengaturan_toko_admin.json
 

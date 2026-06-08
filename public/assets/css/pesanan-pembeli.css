@@ -569,3 +569,39 @@
     font-size: 0.92rem;
     line-height: 1.5;
 }
+
+.pesanan-panel--bayar {
+    margin-top: 1rem;
+}
+
+.pesanan-bayar-teks {
+    margin: 0 0 0.85rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--teks-redup);
+}
+
+.pesanan-bayar-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--teks-utama);
+}
+
+.pesanan-bayar-select {
+    width: 100%;
+    margin-bottom: 0.85rem;
+    padding: 0.55rem 0.65rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.pesanan-bayar-tombol {
+    width: 100%;
+    border: none;
+    cursor: pointer;
+}

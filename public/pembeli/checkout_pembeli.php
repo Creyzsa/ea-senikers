@@ -254,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['aksi'] ?? '') ===
     unset($_SESSION['checkout_pesanan'], $_SESSION['checkout_destinasi'], $_SESSION['checkout_kurir']);
     checkout_hapus_cookie_baris();
     keranjang_kosongkan();
-    $_SESSION['flash_pesanan_baru'] = 'Pesanan #' . $order_id . ' berhasil dibuat. Selanjutnya menunggu pembayaran.';
+    $_SESSION['flash_pesanan_baru'] = 'Pesanan #' . $order_id . ' berhasil dibuat. Lanjutkan pembayaran via Pakasir di bawah.';
     header('Location: ' . aplikasi_url('detail-pesanan?id=' . $order_id));
     exit;
 }
@@ -623,7 +623,7 @@ $total_final = $harga_produk + $ongkir_pilih;
                         <input type="hidden" name="aksi" value="konfirmasi">
                         <button type="submit" class="tombol-page-utama checkout-tombol-konfirmasi">Konfirmasi pesanan</button>
                     </form>
-                    <p class="checkout-catatan-bayar">Pembayaran akan dilakukan via Tripay (segera aktif). Sementara hubungi WA toko setelah pesanan dibuat.</p>
+                    <p class="checkout-catatan-bayar">Setelah pesanan dibuat, lanjutkan pembayaran di halaman detail pesanan melalui <strong>Pakasir</strong> (QRIS, VA, PayPal).</p>
                 <?php endif; ?>
             </div>
         </aside>

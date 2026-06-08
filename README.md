@@ -2,7 +2,7 @@
 
 Website e-commerce penjualan sneakers (baru & preloved) berbasis PHP Native dan Supabase. Project tugas yang dibuat untuk membantu proses penjualan sepatu secara online, mulai dari pendaftaran pengguna, katalog produk, keranjang belanja, hingga pengelolaan pesanan oleh admin.
 
-**Status:** Tahap 1 selesai (siap input data). Tahap 2 (integrasi RajaOngkir + Tripay) menyusul setelah akun layanan siap.
+**Status:** Tahap 1 selesai (siap input data). Tahap 2: ongkir JNE aktif; pembayaran Pakasir terintegrasi (isi kredensial di Pengaturan admin).
 
 ---
 
@@ -186,7 +186,7 @@ EASENIKERS/
     ├── admin/                       # panel admin
     │
     ├── api/
-    │   └── payment_callback.php     # webhook payment Tripay (Tahap 2)
+    │   └── payment_callback.php     # webhook Pakasir
     │
     └── assets/
         ├── css/                     # stylesheet
@@ -197,7 +197,7 @@ EASENIKERS/
 **Aturan penamaan subfolder includes/:**
 - `auth_db/` — semua hal yang berurusan dengan kredensial & koneksi DB
 - `repositori/` — kelas/fungsi yang **membaca/menulis data**
-- `integrasi/` — wrapper API eksternal (RajaOngkir, Tripay nanti, dll)
+- `integrasi/` — wrapper API eksternal (JNE ongkir, Pakasir, dll)
 - `konfigurasi/` — file statis yang **dibaca** oleh halaman (alamat, copy)
 - Root `includes/` — utilitas yang dipakai lintas-modul (helper, sesi
   state, komponen UI)
@@ -249,7 +249,7 @@ Integrasi pengiriman & pembayaran:
 - ✅ **RajaOngkir** (Komerce API) — wrapper, admin tool cek koneksi, search destinasi, hitung ongkir, integrasi penuh di checkout pembeli (auto-pick destinasi via kode pos profil, fallback manual)
 - ✅ Form checkout asli dengan create order ke database (kurir, layanan, ongkir, destination_id)
 - ✅ Form admin input nomor resi saat status pesanan berubah ke "Dikirim"
-- ⏳ **Tripay** sebagai payment gateway — slot konfigurasi sudah disediakan di Pengaturan admin, integrasi nyata (callback signature, link bayar, status sinkronisasi) menyusul
+- ✅ **Pakasir** payment gateway — konfigurasi di Pengaturan admin, bayar dari detail pesanan, webhook `api/payment_callback.php`
 
 ### 🔜 Tahap 3 — Pasca-launch
 

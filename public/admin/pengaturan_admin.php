@@ -35,10 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'rajaongkir_kota_asal_nama' => (string) ($_POST['rajaongkir_kota_asal_nama'] ?? ''),
             'rajaongkir_kota_asal_kode' => (string) ($_POST['rajaongkir_kota_asal_kode'] ?? ''),
             'rajaongkir_kota_asal_id' => (string) ($_POST['rajaongkir_kota_asal_id'] ?? '0'),
-            'tripay_mode' => (string) ($_POST['tripay_mode'] ?? 'sandbox'),
-            'tripay_merchant_code' => (string) ($_POST['tripay_merchant_code'] ?? ''),
-            'tripay_api_key' => (string) ($_POST['tripay_api_key'] ?? ''),
-            'tripay_private_key' => (string) ($_POST['tripay_private_key'] ?? ''),
+            'pakasir_mode' => (string) ($_POST['pakasir_mode'] ?? 'sandbox'),
+            'pakasir_project_slug' => (string) ($_POST['pakasir_project_slug'] ?? ''),
+            'pakasir_api_key' => (string) ($_POST['pakasir_api_key'] ?? ''),
+            'pakasir_metode_default' => (string) ($_POST['pakasir_metode_default'] ?? 'all'),
         ]);
         if ($ok) {
             $_SESSION['flash_admin_pengaturan'] = ['jenis' => 'sukses', 'teks' => 'Pengaturan berhasil disimpan.'];
@@ -206,7 +206,7 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                             <h2 id="judul-bayar">Pembayaran &amp; pengiriman</h2>
                         </div>
                         <div class="admin-form-konten">
-                            <p class="admin-form-keterangan">Ongkir dihitung lewat <strong>JNE</strong> (jne.co.id). <strong>Tripay</strong> untuk pembayaran digital menyusul saat kredensial siap.</p>
+                            <p class="admin-form-keterangan">Ongkir dihitung lewat <strong>JNE</strong> (jne.co.id). Pembayaran digital lewat <strong>Pakasir</strong> (QRIS, VA, PayPal).</p>
                             <div class="admin-form-grid">
                                 <div class="admin-field">
                                     <label for="metode-pembayaran">Metode pembayaran utama</label>
@@ -254,38 +254,51 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                         </div>
                     </section>
 
-                    <?php $__tripay_mode = (string) $cfg['tripay_mode']; ?>
-                    <section class="admin-kartu" aria-labelledby="judul-tripay">
+                    <?php
+                    $__pakasir_mode = (string) $cfg['pakasir_mode'];
+                    require_once __DIR__ . '/../../includes/integrasi/pakasir.php';
+                    $__pakasir_metode = (string) $cfg['pakasir_metode_default'];
+                    $__pakasir_metode_opsi = pakasir_daftar_metode();
+                    $__pakasir_webhook = pakasir_url_webhook();
+                    ?>
+                    <section class="admin-kartu" aria-labelledby="judul-pakasir">
                         <div class="admin-kartu__header">
-                            <h2 id="judul-tripay">Integrasi Tripay</h2>
-                            <span class="admin-lencana admin-lencana--tunda">Tahap 2</span>
+                            <h2 id="judul-pakasir">Integrasi Pakasir</h2>
                         </div>
                         <div class="admin-form-konten">
                             <p class="admin-form-keterangan">
-                                Payment gateway untuk Virtual Account, QRIS, E-wallet. Daftar di
-                                <a href="https://tripay.co.id/member/register" target="_blank" rel="noopener noreferrer">tripay.co.id</a>.
-                                Mulai dengan <strong>Sandbox</strong> untuk uji coba, ganti <strong>Production</strong> saat siap menerima pembayaran nyata.
-                                Kredensial dapat dilihat di Dashboard Tripay → Merchant.
+                                Payment gateway untuk QRIS, Virtual Account multi-bank, dan PayPal. Daftar di
+                                <a href="https://app.pakasir.com" target="_blank" rel="noopener noreferrer">app.pakasir.com</a>,
+                                buat proyek, lalu salin <strong>Project Slug</strong> dan <strong>API Key</strong>.
+                                Mulai dengan <strong>Sandbox</strong> untuk uji coba.
+                            </p>
+                            <p class="admin-form-keterangan">
+                                <strong>Webhook URL</strong> (isi di dashboard Pakasir):<br>
+                                <code><?php echo htmlspecialchars($__pakasir_webhook, ENT_QUOTES, 'UTF-8'); ?></code>
                             </p>
                             <div class="admin-form-grid">
                                 <div class="admin-field">
-                                    <label for="tripay-mode">Mode</label>
-                                    <select id="tripay-mode" name="tripay_mode">
-                                        <option value="sandbox" <?php echo $__tripay_mode === 'sandbox' ? 'selected' : ''; ?>>Sandbox (uji coba)</option>
-                                        <option value="production" <?php echo $__tripay_mode === 'production' ? 'selected' : ''; ?>>Production (live)</option>
+                                    <label for="pakasir-mode">Mode</label>
+                                    <select id="pakasir-mode" name="pakasir_mode">
+                                        <option value="sandbox" <?php echo $__pakasir_mode === 'sandbox' ? 'selected' : ''; ?>>Sandbox (uji coba)</option>
+                                        <option value="production" <?php echo $__pakasir_mode === 'production' ? 'selected' : ''; ?>>Production (live)</option>
                                     </select>
                                 </div>
                                 <div class="admin-field">
-                                    <label for="tripay-merchant-code">Merchant Code</label>
-                                    <input type="text" id="tripay-merchant-code" name="tripay_merchant_code" value="<?php echo htmlspecialchars((string) $cfg['tripay_merchant_code'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="T12345" autocomplete="off">
+                                    <label for="pakasir-metode-default">Metode default</label>
+                                    <select id="pakasir-metode-default" name="pakasir_metode_default">
+                                        <?php foreach ($__pakasir_metode_opsi as $kode => $label): ?>
+                                            <option value="<?php echo htmlspecialchars($kode, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $__pakasir_metode === $kode ? ' selected' : ''; ?>><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </div>
                                 <div class="admin-field admin-field--full">
-                                    <label for="tripay-api-key">API Key</label>
-                                    <input type="password" id="tripay-api-key" name="tripay_api_key" value="<?php echo htmlspecialchars((string) $cfg['tripay_api_key'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" placeholder="DEV-xxxxxxxxxxxx (sandbox) atau xxxxxxxxxxxx (production)">
+                                    <label for="pakasir-project-slug">Project Slug</label>
+                                    <input type="text" id="pakasir-project-slug" name="pakasir_project_slug" value="<?php echo htmlspecialchars((string) $cfg['pakasir_project_slug'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="slug-proyek-anda" autocomplete="off">
                                 </div>
                                 <div class="admin-field admin-field--full">
-                                    <label for="tripay-private-key">Private Key</label>
-                                    <input type="password" id="tripay-private-key" name="tripay_private_key" value="<?php echo htmlspecialchars((string) $cfg['tripay_private_key'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" placeholder="Untuk verifikasi signature callback">
+                                    <label for="pakasir-api-key">API Key</label>
+                                    <input type="password" id="pakasir-api-key" name="pakasir_api_key" value="<?php echo htmlspecialchars((string) $cfg['pakasir_api_key'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" placeholder="API key dari dashboard Pakasir">
                                 </div>
                             </div>
                         </div>

@@ -58,10 +58,10 @@ function admin_pengaturan_format_wa(string $masukan): string
  *   rajaongkir_kota_asal_nama:string,
  *   rajaongkir_kota_asal_kode:string,
  *   rajaongkir_kota_asal_id:int,
- *   tripay_mode:string,
- *   tripay_merchant_code:string,
- *   tripay_api_key:string,
- *   tripay_private_key:string
+ *   pakasir_mode:string,
+ *   pakasir_project_slug:string,
+ *   pakasir_api_key:string,
+ *   pakasir_metode_default:string
  * }
  */
 function admin_pengaturan_muat_terapan(): array
@@ -79,10 +79,10 @@ function admin_pengaturan_muat_terapan(): array
         'rajaongkir_kota_asal_nama' => '',
         'rajaongkir_kota_asal_kode' => '',
         'rajaongkir_kota_asal_id' => 0,
-        'tripay_mode' => 'sandbox',
-        'tripay_merchant_code' => '',
-        'tripay_api_key' => '',
-        'tripay_private_key' => '',
+        'pakasir_mode' => 'sandbox',
+        'pakasir_project_slug' => '',
+        'pakasir_api_key' => '',
+        'pakasir_metode_default' => 'all',
     ];
 
     $path = admin_pengaturan_simpan_ke_file();
@@ -116,9 +116,25 @@ function admin_pengaturan_muat_terapan(): array
         $kota_asal_id = 0;
     }
 
-    $tripay_mode = strtolower(trim((string) ($out['tripay_mode'] ?? $bawaan['tripay_mode'])));
-    if (!in_array($tripay_mode, ['sandbox', 'production'], true)) {
-        $tripay_mode = 'sandbox';
+    // Migrasi kunci Tripay lama (sekali) → Pakasir
+    if (empty($out['pakasir_project_slug']) && !empty($out['tripay_merchant_code'])) {
+        $out['pakasir_project_slug'] = $out['tripay_merchant_code'];
+    }
+    if (empty($out['pakasir_api_key']) && !empty($out['tripay_api_key'])) {
+        $out['pakasir_api_key'] = $out['tripay_api_key'];
+    }
+    if (empty($out['pakasir_mode']) && !empty($out['tripay_mode'])) {
+        $out['pakasir_mode'] = $out['tripay_mode'];
+    }
+
+    $pakasir_mode = strtolower(trim((string) ($out['pakasir_mode'] ?? $bawaan['pakasir_mode'])));
+    if (!in_array($pakasir_mode, ['sandbox', 'production'], true)) {
+        $pakasir_mode = 'sandbox';
+    }
+    $pakasir_metode = strtolower(trim((string) ($out['pakasir_metode_default'] ?? $bawaan['pakasir_metode_default'])));
+    $metode_valid = ['all', 'qris', 'bni_va', 'bri_va', 'cimb_niaga_va', 'maybank_va', 'permata_va', 'bnc_va', 'atm_bersama_va', 'sampoerna_va', 'artha_graha_va', 'paypal'];
+    if (!in_array($pakasir_metode, $metode_valid, true)) {
+        $pakasir_metode = 'all';
     }
 
     return [
@@ -135,10 +151,10 @@ function admin_pengaturan_muat_terapan(): array
         'rajaongkir_kota_asal_nama' => trim((string) ($out['rajaongkir_kota_asal_nama'] ?? '')),
         'rajaongkir_kota_asal_kode' => $kota_asal_kode,
         'rajaongkir_kota_asal_id' => $kota_asal_id,
-        'tripay_mode' => $tripay_mode,
-        'tripay_merchant_code' => trim((string) ($out['tripay_merchant_code'] ?? '')),
-        'tripay_api_key' => trim((string) ($out['tripay_api_key'] ?? '')),
-        'tripay_private_key' => trim((string) ($out['tripay_private_key'] ?? '')),
+        'pakasir_mode' => $pakasir_mode,
+        'pakasir_project_slug' => trim((string) ($out['pakasir_project_slug'] ?? '')),
+        'pakasir_api_key' => trim((string) ($out['pakasir_api_key'] ?? '')),
+        'pakasir_metode_default' => $pakasir_metode,
     ];
 }
 
@@ -193,9 +209,14 @@ function admin_pengaturan_simpan_terapan(array $data): bool
         $kota_asal_id = 0;
     }
 
-    $tripay_mode = strtolower(trim((string) ($data['tripay_mode'] ?? 'sandbox')));
-    if (!in_array($tripay_mode, ['sandbox', 'production'], true)) {
-        $tripay_mode = 'sandbox';
+    $pakasir_mode = strtolower(trim((string) ($data['pakasir_mode'] ?? 'sandbox')));
+    if (!in_array($pakasir_mode, ['sandbox', 'production'], true)) {
+        $pakasir_mode = 'sandbox';
+    }
+    $pakasir_metode = strtolower(trim((string) ($data['pakasir_metode_default'] ?? 'all')));
+    $metode_valid = ['all', 'qris', 'bni_va', 'bri_va', 'cimb_niaga_va', 'maybank_va', 'permata_va', 'bnc_va', 'atm_bersama_va', 'sampoerna_va', 'artha_graha_va', 'paypal'];
+    if (!in_array($pakasir_metode, $metode_valid, true)) {
+        $pakasir_metode = 'all';
     }
 
     $payload = [
@@ -211,10 +232,10 @@ function admin_pengaturan_simpan_terapan(array $data): bool
         'rajaongkir_kota_asal_nama' => trim((string) ($data['rajaongkir_kota_asal_nama'] ?? '')),
         'rajaongkir_kota_asal_kode' => $kota_asal_kode,
         'rajaongkir_kota_asal_id' => $kota_asal_id,
-        'tripay_mode' => $tripay_mode,
-        'tripay_merchant_code' => trim((string) ($data['tripay_merchant_code'] ?? '')),
-        'tripay_api_key' => trim((string) ($data['tripay_api_key'] ?? '')),
-        'tripay_private_key' => trim((string) ($data['tripay_private_key'] ?? '')),
+        'pakasir_mode' => $pakasir_mode,
+        'pakasir_project_slug' => trim((string) ($data['pakasir_project_slug'] ?? '')),
+        'pakasir_api_key' => trim((string) ($data['pakasir_api_key'] ?? '')),
+        'pakasir_metode_default' => $pakasir_metode,
         'updated_at' => gmdate('c'),
     ];
 

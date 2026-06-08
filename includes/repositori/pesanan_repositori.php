@@ -336,6 +336,25 @@ function pesanan_ambil_detail_untuk_user(int $order_id, int $user_id): ?array
 /**
  * Update status (dipakai webhook payment).
  */
+function pesanan_perbarui_metode_bayar(int $order_id, string $metode): bool
+{
+    if ($order_id <= 0) {
+        return false;
+    }
+    $metode = trim($metode);
+    if ($metode === '') {
+        return false;
+    }
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare('UPDATE orders SET payment_method = :m WHERE id = :id');
+
+        return $stmt->execute(['m' => $metode, 'id' => $order_id]);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
 function pesanan_set_status_oleh_id(int $order_id, string $status_baru): bool
 {
     $allowed = ['pending', 'paid', 'processed', 'shipped', 'completed', 'cancelled'];

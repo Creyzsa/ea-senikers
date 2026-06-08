@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 /**
- * Webhook payment gateway: setelah pembayaran sukses → status pesanan jadi `paid`.
+ * Webhook Pakasir: pembayaran sukses → status pesanan `paid`.
  *
- * POST JSON: { "order_id": 123, "secret": "sama dengan PAYMENT_CALLBACK_SECRET di config.php" }
- * Atau form: order_id + secret
+ * Payload (JSON): project, order_id, amount, payment_method, status, completed_at
+ * Status `completed` diverifikasi ulang ke API Pakasir sebelum update DB.
  */
 header('Content-Type: application/json; charset=UTF-8');
 
-require_once __DIR__ . '/../../includes/config_loader.php';
 require_once __DIR__ . '/../../includes/auth_db/database.php';
 require_once __DIR__ . '/../../includes/repositori/pesanan_repositori.php';
+require_once __DIR__ . '/../../includes/integrasi/pakasir.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -21,10 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$secretCfg = defined('PAYMENT_CALLBACK_SECRET') ? (string) PAYMENT_CALLBACK_SECRET : '';
-if ($secretCfg === '') {
+if (!pakasir_siap()) {
     http_response_code(503);
-    echo json_encode(['ok' => false, 'pesan' => 'Callback belum dikonfigurasi (PAYMENT_CALLBACK_SECRET kosong).']);
+    echo json_encode(['ok' => false, 'pesan' => 'Pakasir belum dikonfigurasi di Pengaturan admin.']);
 
     exit;
 }
@@ -41,19 +40,19 @@ if ($data === []) {
     $data = $_POST;
 }
 
-$secretIn = (string) ($data['secret'] ?? '');
-$orderId = isset($data['order_id']) ? (int) $data['order_id'] : 0;
-
-if (!hash_equals($secretCfg, $secretIn)) {
-    http_response_code(403);
-    echo json_encode(['ok' => false, 'pesan' => 'Secret tidak valid.']);
+if ($data === []) {
+    http_response_code(400);
+    echo json_encode(['ok' => false, 'pesan' => 'Payload kosong.']);
 
     exit;
 }
 
-if ($orderId <= 0) {
+$order_id_db_awal = pakasir_parse_order_id_db((string) ($data['order_id'] ?? ''));
+$amount_webhook = (int) ($data['amount'] ?? 0);
+
+if ($order_id_db_awal <= 0 || $amount_webhook < 500) {
     http_response_code(400);
-    echo json_encode(['ok' => false, 'pesan' => 'order_id wajib.']);
+    echo json_encode(['ok' => false, 'pesan' => 'order_id atau amount tidak valid.']);
 
     exit;
 }
@@ -67,8 +66,8 @@ if (!pesanan_cek_tabel_ada()) {
 
 try {
     $pdo = koneksi_database();
-    $stmt = $pdo->prepare('SELECT id, status FROM orders WHERE id = :id LIMIT 1');
-    $stmt->execute(['id' => $orderId]);
+    $stmt = $pdo->prepare('SELECT id, status, total_price FROM orders WHERE id = :id LIMIT 1');
+    $stmt->execute(['id' => $order_id_db_awal]);
     $row = $stmt->fetch();
     if (!$row) {
         http_response_code(404);
@@ -76,6 +75,15 @@ try {
 
         exit;
     }
+
+    $expected_amount = (int) ($row['total_price'] ?? 0);
+    if ($expected_amount < 500) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'pesan' => 'Total pesanan tidak valid.']);
+
+        exit;
+    }
+
     $st = (string) ($row['status'] ?? '');
     if ($st === 'cancelled' || $st === 'completed') {
         http_response_code(409);
@@ -84,7 +92,7 @@ try {
         exit;
     }
     if ($st === 'paid') {
-        echo json_encode(['ok' => true, 'pesan' => 'Sudah paid.', 'order_id' => $orderId]);
+        echo json_encode(['ok' => true, 'pesan' => 'Sudah paid.', 'order_id' => $order_id_db_awal]);
 
         exit;
     }
@@ -95,7 +103,20 @@ try {
     exit;
 }
 
-$ok = pesanan_set_status_oleh_id($orderId, 'paid');
+$verif = pakasir_verifikasi_webhook($data, $expected_amount);
+if (!$verif['ok']) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'pesan' => (string) ($verif['error'] ?? 'Webhook tidak valid.')]);
+
+    exit;
+}
+
+$order_id = (int) ($verif['order_id_db'] ?? 0);
+$metode_kode = (string) ($verif['payment_method'] ?? '');
+$label_bayar = 'Pakasir · ' . pakasir_label_metode($metode_kode);
+pesanan_perbarui_metode_bayar($order_id, $label_bayar);
+
+$ok = pesanan_set_status_oleh_id($order_id, 'paid');
 if (!$ok) {
     http_response_code(500);
     echo json_encode(['ok' => false, 'pesan' => 'Gagal memperbarui status.']);
@@ -106,5 +127,5 @@ if (!$ok) {
 echo json_encode([
     'ok' => true,
     'pesan' => 'Status diperbarui menjadi paid.',
-    'order_id' => $orderId,
+    'order_id' => $order_id,
 ]);
