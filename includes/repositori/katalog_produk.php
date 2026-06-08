@@ -713,6 +713,25 @@ function katalog_persen_kondisi_kartu(array $produk): string
 }
 
 /**
+ * Baris rating bintang konsisten di kartu produk / rekomendasi.
+ */
+function katalog_render_rating_kartu(array $produk, string $kelas = 'kartu-produk__rating'): void
+{
+    $rata = (float) ($produk['rating_rata'] ?? 0);
+    $jml_ulasan = (int) ($produk['jumlah_ulasan'] ?? 0);
+    $ada_ulasan = $jml_ulasan > 0;
+    $teks_rating = $ada_ulasan
+        ? number_format($rata, 1) . ' (' . $jml_ulasan . ')'
+        : 'Baru';
+    ?>
+    <p class="<?php echo htmlspecialchars($kelas, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $ada_ulasan ? ' title="' . htmlspecialchars(number_format($rata, 1) . ' dari 5 · ' . $jml_ulasan . ' ulasan', ENT_QUOTES, 'UTF-8') . '"' : ''; ?>>
+        <span class="<?php echo htmlspecialchars($kelas, ENT_QUOTES, 'UTF-8'); ?>-bintang" aria-hidden="true">★</span>
+        <span><?php echo htmlspecialchars($teks_rating, ENT_QUOTES, 'UTF-8'); ?></span>
+    </p>
+    <?php
+}
+
+/**
  * Render satu kartu produk premium (katalog).
  *
  * @param array<string, true> $wishlist_ids
@@ -732,8 +751,6 @@ function katalog_render_kartu_produk(
     $url_gambar = katalog_url_gambar_utama($p);
     $label_kondisi = $kondisi !== '' ? strtoupper(kondisi_label_pembeli($kondisi)) : '';
     $kelas_badge = strcasecmp($kondisi, 'Baru') === 0 ? 'kartu-premium__badge--baru' : 'kartu-premium__badge--preloved';
-    $rata = (float) ($p['rating_rata'] ?? 0);
-    $jml_ulasan = (int) ($p['jumlah_ulasan'] ?? 0);
     $di_wishlist = isset($wishlist_ids[$id]);
     $siap_jual = (bool) ($p['siap_jual'] ?? ((int) ($p['total_stok'] ?? 0) > 0));
     ?>
@@ -765,14 +782,7 @@ function katalog_render_kartu_produk(
             <ul class="kartu-premium__meta">
                 <li><span class="kartu-premium__meta-label">Ukuran</span> <?php echo htmlspecialchars(katalog_ukuran_ringkas_kartu($p), ENT_QUOTES, 'UTF-8'); ?></li>
                 <li><span class="kartu-premium__meta-label">Kondisi</span> <?php echo htmlspecialchars(katalog_persen_kondisi_kartu($p), ENT_QUOTES, 'UTF-8'); ?></li>
-                <li class="kartu-premium__rating">
-                    <span aria-hidden="true">★</span>
-                    <?php if ($jml_ulasan > 0): ?>
-                        <?php echo htmlspecialchars(number_format($rata, 1), ENT_QUOTES, 'UTF-8'); ?> (<?php echo (int) $jml_ulasan; ?>)
-                    <?php else: ?>
-                        Baru
-                    <?php endif; ?>
-                </li>
+                <li><?php katalog_render_rating_kartu($p, 'kartu-premium__rating'); ?></li>
             </ul>
             <p class="kartu-premium__harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga), ENT_QUOTES, 'UTF-8'); ?></p>
             <div class="kartu-premium__aksi">

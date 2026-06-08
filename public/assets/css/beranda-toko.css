@@ -661,6 +661,23 @@ body.halaman-toko {
     color: var(--teks-utama);
 }
 
+.kartu-produk__rating {
+    margin: 0 0 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--teks-utama);
+    line-height: 1.3;
+}
+
+.kartu-produk__rating-bintang {
+    color: #f59e0b;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
 .kartu-produk__harga {
     margin: 0 0 0.75rem;
     font-size: 1rem;
@@ -2670,6 +2687,24 @@ body.halaman-toko {
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+.rekom-rating {
+    margin: 0.1rem 0 0.2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--teks-utama);
+    line-height: 1.3;
+}
+
+.rekom-rating-bintang {
+    color: #f59e0b;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
 .rekom-harga {
     color: var(--brand-black);
     font-weight: 700;

@@ -317,6 +317,7 @@ $u_checkout = aplikasi_url('checkout');
                 <div class="rekom-info">
                     <div class="rekom-brand"><?= htmlspecialchars($r['brand'] ?? '') ?></div>
                     <div class="rekom-nama"><?= htmlspecialchars($r['nama_produk'] ?? '') ?></div>
+                    <?php katalog_render_rating_kartu($r, 'rekom-rating'); ?>
                     <div class="rekom-harga"><?= htmlspecialchars(katalog_format_rupiah((int)($r['harga'] ?? 0)), ENT_QUOTES, 'UTF-8') ?></div>
                 </div>
             </a>

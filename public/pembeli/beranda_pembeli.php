@@ -156,6 +156,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                             <h3 class="kartu-produk__nama">
                                 <a class="kartu-produk__tautan-nama" href="<?php echo htmlspecialchars($u_detail, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?></a>
                             </h3>
+                            <?php katalog_render_rating_kartu($p); ?>
                             <p class="kartu-produk__harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga), ENT_QUOTES, 'UTF-8'); ?></p>
                             <?php if (($p['terjual'] ?? 0) > 0): ?>
                                 <p style="font-size:0.65rem; color:var(--color-text-muted); margin:-0.1rem 0 0.2rem;"><?= (int)$p['terjual'] ?>+ terjual</p>
