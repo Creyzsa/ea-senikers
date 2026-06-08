@@ -201,6 +201,14 @@ function pakasir_http_json(string $method, string $url, ?array $body = null, ?ar
         $opts[CURLOPT_HTTPHEADER] = $headers;
     }
 
+    $ca = ini_get('curl.cainfo') ?: ini_get('openssl.cafile');
+    if ($ca && is_readable($ca)) {
+        $opts[CURLOPT_CAINFO] = $ca;
+    } else {
+        $opts[CURLOPT_SSL_VERIFYPEER] = false;
+        $opts[CURLOPT_SSL_VERIFYHOST] = 0;
+    }
+
     curl_setopt_array($ch, $opts);
     $raw = curl_exec($ch);
     $errno = curl_errno($ch);

@@ -238,6 +238,12 @@
     }
 }
 
+.pesanan-detail-kanan {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
 .pesanan-panel {
     background: #fff;
     border: 1px solid var(--abu-tepi);
@@ -571,7 +577,7 @@
 }
 
 .pesanan-panel--bayar {
-    margin-top: 1rem;
+    margin-top: 0;
 }
 
 .pesanan-bayar-teks {

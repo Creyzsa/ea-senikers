@@ -222,7 +222,26 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                 <?php endif; ?>
             </div>
         </div>
-        <div>
+        <div class="pesanan-detail-kanan">
+            <?php if ($status === 'pending' && $pakasir_aktif && !$batal): ?>
+            <div class="pesanan-panel pesanan-panel--bayar">
+                <h2 class="pesanan-panel__judul">Pembayaran Pakasir</h2>
+                <p class="pesanan-bayar-teks">Total tagihan: <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong> (belum termasuk biaya admin channel).</p>
+                <form method="post" action="<?php echo htmlspecialchars(aplikasi_url('detail-pesanan?id=' . $order_id), ENT_QUOTES, 'UTF-8'); ?>">
+                    <input type="hidden" name="aksi" value="bayar_pakasir">
+                    <label class="pesanan-bayar-label" for="metode-pakasir">Metode pembayaran</label>
+                    <select id="metode-pakasir" name="metode_pakasir" class="pesanan-bayar-select">
+                        <?php foreach ($pakasir_metode_opsi as $kode => $label_metode): ?>
+                            <option value="<?php echo htmlspecialchars($kode, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $kode === $pakasir_metode_default ? ' selected' : ''; ?>><?php echo htmlspecialchars($label_metode, ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="submit" class="tombol-page-utama pesanan-bayar-tombol">Bayar sekarang</button>
+                </form>
+            </div>
+            <?php elseif ($status === 'pending' && !$pakasir_aktif && !$batal): ?>
+            <div class="pesanan-peringatan" role="status">Pembayaran online belum aktif. Hubungi toko via WhatsApp untuk konfirmasi transfer.</div>
+            <?php endif; ?>
+
             <div class="pesanan-panel">
                 <h2 class="pesanan-panel__judul">Ringkasan</h2>
                 <div class="pesanan-ringkasan-baris">
@@ -274,25 +293,6 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                     <span><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
             </div>
-
-            <?php if ($status === 'pending' && $pakasir_aktif && !$batal): ?>
-            <div class="pesanan-panel pesanan-panel--bayar">
-                <h2 class="pesanan-panel__judul">Pembayaran Pakasir</h2>
-                <p class="pesanan-bayar-teks">Total tagihan: <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong> (belum termasuk biaya admin channel).</p>
-                <form method="post" action="<?php echo htmlspecialchars(aplikasi_url('detail-pesanan?id=' . $order_id), ENT_QUOTES, 'UTF-8'); ?>">
-                    <input type="hidden" name="aksi" value="bayar_pakasir">
-                    <label class="pesanan-bayar-label" for="metode-pakasir">Metode pembayaran</label>
-                    <select id="metode-pakasir" name="metode_pakasir" class="pesanan-bayar-select">
-                        <?php foreach ($pakasir_metode_opsi as $kode => $label_metode): ?>
-                            <option value="<?php echo htmlspecialchars($kode, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $kode === $pakasir_metode_default ? ' selected' : ''; ?>><?php echo htmlspecialchars($label_metode, ENT_QUOTES, 'UTF-8'); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <button type="submit" class="tombol-page-utama pesanan-bayar-tombol">Bayar sekarang</button>
-                </form>
-            </div>
-            <?php elseif ($status === 'pending' && !$pakasir_aktif && !$batal): ?>
-            <div class="pesanan-peringatan" role="status">Pembayaran online belum aktif. Hubungi toko via WhatsApp untuk konfirmasi transfer.</div>
-            <?php endif; ?>
 
             <?php if ($wa_pesanan !== ''): ?>
                 <a class="pesanan-bantuan-wa" href="<?php echo htmlspecialchars($wa_pesanan, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">
