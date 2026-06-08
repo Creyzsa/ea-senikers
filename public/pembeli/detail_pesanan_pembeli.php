@@ -117,12 +117,6 @@ $pakasir_metode_opsi = pakasir_daftar_metode();
 $pakasir_metode_default = pakasir_konfigurasi()['metode_default'];
 $tampil_bayar = $status === 'pending' && $pakasir_aktif && !$batal;
 $tampil_bayar_peringatan = $status === 'pending' && !$pakasir_aktif && !$batal;
-$kelas_layout_detail = 'pesanan-detail-body';
-if ($tampil_bayar || $tampil_bayar_peringatan) {
-    $kelas_layout_detail .= ' pesanan-detail-body--ada-bayar';
-} else {
-    $kelas_layout_detail .= ' pesanan-detail-body--standar';
-}
 
 $wa_pesanan = '';
 foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
@@ -203,47 +197,50 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
         </div>
     <?php endif; ?>
 
-    <div class="<?php echo htmlspecialchars($kelas_layout_detail, ENT_QUOTES, 'UTF-8'); ?>">
-        <div class="pesanan-detail-produk">
-            <div class="pesanan-panel pesanan-panel--setinggi">
-                <h2 class="pesanan-panel__judul">Produk</h2>
+    <div class="pesanan-detail-layout">
+        <section class="pesanan-detail-utama" aria-labelledby="judul-produk-pesanan">
+            <div class="pesanan-panel">
+                <h2 id="judul-produk-pesanan" class="pesanan-panel__judul">Produk</h2>
                 <?php if (!is_array($items) || $items === []): ?>
-                    <p style="margin:0;color:var(--teks-redup);font-size:0.9rem;">Tidak ada baris item (data tidak lengkap).</p>
+                    <p class="pesanan-panel__kosong">Tidak ada baris item (data tidak lengkap).</p>
                 <?php else: ?>
-                    <?php foreach ($items as $it): ?>
-                        <?php
-                        $it = is_array($it) ? $it : [];
-                        $gurl = pesanan_url_gambar_item($it);
-                        $pn = (string) ($it['product_name'] ?? '—');
-                        $pr = (int) ($it['price'] ?? 0);
-                        $sz = trim((string) ($it['size'] ?? ''));
-                        $qty = (int) ($it['quantity'] ?? 1);
-                        ?>
-                        <div class="pesanan-item-baris">
-                            <img class="pesanan-item-baris__gambar" src="<?php echo htmlspecialchars($gurl, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="72" height="72" loading="lazy">
-                            <div>
-                                <p class="pesanan-item-baris__nama"><?php echo htmlspecialchars($pn, ENT_QUOTES, 'UTF-8'); ?></p>
-                                <p class="pesanan-item-baris__kecil">
-                                    Ukuran: <strong><?php echo htmlspecialchars($sz !== '' ? $sz : '—', ENT_QUOTES, 'UTF-8'); ?></strong>
-                                    · Qty: <?php echo (int) $qty; ?>
-                                </p>
-                                <p class="pesanan-item-baris__kecil" style="margin-top:0.35rem;font-weight:700;color:var(--teks-utama);"><?php echo htmlspecialchars(katalog_format_rupiah($pr), ENT_QUOTES, 'UTF-8'); ?></p>
-                                <?php if (in_array($status, ['shipped', 'completed'])): ?>
-                                    <?php $pid = (string) ($it['id_produk'] ?? ''); ?>
-                                    <?php if ($pid): ?>
-                                        <a href="<?php echo htmlspecialchars(aplikasi_url('detail-produk?id=' . rawurlencode($pid)), ENT_QUOTES, 'UTF-8'); ?>" style="font-size:0.75rem; display:inline-block; margin-top:0.2rem; color:var(--accent);">Beri Ulasan →</a>
+                    <ul class="pesanan-produk-list">
+                        <?php foreach ($items as $it): ?>
+                            <?php
+                            $it = is_array($it) ? $it : [];
+                            $gurl = pesanan_url_gambar_item($it);
+                            $pn = (string) ($it['product_name'] ?? '—');
+                            $pr = (int) ($it['price'] ?? 0);
+                            $sz = trim((string) ($it['size'] ?? ''));
+                            $qty = max(1, (int) ($it['quantity'] ?? 1));
+                            $sub_baris = $pr * $qty;
+                            ?>
+                            <li class="pesanan-item-baris">
+                                <img class="pesanan-item-baris__gambar" src="<?php echo htmlspecialchars($gurl, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="84" height="84" loading="lazy">
+                                <div class="pesanan-item-baris__info">
+                                    <p class="pesanan-item-baris__nama"><?php echo htmlspecialchars($pn, ENT_QUOTES, 'UTF-8'); ?></p>
+                                    <p class="pesanan-item-baris__meta">
+                                        Ukuran <strong><?php echo htmlspecialchars($sz !== '' ? $sz : '—', ENT_QUOTES, 'UTF-8'); ?></strong>
+                                        · Qty <strong><?php echo (int) $qty; ?></strong>
+                                    </p>
+                                    <?php if (in_array($status, ['shipped', 'completed'])): ?>
+                                        <?php $pid = (string) ($it['id_produk'] ?? ''); ?>
+                                        <?php if ($pid !== ''): ?>
+                                            <a class="pesanan-item-baris__link" href="<?php echo htmlspecialchars(aplikasi_url('detail-produk?id=' . rawurlencode($pid)), ENT_QUOTES, 'UTF-8'); ?>">Beri ulasan</a>
+                                        <?php endif; ?>
                                     <?php endif; ?>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
+                                </div>
+                                <p class="pesanan-item-baris__harga"><?php echo htmlspecialchars(katalog_format_rupiah($sub_baris), ENT_QUOTES, 'UTF-8'); ?></p>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
                 <?php endif; ?>
             </div>
-        </div>
+        </section>
 
-        <?php if ($tampil_bayar): ?>
-        <div class="pesanan-detail-bayar">
-            <div class="pesanan-panel pesanan-panel--bayar pesanan-panel--setinggi">
+        <aside class="pesanan-detail-samping" aria-label="Ringkasan pesanan">
+            <?php if ($tampil_bayar): ?>
+            <div class="pesanan-panel pesanan-panel--bayar">
                 <h2 class="pesanan-panel__judul">Pembayaran Pakasir</h2>
                 <p class="pesanan-bayar-teks">Total tagihan: <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong> (belum termasuk biaya admin channel).</p>
                 <form class="pesanan-bayar-form" method="post" action="<?php echo htmlspecialchars(aplikasi_url('detail-pesanan?id=' . $order_id), ENT_QUOTES, 'UTF-8'); ?>">
@@ -257,78 +254,72 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                     <button type="submit" class="tombol-page-utama pesanan-bayar-tombol">Bayar sekarang</button>
                 </form>
             </div>
-        </div>
-        <?php elseif ($tampil_bayar_peringatan): ?>
-        <div class="pesanan-detail-bayar">
-            <div class="pesanan-panel pesanan-panel--peringatan pesanan-panel--setinggi" role="status">
+            <?php elseif ($tampil_bayar_peringatan): ?>
+            <div class="pesanan-panel pesanan-panel--peringatan" role="status">
                 <h2 class="pesanan-panel__judul">Pembayaran</h2>
-                <p class="pesanan-bayar-teks" style="margin:0;">Pembayaran online belum aktif. Hubungi toko via WhatsApp untuk konfirmasi transfer.</p>
+                <p class="pesanan-bayar-teks pesanan-bayar-teks--padat">Pembayaran online belum aktif. Hubungi toko via WhatsApp untuk konfirmasi transfer.</p>
             </div>
-        </div>
-        <?php endif; ?>
+            <?php endif; ?>
 
-        <div class="pesanan-detail-ringkasan">
-            <div class="pesanan-panel pesanan-panel--setinggi">
+            <div class="pesanan-panel pesanan-panel--ringkasan">
                 <h2 class="pesanan-panel__judul">Ringkasan</h2>
-                <div class="pesanan-ringkasan-baris">
-                    <span>Alamat pengiriman</span>
-                    <span class="pesanan-ringkasan-nilai">
-                        <?php if ($alamat !== ''): ?>
-                            <?php echo nl2br(htmlspecialchars($alamat, ENT_QUOTES, 'UTF-8')); ?>
-                        <?php else: ?>
-                            <em class="pesanan-ringkasan-kosong">Belum diisi</em>
-                        <?php endif; ?>
-                    </span>
-                </div>
-                <?php if ($kurir !== '' || $layanan !== ''): ?>
-                    <div class="pesanan-ringkasan-baris">
-                        <span>Kurir</span>
-                        <span class="pesanan-ringkasan-nilai">
-                            <?php echo htmlspecialchars(strtoupper($kurir) . ($layanan !== '' ? ' · ' . $layanan : ''), ENT_QUOTES, 'UTF-8'); ?>
-                        </span>
+                <dl class="pesanan-ringkasan-dl">
+                    <div class="pesanan-ringkasan-baris pesanan-ringkasan-baris--stack">
+                        <dt>Alamat pengiriman</dt>
+                        <dd>
+                            <?php if ($alamat !== ''): ?>
+                                <?php echo nl2br(htmlspecialchars($alamat, ENT_QUOTES, 'UTF-8')); ?>
+                            <?php else: ?>
+                                <em class="pesanan-ringkasan-kosong">Belum diisi</em>
+                            <?php endif; ?>
+                        </dd>
                     </div>
-                <?php endif; ?>
-                <?php if ($nomor_resi !== ''): ?>
+                    <?php if ($kurir !== '' || $layanan !== ''): ?>
                     <div class="pesanan-ringkasan-baris">
-                        <span>Nomor resi</span>
-                        <span class="pesanan-ringkasan-nilai"><strong><?php echo htmlspecialchars($nomor_resi, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                        <dt>Kurir</dt>
+                        <dd><?php echo htmlspecialchars(strtoupper($kurir) . ($layanan !== '' ? ' · ' . $layanan : ''), ENT_QUOTES, 'UTF-8'); ?></dd>
                     </div>
-                <?php endif; ?>
-                <div class="pesanan-ringkasan-baris">
-                    <span>Metode pembayaran</span>
-                    <span class="pesanan-ringkasan-nilai">
-                        <?php if ($bayar !== ''): ?>
-                            <?php echo htmlspecialchars($bayar, ENT_QUOTES, 'UTF-8'); ?>
-                        <?php elseif ($pakasir_aktif && $status === 'pending'): ?>
-                            <em class="pesanan-ringkasan-kosong">Belum dibayar (Pakasir)</em>
-                        <?php else: ?>
-                            <em class="pesanan-ringkasan-kosong">—</em>
-                        <?php endif; ?>
-                    </span>
-                </div>
-                <div class="pesanan-ringkasan-baris">
-                    <span>Subtotal produk</span>
-                    <span class="pesanan-ringkasan-nilai"><?php echo htmlspecialchars(katalog_format_rupiah($subtotal_produk), ENT_QUOTES, 'UTF-8'); ?></span>
-                </div>
-                <div class="pesanan-ringkasan-baris">
-                    <span>Ongkos kirim</span>
-                    <span class="pesanan-ringkasan-nilai"><?php echo htmlspecialchars(katalog_format_rupiah($ongkir), ENT_QUOTES, 'UTF-8'); ?></span>
-                </div>
-                <div class="pesanan-ringkasan-baris pesanan-ringkasan-baris--total">
+                    <?php endif; ?>
+                    <?php if ($nomor_resi !== ''): ?>
+                    <div class="pesanan-ringkasan-baris">
+                        <dt>Nomor resi</dt>
+                        <dd><strong><?php echo htmlspecialchars($nomor_resi, ENT_QUOTES, 'UTF-8'); ?></strong></dd>
+                    </div>
+                    <?php endif; ?>
+                    <div class="pesanan-ringkasan-baris">
+                        <dt>Metode pembayaran</dt>
+                        <dd>
+                            <?php if ($bayar !== ''): ?>
+                                <?php echo htmlspecialchars($bayar, ENT_QUOTES, 'UTF-8'); ?>
+                            <?php elseif ($pakasir_aktif && $status === 'pending'): ?>
+                                <em class="pesanan-ringkasan-kosong">Belum dibayar (Pakasir)</em>
+                            <?php else: ?>
+                                <em class="pesanan-ringkasan-kosong">—</em>
+                            <?php endif; ?>
+                        </dd>
+                    </div>
+                    <div class="pesanan-ringkasan-baris">
+                        <dt>Subtotal produk</dt>
+                        <dd><?php echo htmlspecialchars(katalog_format_rupiah($subtotal_produk), ENT_QUOTES, 'UTF-8'); ?></dd>
+                    </div>
+                    <div class="pesanan-ringkasan-baris">
+                        <dt>Ongkos kirim</dt>
+                        <dd><?php echo htmlspecialchars(katalog_format_rupiah($ongkir), ENT_QUOTES, 'UTF-8'); ?></dd>
+                    </div>
+                </dl>
+                <div class="pesanan-ringkasan-total">
                     <span>Total</span>
-                    <span><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></span>
+                    <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong>
                 </div>
             </div>
-        </div>
 
-        <?php if ($wa_pesanan !== ''): ?>
-            <div class="pesanan-detail-wa">
+            <?php if ($wa_pesanan !== ''): ?>
                 <a class="pesanan-bantuan-wa" href="<?php echo htmlspecialchars($wa_pesanan, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413z"/></svg>
-                    Hubungi toko via WhatsApp tentang pesanan ini
+                    Hubungi toko via WhatsApp
                 </a>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </aside>
     </div>
 </main>
 
