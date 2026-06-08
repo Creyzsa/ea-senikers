@@ -7,6 +7,7 @@ declare(strict_types=1);
  */
 require_once __DIR__ . '/../auth_db/database.php';
 require_once __DIR__ . '/../url_bantu.php';
+require_once __DIR__ . '/../integrasi/produk_gambar_storage.php';
 require_once __DIR__ . '/katalog_produk.php';
 
 /** Ukuran default untuk produk. */
@@ -128,16 +129,6 @@ function admin_produk_pastikan_id_valid(string $id_produk): void
     if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id_produk)) {
         throw new RuntimeException('ID produk tidak valid.');
     }
-}
-
-function admin_produk_folder_gambar(): string
-{
-    $folder = easenikers_folder_public() . '/' . KATALOG_FOLDER_GAMBAR;
-    if (!is_dir($folder) && !mkdir($folder, 0755, true) && !is_dir($folder)) {
-        throw new RuntimeException('Folder upload gambar produk tidak dapat dibuat.');
-    }
-
-    return $folder;
 }
 
 /**
@@ -333,7 +324,6 @@ function admin_produk_upload_gambar(string $id_produk, array $files): void
     $errors = (array) ($gambar_files['error'] ?? []);
     $sizes = (array) ($gambar_files['size'] ?? []);
 
-    $folder = admin_produk_folder_gambar();
     $pdo = koneksi_database();
     $stmtUrutan = $pdo->prepare('SELECT COALESCE(MAX(urutan), -1) AS maks FROM produk_gambar WHERE id_produk = :id');
     $stmtUrutan->execute(['id' => $id_produk]);
@@ -374,11 +364,7 @@ function admin_produk_upload_gambar(string $id_produk, array $files): void
         }
 
         $nama_file = uniqid('produk_', true) . '.' . $ext;
-        $path = $folder . '/' . $nama_file;
-
-        if (!move_uploaded_file($tmp, $path)) {
-            throw new RuntimeException('Gagal menyimpan file gambar ke server.');
-        }
+        produk_gambar_simpan_tmp($tmp, $nama_file, produk_gambar_mime_dari_ekstensi($ext), true);
 
         ++$urutan;
         $stmtInsert->execute([
@@ -391,12 +377,5 @@ function admin_produk_upload_gambar(string $id_produk, array $files): void
 
 function admin_produk_hapus_gambar_file(string $nama_file): void
 {
-    $nama_file = basename($nama_file);
-    if ($nama_file === '' || preg_match('/^[a-zA-Z0-9._-]+$/', $nama_file) !== 1) {
-        return;
-    }
-    $path = admin_produk_folder_gambar() . '/' . $nama_file;
-    if (is_file($path)) {
-        unlink($path);
-    }
+    produk_gambar_hapus($nama_file);
 }

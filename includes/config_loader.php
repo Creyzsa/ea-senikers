@@ -11,7 +11,8 @@
  * - Do NOT commit config.php
  * - Set these Environment Variables in Vercel Dashboard (Project > Settings > Environment Variables):
  *   DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS,
- *   SUPABASE_URL, SUPABASE_ANON_KEY,
+ *   SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (upload gambar di Vercel),
+ *   SUPABASE_BUCKET_PRODUK (opsional, default produk-gambar),
  *   URL_APLIKASI,
  *   PAYMENT_CALLBACK_SECRET (optional),
  *   PAKASIR_PROJECT_SLUG, PAKASIR_API_KEY, PAKASIR_MODE (sandbox|production),
@@ -36,6 +37,11 @@ if (!defined('DB_HOST')) {
 
         define('SUPABASE_URL', getenv('SUPABASE_URL') ?: '');
         define('SUPABASE_ANON_KEY', getenv('SUPABASE_ANON_KEY') ?: '');
+        $service_role = getenv('SUPABASE_SERVICE_ROLE_KEY') ?: '';
+        if ($service_role !== '') {
+            define('SUPABASE_SERVICE_ROLE_KEY', $service_role);
+        }
+        define('SUPABASE_BUCKET_PRODUK', getenv('SUPABASE_BUCKET_PRODUK') ?: 'produk-gambar');
 
         $url = getenv('URL_APLIKASI') ?: '';
         if (empty($url) || strpos($url, 'http://') === 0) {
@@ -98,3 +104,20 @@ if (!function_exists('easenikers_definisikan_pakasir_dari_env')) {
     }
 }
 easenikers_definisikan_pakasir_dari_env();
+
+if (!function_exists('easenikers_definisikan_supabase_storage_dari_env')) {
+    function easenikers_definisikan_supabase_storage_dari_env(): void
+    {
+        if (!defined('SUPABASE_SERVICE_ROLE_KEY')) {
+            $service_role = getenv('SUPABASE_SERVICE_ROLE_KEY') ?: '';
+            if (is_string($service_role) && trim($service_role) !== '') {
+                define('SUPABASE_SERVICE_ROLE_KEY', trim($service_role));
+            }
+        }
+        if (!defined('SUPABASE_BUCKET_PRODUK')) {
+            $bucket = getenv('SUPABASE_BUCKET_PRODUK') ?: 'produk-gambar';
+            define('SUPABASE_BUCKET_PRODUK', is_string($bucket) && trim($bucket) !== '' ? trim($bucket) : 'produk-gambar');
+        }
+    }
+}
+easenikers_definisikan_supabase_storage_dari_env();

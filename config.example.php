@@ -31,6 +31,9 @@ define('DB_PASS', 'your-database-password-here');
 
 define('SUPABASE_URL', 'https://your-project-ref.supabase.co');
 define('SUPABASE_ANON_KEY', 'your-anon-key-here');
+// Wajib di Vercel untuk upload gambar produk (Settings → API → service_role):
+// define('SUPABASE_SERVICE_ROLE_KEY', 'your-service-role-key-here');
+// define('SUPABASE_BUCKET_PRODUK', 'produk-gambar');
 
 define('URL_APLIKASI', 'https://www.easenikers.shop');   // PROD. Untuk local dev lihat komentar di bawah + config.php
 

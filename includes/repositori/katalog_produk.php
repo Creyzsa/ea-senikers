@@ -8,6 +8,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth_db/supabase_rest.php';
 require_once __DIR__ . '/../url_bantu.php';
 require_once __DIR__ . '/../auth_db/database.php';
+require_once __DIR__ . '/../integrasi/produk_gambar_storage.php';
 
 /** Path relatif folder gambar produk di bawah URL_APLIKASI (public). */
 const KATALOG_FOLDER_GAMBAR = 'assets/images/produk';
@@ -18,12 +19,21 @@ function katalog_url_gambar_produk(string $nama_file): string
     if ($nama_file === '') {
         return katalog_url_gambar_placeholder();
     }
-    $lokal = easenikers_folder_public() . '/' . KATALOG_FOLDER_GAMBAR . '/' . $nama_file;
-    if (!is_file($lokal)) {
-        return katalog_url_gambar_placeholder();
+
+    if (produk_gambar_pakai_cloud()) {
+        $cloud = produk_gambar_url_publik($nama_file);
+
+        return $cloud !== '' ? $cloud : katalog_url_gambar_placeholder();
     }
 
-    return aplikasi_url_aset(KATALOG_FOLDER_GAMBAR . '/' . rawurlencode($nama_file));
+    $lokal = easenikers_folder_public() . '/' . KATALOG_FOLDER_GAMBAR . '/' . $nama_file;
+    if (is_file($lokal)) {
+        return aplikasi_url_aset(KATALOG_FOLDER_GAMBAR . '/' . rawurlencode($nama_file));
+    }
+
+    $cloud = produk_gambar_url_publik($nama_file);
+
+    return $cloud !== '' ? $cloud : katalog_url_gambar_placeholder();
 }
 
 /** Gambar pengganti bila belum ada upload (tanpa file statis). */
