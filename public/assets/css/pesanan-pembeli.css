@@ -413,74 +413,165 @@
     color: #991b1b;
 }
 
-/* Stepper */
+/* Stepper status pesanan */
+.pesanan-panel--status {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.35rem;
+}
+
 .pesanan-stepper {
     list-style: none;
     margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
+    padding: 0.35rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0;
 }
 
-@media (min-width: 900px) {
-    .pesanan-stepper {
-        flex-direction: row;
-        flex-wrap: nowrap;
-        justify-content: space-between;
-        gap: 0.25rem;
-    }
-}
-
-.pesanan-stepper__item {
+.pesanan-stepper__langkah {
     position: relative;
-    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.55rem;
     min-width: 0;
-    padding: 0.65rem 0.5rem;
+    padding: 0 0.2rem;
     text-align: center;
-    font-size: 0.78rem;
-    font-weight: 600;
-    line-height: 1.35;
+}
+
+.pesanan-stepper__langkah:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 1.125rem;
+    left: 50%;
+    width: 100%;
+    height: 3px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    z-index: 0;
+    transform: translateY(-50%);
+}
+
+.pesanan-stepper__langkah--selesai:not(:last-child)::after {
+    background: linear-gradient(90deg, #34d399 0%, #6ee7b7 100%);
+}
+
+.pesanan-stepper__marker {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: #f4f4f5;
+    border: 2px solid #d1d5db;
     color: var(--teks-redup);
-    border-radius: 10px;
-    background: var(--kotak-fitur-bg);
-    border: 1px solid transparent;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.pesanan-stepper__item--selesai {
+.pesanan-stepper__nomor {
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.pesanan-stepper__ikon {
+    display: block;
+}
+
+.pesanan-stepper__label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.6em;
+    margin: 0;
+    padding: 0 0.15rem;
+    font-size: clamp(0.68rem, 1.6vw, 0.78rem);
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--teks-redup);
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.pesanan-stepper__langkah--selesai .pesanan-stepper__marker {
     background: #ecfdf5;
-    color: #065f46;
-    border-color: #a7f3d0;
+    border-color: #34d399;
+    color: #047857;
 }
 
-.pesanan-stepper__item--aktif {
-    background: linear-gradient(165deg, rgba(214, 40, 40, 0.2) 0%, rgba(214, 40, 40, 0.08) 100%);
-    color: var(--teks-utama);
+.pesanan-stepper__langkah--selesai .pesanan-stepper__label {
+    color: #065f46;
+    font-weight: 700;
+}
+
+.pesanan-stepper__langkah--aktif .pesanan-stepper__marker {
+    background: var(--oranye-cta);
     border-color: var(--oranye-cta);
-    box-shadow: 0 0 0 1px rgba(214, 40, 40, 0.25);
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(214, 40, 40, 0.18);
+}
+
+.pesanan-stepper__langkah--aktif .pesanan-stepper__label {
+    color: var(--teks-utama);
     font-weight: 800;
 }
 
-.pesanan-stepper__item--belum {
-    opacity: 0.65;
+.pesanan-stepper__langkah--belum .pesanan-stepper__marker {
+    background: #fafafa;
+    border-color: #e5e7eb;
+    color: #9ca3af;
 }
 
-@media (min-width: 900px) {
-    .pesanan-stepper__item:not(:last-child)::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        right: -6px;
-        width: 10px;
-        height: 2px;
-        background: var(--abu-tepi);
-        transform: translateY(-50%);
-        z-index: 1;
+.pesanan-stepper__langkah--belum .pesanan-stepper__label {
+    opacity: 0.72;
+}
+
+@media (max-width: 767px) {
+    .pesanan-stepper {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 0.15rem 0 0;
     }
 
-    .pesanan-stepper__item--selesai:not(:last-child)::after {
-        background: #6ee7b7;
+    .pesanan-stepper__langkah {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 0.85rem;
+        padding: 0.55rem 0;
+        text-align: left;
+    }
+
+    .pesanan-stepper__langkah:not(:last-child)::after {
+        top: 2.35rem;
+        left: 1.125rem;
+        right: auto;
+        width: 3px;
+        height: calc(100% - 1.35rem);
+        transform: translateX(-50%);
+        background: #e5e7eb;
+    }
+
+    .pesanan-stepper__langkah--selesai:not(:last-child)::after {
+        background: linear-gradient(180deg, #34d399 0%, #6ee7b7 100%);
+    }
+
+    .pesanan-stepper__label {
+        justify-content: flex-start;
+        min-height: 2.25rem;
+        padding-top: 0.35rem;
+        font-size: 0.86rem;
+        text-align: left;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 960px) {
+    .pesanan-stepper__label {
+        font-size: 0.7rem;
+        min-height: 2.8em;
     }
 }
 

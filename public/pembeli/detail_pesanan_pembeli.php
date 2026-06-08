@@ -175,19 +175,29 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
     <?php if ($batal): ?>
         <div class="pesanan-batal-banner" role="status">Pesanan ini dibatalkan.</div>
     <?php else: ?>
-        <div class="pesanan-panel" style="margin-bottom:1.25rem;">
+        <div class="pesanan-panel pesanan-panel--status">
             <h2 class="pesanan-panel__judul">Status pesanan</h2>
             <ol class="pesanan-stepper" aria-label="Progress pesanan">
                 <?php foreach ($langkah as $i => $step): ?>
                     <?php
-                    $cls = 'pesanan-stepper__item pesanan-stepper__item--belum';
+                    $state = 'belum';
                     if ($idxAktif >= 0 && $i < $idxAktif) {
-                        $cls = 'pesanan-stepper__item pesanan-stepper__item--selesai';
+                        $state = 'selesai';
                     } elseif ($idxAktif >= 0 && $i === $idxAktif) {
-                        $cls = 'pesanan-stepper__item pesanan-stepper__item--aktif';
+                        $state = 'aktif';
                     }
+                    $aria_current = $state === 'aktif' ? ' aria-current="step"' : '';
                     ?>
-                    <li class="<?php echo htmlspecialchars($cls, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($step['label'], ENT_QUOTES, 'UTF-8'); ?></li>
+                    <li class="pesanan-stepper__langkah pesanan-stepper__langkah--<?php echo htmlspecialchars($state, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $aria_current; ?>>
+                        <div class="pesanan-stepper__marker" aria-hidden="true">
+                            <?php if ($state === 'selesai'): ?>
+                                <svg class="pesanan-stepper__ikon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <?php else: ?>
+                                <span class="pesanan-stepper__nomor"><?php echo (int) ($i + 1); ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <span class="pesanan-stepper__label"><?php echo htmlspecialchars($step['label'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    </li>
                 <?php endforeach; ?>
             </ol>
         </div>
