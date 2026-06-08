@@ -94,6 +94,121 @@ function pesanan_format_tanggal_detail(?string $iso): string
     }
 }
 
+function pesanan_format_tanggal_panjang(?string $iso): string
+{
+    if ($iso === null || $iso === '') {
+        return '—';
+    }
+    try {
+        $dt = new DateTimeImmutable($iso);
+        $bulan = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ];
+        $n = (int) $dt->format('n');
+
+        return $dt->format('d') . ' ' . ($bulan[$n] ?? $dt->format('M')) . ' ' . $dt->format('Y');
+    } catch (Throwable $e) {
+        return '—';
+    }
+}
+
+/**
+ * @return array{penerima:string,telepon:string,jalan:string,wilayah:string,destinasi:string}
+ */
+function pesanan_parse_alamat_kirim(string $raw): array
+{
+    $hasil = [
+        'penerima' => '',
+        'telepon' => '',
+        'jalan' => '',
+        'wilayah' => '',
+        'destinasi' => '',
+    ];
+    $lines = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $raw) ?: [])));
+    if ($lines === []) {
+        return $hasil;
+    }
+    if (count($lines) === 1 && !preg_match('/\([^)]+\)/', $lines[0])) {
+        $hasil['jalan'] = $lines[0];
+
+        return $hasil;
+    }
+    if (preg_match('/^(.+?)\s*\(([^)]+)\)\s*$/u', $lines[0], $m)) {
+        $hasil['penerima'] = trim($m[1]);
+        $hasil['telepon'] = trim($m[2]);
+        array_shift($lines);
+    } else {
+        $hasil['penerima'] = $lines[0];
+        array_shift($lines);
+    }
+    $last = $lines !== [] ? $lines[count($lines) - 1] : '';
+    if (is_string($last) && str_starts_with($last, 'Destinasi:')) {
+        $hasil['destinasi'] = trim(substr($last, strlen('Destinasi:')));
+        array_pop($lines);
+    }
+    if (count($lines) >= 2) {
+        $hasil['jalan'] = $lines[0];
+        $hasil['wilayah'] = implode("\n", array_slice($lines, 1));
+    } elseif (count($lines) === 1) {
+        $hasil['jalan'] = $lines[0];
+    }
+
+    return $hasil;
+}
+
+function pesanan_badge_modern_kelas(string $status): string
+{
+    $map = [
+        'pending' => 'pd-badge pd-badge--warning',
+        'paid' => 'pd-badge pd-badge--success',
+        'processed' => 'pd-badge pd-badge--info',
+        'shipped' => 'pd-badge pd-badge--info',
+        'completed' => 'pd-badge pd-badge--success',
+        'cancelled' => 'pd-badge pd-badge--danger',
+    ];
+
+    return $map[$status] ?? 'pd-badge pd-badge--neutral';
+}
+
+/**
+ * Timeline UI dari status + created_at (estimasi menit antar langkah jika belum ada updated_at).
+ *
+ * @return list<array{waktu:string,label:string}>
+ */
+function pesanan_timeline_aktivitas(?string $created_at, int $idxAktif, bool $batal): array
+{
+    if ($batal || $created_at === null || $created_at === '' || $idxAktif < 0) {
+        return [];
+    }
+    try {
+        $base = new DateTimeImmutable($created_at);
+    } catch (Throwable $e) {
+        return [];
+    }
+    $langkah = [
+        ['min_idx' => 0, 'label' => 'Pesanan dibuat'],
+        ['min_idx' => 1, 'label' => 'Pembayaran berhasil'],
+        ['min_idx' => 2, 'label' => 'Pesanan diproses'],
+        ['min_idx' => 3, 'label' => 'Pesanan dikirim'],
+        ['min_idx' => 4, 'label' => 'Pesanan selesai'],
+    ];
+    $events = [];
+    foreach ($langkah as $i => $step) {
+        if ($idxAktif < $step['min_idx']) {
+            break;
+        }
+        $dt = $base->modify('+' . $i . ' minutes');
+        $events[] = [
+            'waktu' => $dt->format('d M Y H:i'),
+            'label' => $step['label'],
+        ];
+    }
+
+    return $events;
+}
+
 $badge = $badgeClass[$status] ?? 'pesanan-badge pesanan-badge--kuning';
 $labelStatus = $labels[$status] ?? $status;
 $items = $order['items'] ?? [];
@@ -117,6 +232,12 @@ $pakasir_metode_opsi = pakasir_daftar_metode();
 $pakasir_metode_default = pakasir_konfigurasi()['metode_default'];
 $tampil_bayar = $status === 'pending' && $pakasir_aktif && !$batal;
 $tampil_bayar_peringatan = $status === 'pending' && !$pakasir_aktif && !$batal;
+$created_at_iso = isset($order['created_at']) ? (string) $order['created_at'] : null;
+$alamat_parsed = pesanan_parse_alamat_kirim($alamat);
+$timeline_events = pesanan_timeline_aktivitas($created_at_iso, $idxAktif, $batal);
+$badge_modern = pesanan_badge_modern_kelas($status);
+$tanggal_pesanan = pesanan_format_tanggal_panjang($created_at_iso);
+$kurir_tampil = trim(strtoupper($kurir) . ($layanan !== '' ? ' - ' . strtoupper($layanan) : ''));
 
 $wa_pesanan = '';
 foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
@@ -136,22 +257,34 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
     <title>Detail pesanan #<?php echo (int) $order_id; ?> — EA SENIKERS</title>
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
     <link rel="stylesheet" href="../assets/css/pesanan-pembeli.css">
+    <link rel="stylesheet" href="../assets/css/detail-pesanan.css">
 </head>
-<body class="halaman-toko">
+<body class="halaman-toko halaman-detail-pesanan">
 
 <?php include __DIR__ . '/../../includes/bilah_pembeli.php'; ?>
 
-<main class="pesanan-wrap" id="utama">
+<main class="pesanan-wrap pd-wrap" id="utama">
     <a class="pesanan-detail-kembali" href="<?php echo htmlspecialchars($u_list, ENT_QUOTES, 'UTF-8'); ?>">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         Kembali ke pesanan
     </a>
 
-    <h1 class="pesanan-judul">Detail pesanan #<?php echo (int) $order_id; ?></h1>
-    <p class="pesanan-sub">
-        <?php echo htmlspecialchars(pesanan_format_tanggal_detail(isset($order['created_at']) ? (string) $order['created_at'] : null), ENT_QUOTES, 'UTF-8'); ?>
-        · <span class="<?php echo htmlspecialchars($badge, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($labelStatus, ENT_QUOTES, 'UTF-8'); ?></span>
-    </p>
+    <header class="pd-header-card" aria-label="Informasi pesanan">
+        <div>
+            <p class="pd-header-card__label">Pesanan</p>
+            <h1 class="pd-header-card__nomor">#<?php echo (int) $order_id; ?></h1>
+        </div>
+        <div class="pd-header-card__meta">
+            <div class="pd-header-card__meta-item">
+                <span>Tanggal</span>
+                <strong><?php echo htmlspecialchars($tanggal_pesanan, ENT_QUOTES, 'UTF-8'); ?></strong>
+            </div>
+            <div class="pd-header-card__meta-item">
+                <span>Status</span>
+                <span class="<?php echo htmlspecialchars($badge_modern, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(strtoupper($labelStatus), ENT_QUOTES, 'UTF-8'); ?></span>
+            </div>
+        </div>
+    </header>
 
     <?php if (is_string($flash_baru) && $flash_baru !== ''): ?>
         <div class="pesanan-flash-sukses" role="status"><?php echo htmlspecialchars($flash_baru, ENT_QUOTES, 'UTF-8'); ?></div>
@@ -169,9 +302,9 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
     <?php if ($batal): ?>
         <div class="pesanan-batal-banner" role="status">Pesanan ini dibatalkan.</div>
     <?php else: ?>
-        <div class="pesanan-panel pesanan-panel--status">
-            <h2 class="pesanan-panel__judul">Status pesanan</h2>
-            <ol class="pesanan-stepper" aria-label="Progress pesanan">
+        <div class="pd-card pd-card--stepper">
+            <h2 class="pd-card__judul">Status pesanan</h2>
+            <ol class="pd-stepper" aria-label="Progress pesanan">
                 <?php foreach ($langkah as $i => $step): ?>
                     <?php
                     $state = 'belum';
@@ -182,15 +315,15 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                     }
                     $aria_current = $state === 'aktif' ? ' aria-current="step"' : '';
                     ?>
-                    <li class="pesanan-stepper__langkah pesanan-stepper__langkah--<?php echo htmlspecialchars($state, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $aria_current; ?>>
-                        <div class="pesanan-stepper__marker" aria-hidden="true">
+                    <li class="pd-stepper__langkah pd-stepper__langkah--<?php echo htmlspecialchars($state, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $aria_current; ?>>
+                        <div class="pd-stepper__marker" aria-hidden="true">
                             <?php if ($state === 'selesai'): ?>
-                                <svg class="pesanan-stepper__ikon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                             <?php else: ?>
-                                <span class="pesanan-stepper__nomor"><?php echo (int) ($i + 1); ?></span>
+                                <span class="pd-stepper__nomor"><?php echo (int) ($i + 1); ?></span>
                             <?php endif; ?>
                         </div>
-                        <span class="pesanan-stepper__label"><?php echo htmlspecialchars($step['label'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="pd-stepper__label"><?php echo htmlspecialchars($step['label'], ENT_QUOTES, 'UTF-8'); ?></span>
                     </li>
                 <?php endforeach; ?>
             </ol>
@@ -199,12 +332,12 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
 
     <div class="pesanan-detail-layout">
         <section class="pesanan-detail-utama" aria-labelledby="judul-produk-pesanan">
-            <div class="pesanan-panel">
-                <h2 id="judul-produk-pesanan" class="pesanan-panel__judul">Produk</h2>
+            <div class="pd-card">
+                <h2 id="judul-produk-pesanan" class="pd-card__judul">Produk dipesan</h2>
                 <?php if (!is_array($items) || $items === []): ?>
                     <p class="pesanan-panel__kosong">Tidak ada baris item (data tidak lengkap).</p>
                 <?php else: ?>
-                    <ul class="pesanan-produk-list">
+                    <ul class="pd-produk-list">
                         <?php foreach ($items as $it): ?>
                             <?php
                             $it = is_array($it) ? $it : [];
@@ -215,33 +348,52 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                             $qty = max(1, (int) ($it['quantity'] ?? 1));
                             $sub_baris = $pr * $qty;
                             ?>
-                            <li class="pesanan-item-baris">
-                                <img class="pesanan-item-baris__gambar" src="<?php echo htmlspecialchars($gurl, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="84" height="84" loading="lazy">
-                                <div class="pesanan-item-baris__info">
-                                    <p class="pesanan-item-baris__nama"><?php echo htmlspecialchars($pn, ENT_QUOTES, 'UTF-8'); ?></p>
-                                    <p class="pesanan-item-baris__meta">
-                                        Ukuran <strong><?php echo htmlspecialchars($sz !== '' ? $sz : '—', ENT_QUOTES, 'UTF-8'); ?></strong>
-                                        · Qty <strong><?php echo (int) $qty; ?></strong>
-                                    </p>
+                            <li class="pd-produk-item">
+                                <img class="pd-produk-item__gambar" src="<?php echo htmlspecialchars($gurl, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="112" height="112" loading="lazy">
+                                <div>
+                                    <p class="pd-produk-item__nama"><?php echo htmlspecialchars($pn, ENT_QUOTES, 'UTF-8'); ?></p>
+                                    <div class="pd-produk-item__badges">
+                                        <span class="pd-chip">Size <strong><?php echo htmlspecialchars($sz !== '' ? $sz : '—', ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                                        <span class="pd-chip">Qty <strong><?php echo (int) $qty; ?></strong></span>
+                                    </div>
+                                    <p class="pd-produk-item__harga"><?php echo htmlspecialchars(katalog_format_rupiah($sub_baris), ENT_QUOTES, 'UTF-8'); ?></p>
                                     <?php if (in_array($status, ['shipped', 'completed'])): ?>
                                         <?php $pid = (string) ($it['id_produk'] ?? ''); ?>
                                         <?php if ($pid !== ''): ?>
-                                            <a class="pesanan-item-baris__link" href="<?php echo htmlspecialchars(aplikasi_url('detail-produk?id=' . rawurlencode($pid)), ENT_QUOTES, 'UTF-8'); ?>">Beri ulasan</a>
+                                            <a class="pd-produk-item__ulasan" href="<?php echo htmlspecialchars(aplikasi_url('detail-produk?id=' . rawurlencode($pid)), ENT_QUOTES, 'UTF-8'); ?>">Beri ulasan</a>
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
-                                <p class="pesanan-item-baris__harga"><?php echo htmlspecialchars(katalog_format_rupiah($sub_baris), ENT_QUOTES, 'UTF-8'); ?></p>
                             </li>
                         <?php endforeach; ?>
                     </ul>
                 <?php endif; ?>
             </div>
+
+            <?php if ($timeline_events !== []): ?>
+            <div class="pd-card pd-card--timeline">
+                <h2 class="pd-card__judul">Aktivitas pesanan</h2>
+                <ol class="pd-timeline">
+                    <?php foreach ($timeline_events as $ev): ?>
+                    <li class="pd-timeline__item">
+                        <span class="pd-timeline__dot" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </span>
+                        <p class="pd-timeline__waktu"><?php echo htmlspecialchars((string) ($ev['waktu'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p class="pd-timeline__teks"><?php echo htmlspecialchars((string) ($ev['label'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
+                    </li>
+                    <?php endforeach; ?>
+                </ol>
+                <p class="pd-timeline__hint">Status berikutnya akan muncul otomatis saat terjadi perubahan.</p>
+            </div>
+            <?php endif; ?>
         </section>
 
         <aside class="pesanan-detail-samping" aria-label="Ringkasan pesanan">
+            <div class="pd-sidebar-sticky">
             <?php if ($tampil_bayar): ?>
-            <div class="pesanan-panel pesanan-panel--bayar">
-                <h2 class="pesanan-panel__judul">Pembayaran Pakasir</h2>
+            <div class="pd-card pd-card--bayar">
+                <h2 class="pd-card__judul">Pembayaran Pakasir</h2>
                 <p class="pesanan-bayar-teks">Total tagihan: <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong> (belum termasuk biaya admin channel).</p>
                 <form class="pesanan-bayar-form" method="post" action="<?php echo htmlspecialchars(aplikasi_url('detail-pesanan?id=' . $order_id), ENT_QUOTES, 'UTF-8'); ?>">
                     <input type="hidden" name="aksi" value="bayar_pakasir">
@@ -255,59 +407,115 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                 </form>
             </div>
             <?php elseif ($tampil_bayar_peringatan): ?>
-            <div class="pesanan-panel pesanan-panel--peringatan" role="status">
-                <h2 class="pesanan-panel__judul">Pembayaran</h2>
+            <div class="pd-card pd-card--peringatan" role="status">
+                <h2 class="pd-card__judul">Pembayaran</h2>
                 <p class="pesanan-bayar-teks pesanan-bayar-teks--padat">Pembayaran online belum aktif. Hubungi toko via WhatsApp untuk konfirmasi transfer.</p>
             </div>
             <?php endif; ?>
 
-            <div class="pesanan-panel pesanan-panel--ringkasan">
-                <h2 class="pesanan-panel__judul">Ringkasan</h2>
-                <dl class="pesanan-ringkasan-dl">
-                    <div class="pesanan-ringkasan-baris pesanan-ringkasan-baris--stack">
-                        <dt>Alamat pengiriman</dt>
-                        <dd>
-                            <?php if ($alamat !== ''): ?>
-                                <?php echo nl2br(htmlspecialchars($alamat, ENT_QUOTES, 'UTF-8')); ?>
-                            <?php else: ?>
-                                <em class="pesanan-ringkasan-kosong">Belum diisi</em>
-                            <?php endif; ?>
-                        </dd>
-                    </div>
-                    <?php if ($kurir !== '' || $layanan !== ''): ?>
-                    <div class="pesanan-ringkasan-baris">
-                        <dt>Kurir</dt>
-                        <dd><?php echo htmlspecialchars(strtoupper($kurir) . ($layanan !== '' ? ' · ' . $layanan : ''), ENT_QUOTES, 'UTF-8'); ?></dd>
-                    </div>
+            <div class="pd-card">
+                <h2 class="pd-card__judul">Pengiriman</h2>
+                <ul class="pd-pengiriman-list">
+                    <?php if ($alamat_parsed['penerima'] !== ''): ?>
+                    <li class="pd-pengiriman-item">
+                        <span class="pd-pengiriman-item__ikon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        </span>
+                        <div>
+                            <p class="pd-pengiriman-item__label">Penerima</p>
+                            <p class="pd-pengiriman-item__nilai"><?php echo htmlspecialchars($alamat_parsed['penerima'], ENT_QUOTES, 'UTF-8'); ?></p>
+                        </div>
+                    </li>
+                    <?php endif; ?>
+                    <?php if ($alamat_parsed['telepon'] !== ''): ?>
+                    <li class="pd-pengiriman-item">
+                        <span class="pd-pengiriman-item__ikon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                        </span>
+                        <div>
+                            <p class="pd-pengiriman-item__label">Nomor telepon</p>
+                            <p class="pd-pengiriman-item__nilai"><?php echo htmlspecialchars($alamat_parsed['telepon'], ENT_QUOTES, 'UTF-8'); ?></p>
+                        </div>
+                    </li>
+                    <?php endif; ?>
+                    <?php if ($alamat_parsed['jalan'] !== '' || $alamat_parsed['wilayah'] !== ''): ?>
+                    <li class="pd-pengiriman-item">
+                        <span class="pd-pengiriman-item__ikon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </span>
+                        <div>
+                            <p class="pd-pengiriman-item__label">Alamat</p>
+                            <p class="pd-pengiriman-item__nilai">
+                                <?php if ($alamat_parsed['jalan'] !== ''): ?>
+                                    <?php echo htmlspecialchars($alamat_parsed['jalan'], ENT_QUOTES, 'UTF-8'); ?><br>
+                                <?php endif; ?>
+                                <?php if ($alamat_parsed['wilayah'] !== ''): ?>
+                                    <?php echo nl2br(htmlspecialchars($alamat_parsed['wilayah'], ENT_QUOTES, 'UTF-8')); ?>
+                                <?php endif; ?>
+                            </p>
+                        </div>
+                    </li>
+                    <?php elseif ($alamat === ''): ?>
+                    <li class="pd-pengiriman-item">
+                        <span class="pd-pengiriman-item__ikon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </span>
+                        <div>
+                            <p class="pd-pengiriman-item__label">Alamat</p>
+                            <p class="pd-pengiriman-item__nilai"><em class="pesanan-ringkasan-kosong">Belum diisi</em></p>
+                        </div>
+                    </li>
+                    <?php endif; ?>
+                    <?php if ($kurir_tampil !== ''): ?>
+                    <li class="pd-pengiriman-item">
+                        <span class="pd-pengiriman-item__ikon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m10 0H3m10 0h2l3-3V9a1 1 0 00-1-1h-2"/></svg>
+                        </span>
+                        <div>
+                            <p class="pd-pengiriman-item__label">Kurir</p>
+                            <p class="pd-pengiriman-item__nilai"><?php echo htmlspecialchars($kurir_tampil, ENT_QUOTES, 'UTF-8'); ?></p>
+                        </div>
+                    </li>
                     <?php endif; ?>
                     <?php if ($nomor_resi !== ''): ?>
-                    <div class="pesanan-ringkasan-baris">
-                        <dt>Nomor resi</dt>
-                        <dd><strong><?php echo htmlspecialchars($nomor_resi, ENT_QUOTES, 'UTF-8'); ?></strong></dd>
-                    </div>
+                    <li class="pd-pengiriman-item">
+                        <span class="pd-pengiriman-item__ikon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </span>
+                        <div>
+                            <p class="pd-pengiriman-item__label">Nomor resi</p>
+                            <p class="pd-pengiriman-item__nilai"><strong><?php echo htmlspecialchars($nomor_resi, ENT_QUOTES, 'UTF-8'); ?></strong></p>
+                        </div>
+                    </li>
                     <?php endif; ?>
-                    <div class="pesanan-ringkasan-baris">
+                </ul>
+            </div>
+
+            <div class="pd-card">
+                <h2 class="pd-card__judul">Ringkasan pembayaran</h2>
+                <dl class="pd-harga-list">
+                    <div class="pd-harga-baris">
                         <dt>Metode pembayaran</dt>
                         <dd>
                             <?php if ($bayar !== ''): ?>
                                 <?php echo htmlspecialchars($bayar, ENT_QUOTES, 'UTF-8'); ?>
                             <?php elseif ($pakasir_aktif && $status === 'pending'): ?>
-                                <em class="pesanan-ringkasan-kosong">Belum dibayar (Pakasir)</em>
+                                <em class="pesanan-ringkasan-kosong">Belum dibayar</em>
                             <?php else: ?>
                                 <em class="pesanan-ringkasan-kosong">—</em>
                             <?php endif; ?>
                         </dd>
                     </div>
-                    <div class="pesanan-ringkasan-baris">
+                    <div class="pd-harga-baris">
                         <dt>Subtotal produk</dt>
                         <dd><?php echo htmlspecialchars(katalog_format_rupiah($subtotal_produk), ENT_QUOTES, 'UTF-8'); ?></dd>
                     </div>
-                    <div class="pesanan-ringkasan-baris">
+                    <div class="pd-harga-baris">
                         <dt>Ongkos kirim</dt>
                         <dd><?php echo htmlspecialchars(katalog_format_rupiah($ongkir), ENT_QUOTES, 'UTF-8'); ?></dd>
                     </div>
                 </dl>
-                <div class="pesanan-ringkasan-total">
+                <div class="pd-harga-total">
                     <span>Total</span>
                     <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong>
                 </div>
@@ -319,6 +527,7 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                     Hubungi toko via WhatsApp
                 </a>
             <?php endif; ?>
+            </div>
         </aside>
     </div>
 </main>
