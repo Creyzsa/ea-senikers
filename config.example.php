@@ -75,5 +75,11 @@ define('PAYMENT_CALLBACK_SECRET', '');
 /** Kode asal JNE toko (3 huruf + 5 angka). EA Senikers Padang Panjang = PDG21100 */
 define('JNE_ORIGIN_CODE', 'PDG21100');
 
+/** Pakasir (opsional di config.php — alternatif: Admin Pengaturan atau env Vercel) */
+// define('PAKASIR_PROJECT_SLUG', 'easenikers');
+// define('PAKASIR_API_KEY', 'your-pakasir-api-key');
+// define('PAKASIR_MODE', 'sandbox');
+// define('PAKASIR_METODE_DEFAULT', 'qris');
+
 define('EMAIL_DRIVER', 'log');
 define('EMAIL_PENGIRIM', 'EA SENIKERS <noreply@example.com>');

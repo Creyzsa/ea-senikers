@@ -13,6 +13,30 @@ require_once __DIR__ . '/../url_bantu.php';
 const PAKASIR_API_BASE = 'https://app.pakasir.com/api';
 const PAKASIR_WEB_BASE = 'https://app.pakasir.com';
 
+function pakasir_env_nilai(string ...$nama): string
+{
+    foreach ($nama as $n) {
+        $v = getenv($n);
+        if (is_string($v) && trim($v) !== '') {
+            return trim($v);
+        }
+        if (isset($_ENV[$n]) && is_string($_ENV[$n]) && trim($_ENV[$n]) !== '') {
+            return trim($_ENV[$n]);
+        }
+        if (isset($_SERVER[$n]) && is_string($_SERVER[$n]) && trim($_SERVER[$n]) !== '') {
+            return trim($_SERVER[$n]);
+        }
+        if (defined($n)) {
+            $konst = constant($n);
+            if (is_string($konst) && trim($konst) !== '') {
+                return trim($konst);
+            }
+        }
+    }
+
+    return '';
+}
+
 /**
  * @return array<string, string>
  */
@@ -41,10 +65,10 @@ function pakasir_konfigurasi(): array
 {
     $cfg = admin_pengaturan_muat_terapan();
 
-    $env_slug = trim((string) (getenv('PAKASIR_PROJECT_SLUG') ?: getenv('PAKASIR_PROJECT') ?: ''));
-    $env_key = trim((string) (getenv('PAKASIR_API_KEY') ?: ''));
-    $env_mode = strtolower(trim((string) (getenv('PAKASIR_MODE') ?: '')));
-    $env_metode = strtolower(trim((string) (getenv('PAKASIR_METODE_DEFAULT') ?: '')));
+    $env_slug = pakasir_env_nilai('PAKASIR_PROJECT_SLUG', 'PAKASIR_PROJECT');
+    $env_key = pakasir_env_nilai('PAKASIR_API_KEY');
+    $env_mode = strtolower(pakasir_env_nilai('PAKASIR_MODE'));
+    $env_metode = strtolower(pakasir_env_nilai('PAKASIR_METODE_DEFAULT'));
 
     $mode = $env_mode !== '' ? $env_mode : strtolower(trim((string) ($cfg['pakasir_mode'] ?? 'sandbox')));
     if (!in_array($mode, ['sandbox', 'production'], true)) {

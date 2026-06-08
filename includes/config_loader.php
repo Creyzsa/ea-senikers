@@ -52,5 +52,18 @@ if (!defined('DB_HOST')) {
         if (!defined('JNE_ORIGIN_CODE')) {
             define('JNE_ORIGIN_CODE', getenv('JNE_ORIGIN_CODE') ?: 'PDG21100');
         }
+
+        if (!defined('PAKASIR_PROJECT_SLUG')) {
+            define('PAKASIR_PROJECT_SLUG', getenv('PAKASIR_PROJECT_SLUG') ?: getenv('PAKASIR_PROJECT') ?: '');
+        }
+        if (!defined('PAKASIR_API_KEY')) {
+            define('PAKASIR_API_KEY', getenv('PAKASIR_API_KEY') ?: '');
+        }
+        if (!defined('PAKASIR_MODE')) {
+            define('PAKASIR_MODE', getenv('PAKASIR_MODE') ?: 'sandbox');
+        }
+        if (!defined('PAKASIR_METODE_DEFAULT')) {
+            define('PAKASIR_METODE_DEFAULT', getenv('PAKASIR_METODE_DEFAULT') ?: 'qris');
+        }
     }
 }

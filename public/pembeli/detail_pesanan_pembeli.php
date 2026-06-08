@@ -240,11 +240,15 @@ $tanggal_pesanan = pesanan_format_tanggal_panjang($created_at_iso);
 $kurir_tampil = trim(strtoupper($kurir) . ($layanan !== '' ? ' - ' . strtoupper($layanan) : ''));
 
 $wa_pesanan = '';
+$wa_konfirmasi_bayar = '';
 foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
     $e164 = preg_replace('/\D+/', '', (string) ($wa['e164'] ?? ''));
     if ($e164 !== '') {
         $pesan_wa = "Halo EA SENIKERS, saya mau menanyakan pesanan #{$order_id} (status: {$labelStatus}). Terima kasih.";
         $wa_pesanan = 'https://wa.me/' . $e164 . '?text=' . rawurlencode($pesan_wa);
+        $pesan_bayar = 'Halo EA SENIKERS, saya ingin konfirmasi pembayaran pesanan #' . $order_id
+            . ' sebesar ' . katalog_format_rupiah($total) . '. Terima kasih.';
+        $wa_konfirmasi_bayar = 'https://wa.me/' . $e164 . '?text=' . rawurlencode($pesan_bayar);
         break;
     }
 }
@@ -418,9 +422,21 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                 </form>
             </div>
             <?php elseif ($tampil_bayar_peringatan): ?>
-            <div class="pd-card pd-card--peringatan" role="status">
-                <h2 class="pd-card__judul">Pembayaran</h2>
-                <p class="pesanan-bayar-teks pesanan-bayar-teks--padat">Pembayaran online belum aktif. Hubungi toko via WhatsApp untuk konfirmasi transfer.</p>
+            <div class="pd-card pd-card--bayar-manual" role="status">
+                <div class="pd-bayar-manual__ikon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h2 class="pd-card__judul">Konfirmasi pembayaran</h2>
+                <p class="pd-bayar-manual__teks">Pembayaran online (Pakasir) belum aktif di server ini. Silakan transfer manual lalu konfirmasi ke toko.</p>
+                <p class="pd-bayar-manual__total">Total transfer: <strong><?php echo htmlspecialchars(katalog_format_rupiah($total), ENT_QUOTES, 'UTF-8'); ?></strong></p>
+                <?php if ($wa_konfirmasi_bayar !== ''): ?>
+                    <a class="pd-bayar-manual__wa" href="<?php echo htmlspecialchars($wa_konfirmasi_bayar, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413z"/></svg>
+                        Konfirmasi via WhatsApp
+                    </a>
+                <?php else: ?>
+                    <p class="pd-bayar-manual__catatan">Hubungi toko untuk detail rekening dan konfirmasi transfer.</p>
+                <?php endif; ?>
             </div>
             <?php endif; ?>
 
