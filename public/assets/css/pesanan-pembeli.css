@@ -228,71 +228,261 @@
     text-decoration: underline;
 }
 
-.pesanan-detail-body {
+/* Layout detail pesanan — pola checkout/keranjang */
+.pesanan-detail-layout {
     display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(17.5rem, 22rem);
     gap: 1.25rem;
-}
-
-.pesanan-detail-body--ada-bayar {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas:
-        "produk bayar"
-        "ringkasan ringkasan"
-        "wa wa";
-    align-items: stretch;
-}
-
-.pesanan-detail-body--standar {
-    grid-template-columns: minmax(0, 1fr) 22rem;
-    grid-template-areas:
-        "produk ringkasan"
-        "wa wa";
     align-items: start;
 }
 
-.pesanan-detail-produk,
-.pesanan-detail-bayar {
-    display: flex;
-    flex-direction: column;
+.pesanan-detail-main,
+.pesanan-detail-sidebar {
     min-width: 0;
 }
 
-.pesanan-detail-produk { grid-area: produk; }
-.pesanan-detail-bayar { grid-area: bayar; }
-.pesanan-detail-ringkasan { grid-area: ringkasan; min-width: 0; }
-.pesanan-detail-wa { grid-area: wa; min-width: 0; }
-
-@media (max-width: 768px) {
-    .pesanan-detail-body--ada-bayar {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-            "produk"
-            "bayar"
-            "ringkasan"
-            "wa";
-    }
-
-    .pesanan-detail-body--standar {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-            "produk"
-            "ringkasan"
-            "wa";
-    }
-}
-
-.pesanan-panel--setinggi {
-    height: 100%;
-    box-sizing: border-box;
+.pesanan-detail-sidebar {
     display: flex;
     flex-direction: column;
+    gap: 1rem;
+}
+
+.pesanan-kartu {
+    padding: clamp(1rem, 2.5vw, 1.3rem);
+    background: #fff;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 12px;
+    box-shadow: var(--bayangan-kartu);
+}
+
+.pesanan-kartu--ringkasan {
+    position: sticky;
+    top: 5.5rem;
+}
+
+.pesanan-kartu__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.pesanan-kartu__judul {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.pesanan-kartu__header .pesanan-kartu__judul {
+    margin-bottom: 0;
+}
+
+.pesanan-kartu__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.28rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--teks-redup);
+    background: var(--brand-gray-light);
+    border-radius: 999px;
+}
+
+.pesanan-kartu__kosong {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--teks-redup);
+}
+
+.pesanan-produk-daftar {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.pesanan-produk-item {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr) auto;
+    gap: 0.9rem;
+    align-items: center;
+    padding: 0.9rem;
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 10px;
+}
+
+.pesanan-produk-item__gambar {
+    width: 88px;
+    height: 88px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--abu-tepi);
+    background: #f4f4f5;
+}
+
+.pesanan-produk-item__nama {
+    margin: 0 0 0.45rem;
+    font-size: 0.96rem;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--teks-utama);
+}
+
+.pesanan-produk-item__chip-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.pesanan-produk-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.22rem 0.55rem;
+    font-size: 0.76rem;
+    color: var(--teks-redup);
+    background: var(--brand-gray-light);
+    border-radius: 999px;
+}
+
+.pesanan-produk-chip strong {
+    color: var(--teks-utama);
+    font-weight: 700;
+}
+
+.pesanan-produk-item__ulasan {
+    display: inline-block;
+    margin-top: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--brand-red);
+    text-decoration: none;
+}
+
+.pesanan-produk-item__ulasan:hover {
+    text-decoration: underline;
+}
+
+.pesanan-produk-item__harga {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.3rem;
+    text-align: right;
+    min-width: 7.5rem;
+}
+
+.pesanan-produk-item__harga-satuan {
+    font-size: 0.74rem;
+    color: var(--teks-redup);
+}
+
+.pesanan-produk-item__subtotal {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.pesanan-info-blok + .pesanan-info-blok {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.pesanan-info-blok__judul {
+    margin: 0 0 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--teks-redup);
+}
+
+.pesanan-info-dl,
+.pesanan-harga-dl {
+    margin: 0;
+    padding: 0;
+}
+
+.pesanan-info-satu,
+.pesanan-harga-satu {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.42rem 0;
+    font-size: 0.88rem;
+}
+
+.pesanan-info-satu--stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3rem;
+}
+
+.pesanan-info-satu dt,
+.pesanan-harga-satu dt {
+    margin: 0;
+    font-weight: 600;
+    color: var(--teks-redup);
+}
+
+.pesanan-info-satu dd,
+.pesanan-harga-satu dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--teks-utama);
+    text-align: right;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.pesanan-info-satu--stack dd {
+    text-align: left;
+    font-weight: 600;
+}
+
+.pesanan-harga-dl {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.pesanan-total-akhir {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-top: 0.65rem;
+    padding-top: 0.85rem;
+    border-top: 2px solid var(--brand-black);
+    font-size: 0.9rem;
+    color: var(--teks-redup);
+}
+
+.pesanan-total-akhir strong {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.pesanan-ringkasan-kosong {
+    color: var(--teks-redup);
+    font-size: 0.82rem;
+    font-style: italic;
+    font-weight: 500;
 }
 
 .pesanan-panel {
     background: #fff;
     border: 1px solid var(--abu-tepi);
-    border-radius: 14px;
-    padding: 1.15rem 1.25rem;
+    border-radius: 12px;
+    padding: clamp(1rem, 2.5vw, 1.3rem);
     box-shadow: var(--bayangan-kartu);
 }
 
@@ -300,79 +490,40 @@
     margin: 0 0 1rem;
     font-size: 0.8rem;
     font-weight: 800;
-    letter-spacing: 0;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--teks-redup);
 }
 
-.pesanan-item-baris {
-    display: flex;
-    gap: 1rem;
-    padding: 0.85rem 0;
-    border-bottom: 1px solid var(--abu-tepi);
+@media (max-width: 960px) {
+    .pesanan-detail-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .pesanan-kartu--ringkasan {
+        position: static;
+    }
 }
 
-.pesanan-item-baris:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
+@media (max-width: 640px) {
+    .pesanan-produk-item {
+        grid-template-columns: 72px minmax(0, 1fr);
+    }
 
-.pesanan-item-baris:first-child {
-    padding-top: 0;
-}
+    .pesanan-produk-item__gambar {
+        width: 72px;
+        height: 72px;
+    }
 
-.pesanan-item-baris__gambar {
-    width: 72px;
-    height: 72px;
-    object-fit: cover;
-    border-radius: 10px;
-    background: var(--kotak-fitur-bg);
-}
-
-.pesanan-item-baris__nama {
-    margin: 0 0 0.25rem;
-    font-weight: 700;
-    font-size: 0.95rem;
-}
-
-.pesanan-item-baris__kecil {
-    margin: 0;
-    font-size: 0.82rem;
-    color: var(--teks-redup);
-}
-
-.pesanan-ringkasan-baris {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 0.75rem 1rem;
-    align-items: start;
-    margin: 0 0 0.5rem;
-    font-size: 0.9rem;
-}
-
-.pesanan-ringkasan-baris > span:first-child {
-    font-weight: 600;
-    color: var(--teks-redup);
-}
-
-.pesanan-ringkasan-baris--total {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px dashed var(--abu-tepi);
-    font-weight: 800;
-    font-size: 1.05rem;
-}
-
-.pesanan-ringkasan-nilai {
-    text-align: right;
-    line-height: 1.45;
-    word-break: break-word;
-}
-
-.pesanan-ringkasan-kosong {
-    color: var(--teks-redup);
-    font-size: 0.82rem;
-    font-style: italic;
+    .pesanan-produk-item__harga {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        min-width: 0;
+        padding-top: 0.35rem;
+        border-top: 1px dashed #e5e7eb;
+    }
 }
 
 .pesanan-bantuan-wa {
@@ -717,11 +868,12 @@
     line-height: 1.5;
 }
 
-.pesanan-panel--bayar {
-    margin-top: 0;
+.pesanan-kartu--bayar {
+    border-color: rgba(214, 40, 40, 0.28);
+    background: linear-gradient(180deg, #fff 0%, #fff9f9 100%);
 }
 
-.pesanan-panel--peringatan {
+.pesanan-kartu--peringatan {
     background: #fffbeb;
     border-color: #fcd34d;
 }
@@ -729,15 +881,18 @@
 .pesanan-bayar-form {
     display: flex;
     flex-direction: column;
-    flex: 1;
-    margin-top: auto;
+    gap: 0;
 }
 
 .pesanan-bayar-teks {
     margin: 0 0 0.85rem;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     line-height: 1.5;
     color: var(--teks-redup);
+}
+
+.pesanan-bayar-teks--padat {
+    margin: 0;
 }
 
 .pesanan-bayar-label {
