@@ -67,3 +67,34 @@ if (!defined('DB_HOST')) {
         }
     }
 }
+
+/**
+ * Pakasir: env / vercel.json boleh mengisi konstanta meski config.php sudah dimuat.
+ * Prioritas tetap: env → konstanta → pengaturan_toko_admin.json (di pakasir_konfigurasi).
+ */
+if (!function_exists('easenikers_definisikan_pakasir_dari_env')) {
+    function easenikers_definisikan_pakasir_dari_env(): void
+    {
+        if (!defined('PAKASIR_PROJECT_SLUG')) {
+            $slug = getenv('PAKASIR_PROJECT_SLUG') ?: getenv('PAKASIR_PROJECT') ?: '';
+            if (is_string($slug) && trim($slug) !== '') {
+                define('PAKASIR_PROJECT_SLUG', trim($slug));
+            }
+        }
+        if (!defined('PAKASIR_API_KEY')) {
+            $key = getenv('PAKASIR_API_KEY') ?: '';
+            if (is_string($key) && trim($key) !== '') {
+                define('PAKASIR_API_KEY', trim($key));
+            }
+        }
+        if (!defined('PAKASIR_MODE')) {
+            $mode = strtolower(trim((string) (getenv('PAKASIR_MODE') ?: 'sandbox')));
+            define('PAKASIR_MODE', in_array($mode, ['sandbox', 'production'], true) ? $mode : 'sandbox');
+        }
+        if (!defined('PAKASIR_METODE_DEFAULT')) {
+            $metode = strtolower(trim((string) (getenv('PAKASIR_METODE_DEFAULT') ?: 'qris')));
+            define('PAKASIR_METODE_DEFAULT', $metode !== '' ? $metode : 'qris');
+        }
+    }
+}
+easenikers_definisikan_pakasir_dari_env();

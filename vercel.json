@@ -66,6 +66,10 @@
   ],
   "env": {
     "APP_ENV": "production",
-    "URL_APLIKASI": "https://www.easenikers.shop"
+    "URL_APLIKASI": "https://www.easenikers.shop",
+    "PAKASIR_PROJECT_SLUG": "easenikers",
+    "PAKASIR_API_KEY": "4eXA7A6IcbrTSrMjqPktZuJlhi64NwP1",
+    "PAKASIR_MODE": "sandbox",
+    "PAKASIR_METODE_DEFAULT": "qris"
   }
 }
