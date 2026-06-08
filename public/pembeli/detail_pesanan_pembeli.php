@@ -302,9 +302,19 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
     <?php if ($batal): ?>
         <div class="pesanan-batal-banner" role="status">Pesanan ini dibatalkan.</div>
     <?php else: ?>
+        <?php
+        $jumlah_langkah = count($langkah);
+        $stepper_progress = $jumlah_langkah > 1
+            ? max(0, min(100, (int) round(($idxAktif / ($jumlah_langkah - 1)) * 100)))
+            : 0;
+        ?>
         <div class="pd-card pd-card--stepper">
             <h2 class="pd-card__judul">Status pesanan</h2>
-            <ol class="pd-stepper" aria-label="Progress pesanan">
+            <div class="pd-stepper-shell">
+                <div class="pd-stepper-track" aria-hidden="true">
+                    <span class="pd-stepper-track__fill" style="width: <?php echo (int) $stepper_progress; ?>%;"></span>
+                </div>
+                <ol class="pd-stepper" aria-label="Progress pesanan">
                 <?php foreach ($langkah as $i => $step): ?>
                     <?php
                     $state = 'belum';
@@ -326,7 +336,8 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                         <span class="pd-stepper__label"><?php echo htmlspecialchars($step['label'], ENT_QUOTES, 'UTF-8'); ?></span>
                     </li>
                 <?php endforeach; ?>
-            </ol>
+                </ol>
+            </div>
         </div>
     <?php endif; ?>
 
