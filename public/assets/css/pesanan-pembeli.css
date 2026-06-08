@@ -1,7 +1,7 @@
 /* Halaman Pesanan - EA SENIKERS (variabel dari beranda-toko.css / tema-easenikers.css) */
 
 .pesanan-wrap {
-    max-width: 56rem;
+    max-width: 68.75rem;
     margin: 0 auto;
     padding: 1.25rem clamp(1rem, 3vw, 2rem) 3rem;
 }
@@ -63,7 +63,7 @@
 /* Kartu daftar */
 .pesanan-kartu {
     display: grid;
-    grid-template-columns: 96px 1fr auto;
+    grid-template-columns: 96px minmax(0, 1fr) minmax(9.5rem, auto);
     gap: 1rem 1.25rem;
     align-items: center;
     padding: 1rem 1.15rem;
@@ -116,7 +116,9 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    justify-content: center;
     gap: 0.65rem;
+    min-width: 9.5rem;
 }
 
 @media (max-width: 640px) {
@@ -226,22 +228,64 @@
     text-decoration: underline;
 }
 
-.pesanan-detail-grid {
+.pesanan-detail-body {
     display: grid;
     gap: 1.25rem;
 }
 
-@media (min-width: 768px) {
-    .pesanan-detail-grid {
-        grid-template-columns: 1fr 320px;
-        align-items: start;
+.pesanan-detail-body--ada-bayar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+        "produk bayar"
+        "ringkasan ringkasan"
+        "wa wa";
+    align-items: stretch;
+}
+
+.pesanan-detail-body--standar {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    grid-template-areas:
+        "produk ringkasan"
+        "wa wa";
+    align-items: start;
+}
+
+.pesanan-detail-produk,
+.pesanan-detail-bayar {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pesanan-detail-produk { grid-area: produk; }
+.pesanan-detail-bayar { grid-area: bayar; }
+.pesanan-detail-ringkasan { grid-area: ringkasan; min-width: 0; }
+.pesanan-detail-wa { grid-area: wa; min-width: 0; }
+
+@media (max-width: 768px) {
+    .pesanan-detail-body--ada-bayar {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "produk"
+            "bayar"
+            "ringkasan"
+            "wa";
+    }
+
+    .pesanan-detail-body--standar {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "produk"
+            "ringkasan"
+            "wa";
     }
 }
 
-.pesanan-detail-kanan {
+.pesanan-panel--setinggi {
+    height: 100%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
 }
 
 .pesanan-panel {
@@ -298,11 +342,17 @@
 }
 
 .pesanan-ringkasan-baris {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.75rem 1rem;
+    align-items: start;
     margin: 0 0 0.5rem;
     font-size: 0.9rem;
+}
+
+.pesanan-ringkasan-baris > span:first-child {
+    font-weight: 600;
+    color: var(--teks-redup);
 }
 
 .pesanan-ringkasan-baris--total {
@@ -315,8 +365,8 @@
 
 .pesanan-ringkasan-nilai {
     text-align: right;
-    max-width: 14rem;
     line-height: 1.45;
+    word-break: break-word;
 }
 
 .pesanan-ringkasan-kosong {
@@ -329,7 +379,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 0.9rem;
+    margin-top: 0;
     padding: 0.7rem 1rem;
     width: 100%;
     box-sizing: border-box;
@@ -487,10 +537,10 @@
 
 .pesanan-filter {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.55rem;
     margin: 0 0 1rem;
     padding: 0.55rem;
-    overflow-x: auto;
     background: #fff;
     border: 1px solid var(--abu-tepi);
     border-radius: 8px;
@@ -578,6 +628,18 @@
 
 .pesanan-panel--bayar {
     margin-top: 0;
+}
+
+.pesanan-panel--peringatan {
+    background: #fffbeb;
+    border-color: #fcd34d;
+}
+
+.pesanan-bayar-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin-top: auto;
 }
 
 .pesanan-bayar-teks {
