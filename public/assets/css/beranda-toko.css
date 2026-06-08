@@ -552,9 +552,22 @@ body.halaman-toko {
     color: var(--teks-aksen-hover);
 }
 
+.blok-terlaris {
+    --katalog-primary: #0f0f10;
+    --katalog-accent: #e63946;
+    --katalog-bg: #ffffff;
+    --katalog-surface: #f3f4f6;
+    --katalog-muted: #6b7280;
+}
+
 .grid-produk-terlaris {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.grid-produk-terlaris.katalog-grid-premium {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
 }
 
@@ -562,6 +575,26 @@ body.halaman-toko {
     .grid-produk-terlaris {
         grid-template-columns: repeat(4, 1fr);
     }
+
+    .grid-produk-terlaris.katalog-grid-premium {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.blok-terlaris .kartu-premium {
+    min-height: 0;
+}
+
+.blok-terlaris .kartu-premium__nama {
+    font-size: 0.9rem;
+}
+
+.blok-terlaris .kartu-premium__harga {
+    font-size: 1rem;
+}
+
+.blok-terlaris .kartu-premium__meta {
+    font-size: 0.74rem;
 }
 
 /* --- Kartu produk --- */

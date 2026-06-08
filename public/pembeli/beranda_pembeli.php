@@ -29,6 +29,12 @@ if ($produk_terlaris === [] && $semua_produk !== []) {
     $produk_terlaris = array_slice($semua_produk, 0, 4);
 }
 
+$sudah_login = sudah_masuk();
+$id_pengguna = $sudah_login ? (int) ($_SESSION['id_pengguna'] ?? 0) : 0;
+$wishlist_ids = $id_pengguna > 0 ? wishlist_id_set($id_pengguna) : [];
+$u_masuk = aplikasi_url('login/masuk.php');
+$u_wishlist_toggle = aplikasi_url('api/wishlist-toggle');
+
 $u_ig = 'https://www.instagram.com/' . rawurlencode((string) ($kontak_toko['sosial']['instagram'] ?? 'easenikers')) . '/';
 $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial']['tiktok'] ?? 'easecondbrandofficial'));
 ?>
@@ -39,6 +45,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Beranda - EA SENIKERS</title>
     <link rel="stylesheet" href="<?php echo htmlspecialchars(aplikasi_url_aset('assets/css/beranda-toko.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(aplikasi_url_aset('assets/css/katalog-produk.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <script>
     // Handle Supabase email confirmation tokens in hash (common case) or query
     (function () {
@@ -55,7 +62,9 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
     })();
     </script>
 </head>
-<body class="halaman-toko">
+<body class="halaman-toko"
+      data-wishlist-api="<?php echo htmlspecialchars($u_wishlist_toggle, ENT_QUOTES, 'UTF-8'); ?>"
+      <?php if ($sudah_login): ?>data-wishlist-csrf="<?php echo htmlspecialchars(csrf_wishlist_token(), ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>>
 
 <?php include __DIR__ . '/../../includes/bilah_pembeli.php'; ?>
 
@@ -133,43 +142,13 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                 <a class="blok-terlaris__lihat" href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>">Lihat semua &rarr;</a>
             </div>
 
-            <div class="grid-produk-terlaris">
+            <div class="grid-produk-terlaris katalog-grid-premium">
                     <?php if ($produk_terlaris === []): ?>
                     <p class="beranda-terlaris-kosong">Katalog akan tampil di sini ketika sudah ada produk.</p>
                     <?php else: ?>
                     <?php foreach ($produk_terlaris as $p):
-                        $id = (string) ($p['id_produk'] ?? '');
-                        $nama = (string) ($p['nama_produk'] ?? '');
-                        $brand = (string) ($p['brand'] ?? '');
-                        $harga = (int) ($p['harga'] ?? 0);
-                        $u_detail = aplikasi_url('detail-produk?id=' . rawurlencode($id));
-                        $u_gambar = katalog_url_gambar_utama($p);
-                    ?>
-                    <article class="kartu-produk">
-                        <a class="kartu-produk__tautan-gambar" href="<?php echo htmlspecialchars($u_detail, ENT_QUOTES, 'UTF-8'); ?>">
-                        <div class="kartu-produk__gambar">
-                            <img class="kartu-produk__foto" src="<?php echo htmlspecialchars($u_gambar, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?>" loading="lazy" width="400" height="275">
-                        </div>
-                        </a>
-                        <div class="kartu-produk__isi">
-                            <?php if ($brand !== ''): ?><p class="kartu-produk__brand"><?php echo htmlspecialchars($brand, ENT_QUOTES, 'UTF-8'); ?></p><?php endif; ?>
-                            <h3 class="kartu-produk__nama">
-                                <a class="kartu-produk__tautan-nama" href="<?php echo htmlspecialchars($u_detail, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($nama, ENT_QUOTES, 'UTF-8'); ?></a>
-                            </h3>
-                            <?php katalog_render_rating_kartu($p); ?>
-                            <p class="kartu-produk__harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga), ENT_QUOTES, 'UTF-8'); ?></p>
-                            <?php if (($p['terjual'] ?? 0) > 0): ?>
-                                <p style="font-size:0.65rem; color:var(--color-text-muted); margin:-0.1rem 0 0.2rem;"><?= (int)$p['terjual'] ?>+ terjual</p>
-                            <?php endif; ?>
-                            <a class="tombol-beli" href="<?php echo htmlspecialchars($u_detail, ENT_QUOTES, 'UTF-8'); ?>">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
-                                Beli
-                            </a>
-                        </div>
-                    </article>
-                    <?php endforeach; ?>
+                        katalog_render_kartu_produk($p, $sudah_login, $u_masuk, $wishlist_ids);
+                    endforeach; ?>
                     <?php endif; ?>
             </div>
         </section>
@@ -253,5 +232,6 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
         <p class="beranda-toko__footer-hakcipta">&copy; <?php echo date('Y'); ?> EA SENIKERS. Hak cipta dilindungi undang-undang.</p>
     </footer>
 
+<script src="<?php echo htmlspecialchars(aplikasi_url_aset('assets/js/katalog-premium.js'), ENT_QUOTES, 'UTF-8'); ?>" defer></script>
 </body>
 </html>
