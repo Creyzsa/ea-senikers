@@ -30,6 +30,9 @@ if ($peran === null) {
     exit;
 }
 
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
 if ($peran === 'admin') {
     header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
 } else {

@@ -324,10 +324,84 @@ function sudah_masuk(): bool
     return isset($_SESSION['id_pengguna']);
 }
 
+/**
+ * Normalisasi nilai kolom users.role → 'admin' atau 'pembeli'.
+ */
+function sesi_normalisasi_peran(string $role): string
+{
+    $role = strtolower(trim($role));
+
+    return $role === 'admin' ? 'admin' : 'pembeli';
+}
+
+/**
+ * Ambil peran efektif: dari sesi, atau sekali coba dari DB lewat email (penting di serverless / device baru).
+ */
+function ambil_peran_efektif(bool $perbarui_sesi = true): ?string
+{
+    if (!sudah_masuk()) {
+        return null;
+    }
+
+    $peran = isset($_SESSION['peran']) ? sesi_normalisasi_peran((string) $_SESSION['peran']) : null;
+    if ($peran === 'admin' || $peran === 'pembeli') {
+        if ($perbarui_sesi && session_status() === PHP_SESSION_ACTIVE && ($_SESSION['peran'] ?? null) !== $peran) {
+            $_SESSION['peran'] = $peran;
+        }
+
+        return $peran;
+    }
+
+    $email = trim((string) ($_SESSION['email_pengguna'] ?? ''));
+    if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        require_once __DIR__ . '/database.php';
+        try {
+            $pdo = koneksi_database();
+            $stmt = $pdo->prepare('SELECT role FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1');
+            $stmt->execute(['email' => $email]);
+            $baris = $stmt->fetch();
+            if ($baris) {
+                $peran = sesi_normalisasi_peran((string) ($baris['role'] ?? 'pembeli'));
+                if ($perbarui_sesi && session_status() === PHP_SESSION_ACTIVE) {
+                    $_SESSION['peran'] = $peran;
+                }
+
+                return $peran;
+            }
+        } catch (Throwable $e) {
+            // lanjut ke default
+        }
+    }
+
+    $peran = 'pembeli';
+    if ($perbarui_sesi && session_status() === PHP_SESSION_ACTIVE) {
+        $_SESSION['peran'] = $peran;
+    }
+
+    return $peran;
+}
+
 /** Ambil peran: admin atau pembeli (null jika belum login). */
 function ambil_peran(): ?string
 {
-    return $_SESSION['peran'] ?? null;
+    return ambil_peran_efektif();
+}
+
+/**
+ * Hanya halaman pembeli — admin dialihkan ke panel admin, bukan pesan 403 mentah.
+ */
+function wajib_peran_pembeli(): void
+{
+    wajib_sudah_masuk();
+    $peran = ambil_peran_efektif();
+    if ($peran === 'admin') {
+        header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
+        exit;
+    }
+    if ($peran !== 'pembeli') {
+        header('Location: ' . aplikasi_url('login/masuk.php'));
+        exit;
+    }
 }
 
 /**
@@ -449,7 +523,7 @@ function easenikers_sesi_login_dari_token_supabase(string $access_token, string 
         if ($baris) {
             $id_pengguna = (int) $baris['id'];
             $nama_tampil = (string) $baris['username'];
-            $peran = (string) $baris['role'];
+            $peran = sesi_normalisasi_peran((string) $baris['role']);
         }
     } catch (Throwable $e) {
         // lanjut dengan data Supabase saja

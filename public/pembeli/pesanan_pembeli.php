@@ -8,12 +8,7 @@ require_once __DIR__ . '/../../includes/repositori/katalog_produk.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
 require_once __DIR__ . '/../../includes/paginasi.php';
 
-wajib_sudah_masuk();
-if (ambil_peran() !== 'pembeli') {
-    header('HTTP/1.1 403 Forbidden');
-    echo 'Halaman ini khusus pembeli.';
-    exit;
-}
+wajib_peran_pembeli();
 
 $bilah_pembeli_aktif = 'pesanan';
 $id_pengguna = ambil_id_pengguna_efektif();

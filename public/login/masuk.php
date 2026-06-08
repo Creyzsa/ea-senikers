@@ -12,6 +12,22 @@ if (isset($_GET['daftar']) && $_GET['daftar'] === 'cek_email') {
 
 $pesan_kesalahan = '';
 
+if (sudah_masuk()) {
+    $peran_aktif = ambil_peran_efektif();
+    if ($peran_aktif === 'admin') {
+        header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
+    } else {
+        $kembali_aktif = trim((string) ($_GET['kembali'] ?? ''));
+        if ($kembali_aktif !== '' && $kembali_aktif[0] === '/' && stripos($kembali_aktif, '/admin/') === false) {
+            $dasar = easenikers_url_dasar_untuk_link();
+            header('Location: ' . ($dasar !== '' ? rtrim($dasar, '/') . $kembali_aktif : aplikasi_url(ltrim($kembali_aktif, '/'))));
+        } else {
+            header('Location: ' . aplikasi_url(''));
+        }
+    }
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Supabase Auth: login = email + sandi. Input boleh email atau nama pengguna (email diambil dari tabel users).
     $identifier = trim($_POST['email'] ?? $_POST['nama_pengguna'] ?? '');
@@ -77,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($baris) {
                     $id_pengguna = (int) $baris['id'];
                     $nama_tampil = (string) $baris['username'];
-                    $peran = (string) $baris['role'];
+                    $peran = sesi_normalisasi_peran((string) $baris['role']);
                 }
             } catch (Throwable $e) {
                 // Tanpa baris di DB tetap bisa masuk dengan data dari Supabase Auth
@@ -102,6 +118,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             unset($_SESSION['login_redirect']);
             if ($kembali !== '' && $kembali[0] !== '/') {
                 $kembali = '';
+            }
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
             }
             if ($peran === 'admin') {
                 header('Location: ' . aplikasi_url('admin/beranda_admin.php'));

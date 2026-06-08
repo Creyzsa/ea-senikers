@@ -54,18 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_produk'], $_POST['
     exit;
 }
 
-wajib_sudah_masuk();
+wajib_peran_pembeli();
 checkout_pulihkan_dari_cookie();
-$peran_checkout = ambil_peran();
-if ($peran_checkout === 'admin') {
-    header('Location: ' . aplikasi_url('admin/beranda_admin.php'));
-    exit;
-}
-if ($peran_checkout !== null && $peran_checkout !== '' && $peran_checkout !== 'pembeli') {
-    header('HTTP/1.1 403 Forbidden');
-    echo 'Halaman ini khusus pembeli.';
-    exit;
-}
 
 if (!isset($_SESSION['csrf_checkout']) || !is_string($_SESSION['csrf_checkout'])) {
     $_SESSION['csrf_checkout'] = bin2hex(random_bytes(24));

@@ -17,6 +17,7 @@ if ($bp_kj < 0) {
 }
 
 $sudah_login = sudah_masuk();
+$peran_nav = $sudah_login ? ambil_peran_efektif(false) : null;
 
 $u_beranda = aplikasi_url('');
 $u_produk = aplikasi_url('produk');
@@ -27,7 +28,22 @@ $u_keranjang = aplikasi_url('keranjang');
 $u_akun = aplikasi_url('akun');
 $u_wishlist = aplikasi_url('wishlist');
 $u_masuk = aplikasi_url('login/masuk.php');
-$u_akun_tujuan = $sudah_login ? $u_akun : $u_masuk;
+$u_admin = aplikasi_url('admin/beranda_admin.php');
+$u_pesanan_admin = aplikasi_url('admin/pesanan_admin.php');
+
+if ($peran_nav === 'admin') {
+    $u_akun_tujuan = $u_admin;
+    $u_pesanan_tampil = $u_pesanan_admin;
+    $label_akun_nav = 'Panel admin';
+} elseif ($sudah_login) {
+    $u_akun_tujuan = $u_akun;
+    $u_pesanan_tampil = $u_pesanan;
+    $label_akun_nav = 'Akun saya';
+} else {
+    $u_akun_tujuan = $u_masuk;
+    $u_pesanan_tampil = $u_pesanan;
+    $label_akun_nav = 'Masuk ke akun';
+}
 $u_wishlist_tujuan = $sudah_login ? $u_wishlist : $u_masuk;
 
 $bp_cari_q = isset($bilah_cari_q)
@@ -66,7 +82,7 @@ $bp_render_tautan = static function (array $item) use ($bp_aktif): void {
                 $bp_render_tautan(['beranda', 'Beranda', $u_beranda]);
                 $bp_render_tautan(['produk', 'Produk', $u_produk]);
                 $bp_render_tautan(['kategori', 'Kategori', $u_kategori]);
-                $bp_render_tautan(['pesanan', 'Pesanan', $u_pesanan]);
+                $bp_render_tautan(['pesanan', 'Pesanan', $u_pesanan_tampil]);
                 $bp_render_tautan(['tentang', 'Tentang', $u_tentang]);
                 ?>
             </div>
@@ -84,8 +100,8 @@ $bp_render_tautan = static function (array $item) use ($bp_aktif): void {
             <div class="nav-toko__ikon-grup" aria-label="Aksi cepat">
                 <a class="nav-toko__ikon<?php echo $bp_aktif === 'akun' ? ' nav-toko__ikon--aktif' : ''; ?>"
                    href="<?php echo htmlspecialchars($u_akun_tujuan, ENT_QUOTES, 'UTF-8'); ?>"
-                   aria-label="<?php echo $sudah_login ? 'Akun saya' : 'Masuk ke akun'; ?>"
-                   title="<?php echo $sudah_login ? 'Akun' : 'Masuk'; ?>">
+                   aria-label="<?php echo htmlspecialchars($label_akun_nav, ENT_QUOTES, 'UTF-8'); ?>"
+                   title="<?php echo htmlspecialchars($peran_nav === 'admin' ? 'Admin' : ($sudah_login ? 'Akun' : 'Masuk'), ENT_QUOTES, 'UTF-8'); ?>">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>

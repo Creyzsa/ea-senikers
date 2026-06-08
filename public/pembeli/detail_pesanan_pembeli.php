@@ -9,12 +9,7 @@ require_once __DIR__ . '/../../includes/integrasi/pakasir.php';
 require_once __DIR__ . '/../../includes/url_bantu.php';
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
 
-wajib_sudah_masuk();
-if (ambil_peran() !== 'pembeli') {
-    header('HTTP/1.1 403 Forbidden');
-    echo 'Halaman ini khusus pembeli.';
-    exit;
-}
+wajib_peran_pembeli();
 
 $id_pengguna = ambil_id_pengguna_efektif();
 $order_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
