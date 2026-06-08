@@ -82,7 +82,7 @@ function admin_pengaturan_muat_terapan(): array
         'pakasir_mode' => 'sandbox',
         'pakasir_project_slug' => '',
         'pakasir_api_key' => '',
-        'pakasir_metode_default' => 'all',
+        'pakasir_metode_default' => 'qris',
     ];
 
     $path = admin_pengaturan_simpan_ke_file();

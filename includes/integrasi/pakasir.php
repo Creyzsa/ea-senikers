@@ -40,19 +40,28 @@ function pakasir_daftar_metode(): array
 function pakasir_konfigurasi(): array
 {
     $cfg = admin_pengaturan_muat_terapan();
-    $mode = strtolower(trim((string) ($cfg['pakasir_mode'] ?? 'sandbox')));
+
+    $env_slug = trim((string) (getenv('PAKASIR_PROJECT_SLUG') ?: getenv('PAKASIR_PROJECT') ?: ''));
+    $env_key = trim((string) (getenv('PAKASIR_API_KEY') ?: ''));
+    $env_mode = strtolower(trim((string) (getenv('PAKASIR_MODE') ?: '')));
+    $env_metode = strtolower(trim((string) (getenv('PAKASIR_METODE_DEFAULT') ?: '')));
+
+    $mode = $env_mode !== '' ? $env_mode : strtolower(trim((string) ($cfg['pakasir_mode'] ?? 'sandbox')));
     if (!in_array($mode, ['sandbox', 'production'], true)) {
         $mode = 'sandbox';
     }
-    $metode = strtolower(trim((string) ($cfg['pakasir_metode_default'] ?? 'all')));
+    $metode = $env_metode !== '' ? $env_metode : strtolower(trim((string) ($cfg['pakasir_metode_default'] ?? 'qris')));
     if (!array_key_exists($metode, pakasir_daftar_metode())) {
-        $metode = 'all';
+        $metode = 'qris';
     }
+
+    $project_slug = $env_slug !== '' ? $env_slug : trim((string) ($cfg['pakasir_project_slug'] ?? ''));
+    $api_key = $env_key !== '' ? $env_key : trim((string) ($cfg['pakasir_api_key'] ?? ''));
 
     return [
         'mode' => $mode,
-        'project_slug' => trim((string) ($cfg['pakasir_project_slug'] ?? '')),
-        'api_key' => trim((string) ($cfg['pakasir_api_key'] ?? '')),
+        'project_slug' => $project_slug,
+        'api_key' => $api_key,
         'metode_default' => $metode,
     ];
 }

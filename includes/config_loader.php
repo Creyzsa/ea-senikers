@@ -14,6 +14,8 @@
  *   SUPABASE_URL, SUPABASE_ANON_KEY,
  *   URL_APLIKASI,
  *   PAYMENT_CALLBACK_SECRET (optional),
+ *   PAKASIR_PROJECT_SLUG, PAKASIR_API_KEY, PAKASIR_MODE (sandbox|production),
+ *   PAKASIR_METODE_DEFAULT (optional, default qris),
  *   JNE_ORIGIN_CODE (optional, kode asal toko — contoh PDG21100),
  *   EMAIL_DRIVER, EMAIL_PENGIRIM (optional)
  */
