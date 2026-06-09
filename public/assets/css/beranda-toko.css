@@ -300,6 +300,56 @@ body.halaman-toko {
     flex-shrink: 0;
 }
 
+/* Beranda tamu: teks Login / Daftar menggantikan ikon akun */
+.nav-toko__login-daftar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    flex-shrink: 0;
+}
+
+.nav-toko__login-daftar-tautan {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.nav-toko__login-daftar-tautan:hover,
+.nav-toko__login-daftar-tautan:focus-visible {
+    color: #fff;
+}
+
+.nav-toko__login-daftar-pisah {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.45);
+    user-select: none;
+}
+
+/* Sudah login: ikon akun + nama pengguna */
+.nav-toko__ikon--dengan-nama {
+    width: auto;
+    max-width: min(11rem, 30vw);
+    padding: 0.3rem 0.7rem 0.3rem 0.35rem;
+    gap: 0.4rem;
+    border-radius: 999px;
+    justify-content: flex-start;
+}
+
+.nav-toko__nama-pengguna {
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
 .nav-toko__badge {
     position: absolute;
     top: 0.15rem;
@@ -925,6 +975,16 @@ body.halaman-toko {
         height: 2.35rem;
     }
 
+    .nav-toko__ikon--dengan-nama {
+        max-width: min(9rem, 36vw);
+        padding-right: 0.55rem;
+    }
+
+    .nav-toko__nama-pengguna,
+    .nav-toko__login-daftar-tautan {
+        font-size: 0.78rem;
+    }
+
     .nav-toko__ikon-grup {
         margin-left: auto;
     }
@@ -1008,6 +1068,7 @@ body.halaman-toko {
     .nav-toko__tautan,
     .nav-toko__tautan::after,
     .nav-toko__ikon,
+    .nav-toko__login-daftar-tautan,
     .nav-toko__cari {
         transition: none;
     }
