@@ -11,6 +11,7 @@ if ($nama_sapa === '') {
 
 $bilah_pembeli_aktif = 'beranda';
 $tautan_produk = aplikasi_url('produk');
+$u_kategori_halaman = aplikasi_url('kategori');
 $u_artikel_rawat = aplikasi_url('cara-membersihkan');
 $merek_ringkas = require __DIR__ . '/../../includes/konfigurasi/merek_ringkas.php';
 $kontak_toko = require __DIR__ . '/../../includes/konfigurasi/kontak_toko.php';
@@ -24,6 +25,7 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $__wa) {
 }
 
 $semua_produk = katalog_ambil_semua_produk();
+$ringkasan_kategori = katalog_ringkasan_kategori_beranda($semua_produk);
 $produk_terlaris = pesanan_produk_terlaris_gabung_katalog(4);
 if ($produk_terlaris === [] && $semua_produk !== []) {
     $produk_terlaris = array_slice($semua_produk, 0, 4);
@@ -133,6 +135,28 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                     </div>
                 </article>
             </div>
+
+            <section class="beranda-kategori" aria-labelledby="judul-beranda-kategori">
+                <div class="beranda-kategori__header">
+                    <div>
+                        <p class="section-eyebrow">Kategori</p>
+                        <h2 id="judul-beranda-kategori" class="beranda-kategori__judul">Jelajahi koleksi</h2>
+                    </div>
+                    <a class="beranda-kategori__lihat" href="<?php echo htmlspecialchars($u_kategori_halaman, ENT_QUOTES, 'UTF-8'); ?>">Semua kategori &rarr;</a>
+                </div>
+                <div class="beranda-kategori__grid kategori-feature-grid">
+                    <?php foreach ($ringkasan_kategori as $kategori_item): ?>
+                        <a class="kategori-feature-card" href="<?php echo htmlspecialchars((string) $kategori_item['url'], ENT_QUOTES, 'UTF-8'); ?>">
+                            <img src="<?php echo htmlspecialchars((string) $kategori_item['gambar'], ENT_QUOTES, 'UTF-8'); ?>" alt="" width="480" height="360" loading="lazy">
+                            <span class="kategori-feature-card__label"><?php echo (int) $kategori_item['jumlah']; ?> produk</span>
+                            <strong><?php echo htmlspecialchars((string) $kategori_item['nama'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                            <span class="kategori-feature-card__panah" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                            </span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </section>
 
             <div class="blok-terlaris__header">
                 <div>

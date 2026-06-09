@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Isi #hasil-katalog — dipakai halaman produk & live search (fetch partial).
  * Variabel wajib: $daftar_produk, $daftar_tersaring, $daftar_tersaring_hal, $pg,
- * $q, $brand_filter, $kondisi_filter, $sort, $total_tersaring, $pg_params,
+ * $q, $brand_filter, $kondisi_filter, $kategori_filter, $sort, $total_tersaring, $pg_params,
  * $sudah_login, $wishlist_ids, $u_masuk, produk_url_filter()
  */
 if (!function_exists('produk_url_filter')) {
@@ -35,16 +35,19 @@ if (!function_exists('produk_url_filter')) {
             <strong><?php echo (string) $total_tersaring; ?></strong>
             <?php echo $total_tersaring === 1 ? 'Produk' : 'Produk'; ?>
         </p>
-        <?php if ($q !== '' || $brand_filter !== '' || $kondisi_filter !== ''): ?>
+        <?php if ($q !== '' || $brand_filter !== '' || $kondisi_filter !== '' || $kategori_filter !== ''): ?>
         <div class="katalog-chip-row" aria-label="Filter aktif">
             <?php if ($q !== ''): ?>
-                <a href="<?php echo htmlspecialchars(produk_url_filter(['brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Cari: <?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?></a>
+                <a href="<?php echo htmlspecialchars(produk_url_filter(['brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'kategori' => $kategori_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Cari: <?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?></a>
+            <?php endif; ?>
+            <?php if ($kategori_filter !== ''): ?>
+                <a href="<?php echo htmlspecialchars(produk_url_filter(['q' => $q, 'brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Kategori: <?php echo htmlspecialchars($kategori_filter, ENT_QUOTES, 'UTF-8'); ?></a>
             <?php endif; ?>
             <?php if ($brand_filter !== ''): ?>
-                <a href="<?php echo htmlspecialchars(produk_url_filter(['q' => $q, 'kondisi' => $kondisi_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Merek: <?php echo htmlspecialchars($brand_filter, ENT_QUOTES, 'UTF-8'); ?></a>
+                <a href="<?php echo htmlspecialchars(produk_url_filter(['q' => $q, 'kondisi' => $kondisi_filter, 'kategori' => $kategori_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Merek: <?php echo htmlspecialchars($brand_filter, ENT_QUOTES, 'UTF-8'); ?></a>
             <?php endif; ?>
             <?php if ($kondisi_filter !== ''): ?>
-                <a href="<?php echo htmlspecialchars(produk_url_filter(['q' => $q, 'brand' => $brand_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Kondisi: <?php echo htmlspecialchars(kondisi_label_pembeli($kondisi_filter), ENT_QUOTES, 'UTF-8'); ?></a>
+                <a href="<?php echo htmlspecialchars(produk_url_filter(['q' => $q, 'brand' => $brand_filter, 'kategori' => $kategori_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Kondisi: <?php echo htmlspecialchars(kondisi_label_pembeli($kondisi_filter), ENT_QUOTES, 'UTF-8'); ?></a>
             <?php endif; ?>
         </div>
         <?php endif; ?>

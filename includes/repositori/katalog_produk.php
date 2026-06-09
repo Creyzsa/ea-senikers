@@ -354,6 +354,51 @@ function katalog_daftar_ukuran_default(): array
     return ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
 }
 
+/** Kategori produk utama (admin & beranda). */
+function katalog_daftar_kategori_produk(): array
+{
+    return [
+        'Sneaker',
+        'Sport Sneaker',
+        'Running',
+    ];
+}
+
+/**
+ * Ringkasan kategori untuk kartu di beranda.
+ *
+ * @param list<array<string, mixed>> $daftar_produk
+ * @return list<array{nama: string, jumlah: int, gambar: string, url: string}>
+ */
+function katalog_ringkasan_kategori_beranda(array $daftar_produk): array
+{
+    $map = [];
+    foreach (katalog_daftar_kategori_produk() as $nama_kategori) {
+        $map[$nama_kategori] = [
+            'nama' => $nama_kategori,
+            'jumlah' => 0,
+            'gambar' => katalog_url_gambar_placeholder(),
+            'url' => aplikasi_url('produk?kategori=' . rawurlencode($nama_kategori)),
+        ];
+    }
+
+    foreach ($daftar_produk as $produk) {
+        if (!is_array($produk)) {
+            continue;
+        }
+        $nama_kategori = trim((string) ($produk['kategori'] ?? ''));
+        if ($nama_kategori === '' || !isset($map[$nama_kategori])) {
+            continue;
+        }
+        $map[$nama_kategori]['jumlah']++;
+        if ($map[$nama_kategori]['jumlah'] === 1) {
+            $map[$nama_kategori]['gambar'] = katalog_url_gambar_utama($produk);
+        }
+    }
+
+    return array_values($map);
+}
+
 /**
  * Lengkapi produk_ukuran dengan semua ukuran default; yang tidak ada di DB = stok 0.
  *

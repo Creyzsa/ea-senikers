@@ -19,11 +19,7 @@ function admin_daftar_ukuran_default(): array
 /** Kategori produk yang bisa dipilih admin (dropdown). */
 function admin_daftar_kategori_produk(): array
 {
-    return [
-        'Sneaker',
-        'Sport Sneaker',
-        'Running',
-    ];
+    return katalog_daftar_kategori_produk();
 }
 
 /**

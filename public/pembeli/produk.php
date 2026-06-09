@@ -19,6 +19,11 @@ $q = trim(is_string($_GET['q'] ?? null) ? (string) $_GET['q'] : '');
 $bilah_cari_q = $q;
 $brand_filter = trim(is_string($_GET['brand'] ?? null) ? (string) $_GET['brand'] : '');
 $kondisi_filter = trim(is_string($_GET['kondisi'] ?? null) ? (string) $_GET['kondisi'] : '');
+$kategori_filter = trim(is_string($_GET['kategori'] ?? null) ? (string) $_GET['kategori'] : '');
+$opsi_kategori = katalog_daftar_kategori_produk();
+if ($kategori_filter !== '' && !in_array($kategori_filter, $opsi_kategori, true)) {
+    $kategori_filter = '';
+}
 $sort = trim(is_string($_GET['sort'] ?? null) ? (string) $_GET['sort'] : 'terbaru');
 $sort_valid = ['terbaru', 'harga_asc', 'harga_desc', 'nama'];
 if (!in_array($sort, $sort_valid, true)) {
@@ -42,14 +47,18 @@ $opsi_kondisi = array_values(array_keys($opsi_kondisi));
 natcasesort($opsi_brand);
 natcasesort($opsi_kondisi);
 
-$daftar_tersaring = array_values(array_filter($daftar_produk, static function (array $produk) use ($q, $brand_filter, $kondisi_filter): bool {
+$daftar_tersaring = array_values(array_filter($daftar_produk, static function (array $produk) use ($q, $brand_filter, $kondisi_filter, $kategori_filter): bool {
     $brand = (string) ($produk['brand'] ?? '');
     $kondisi = (string) ($produk['kondisi'] ?? '');
+    $kategori = (string) ($produk['kategori'] ?? '');
 
     if ($brand_filter !== '' && strcasecmp($brand, $brand_filter) !== 0) {
         return false;
     }
     if ($kondisi_filter !== '' && strcasecmp($kondisi, $kondisi_filter) !== 0) {
+        return false;
+    }
+    if ($kategori_filter !== '' && strcasecmp($kategori, $kategori_filter) !== 0) {
         return false;
     }
     if ($q !== '' && !katalog_produk_cocok_pencarian($produk, $q)) {
@@ -85,7 +94,7 @@ function produk_url_filter(array $params): string
 $total_tersaring = count($daftar_tersaring);
 
 $pg_params = [];
-foreach (['q' => $q, 'brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'sort' => $sort] as $pg_k => $pg_v) {
+foreach (['q' => $q, 'brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'kategori' => $kategori_filter, 'sort' => $sort] as $pg_k => $pg_v) {
     if (trim((string) $pg_v) !== '') {
         $pg_params[$pg_k] = $pg_v;
     }
@@ -156,6 +165,15 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('produk'), $pg_params, 'hal');
             <label class="katalog-filter-premium__field katalog-filter-premium__field--cari">
                 <span>Search produk</span>
                 <input type="search" name="q" value="<?php echo htmlspecialchars($q, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Nike, Adidas, Air Max..." autocomplete="off" aria-autocomplete="list">
+            </label>
+            <label class="katalog-filter-premium__field">
+                <span>Kategori</span>
+                <select name="kategori">
+                    <option value="">Semua kategori</option>
+                    <?php foreach ($opsi_kategori as $kategori): ?>
+                        <option value="<?php echo htmlspecialchars($kategori, ENT_QUOTES, 'UTF-8'); ?>"<?php echo strcasecmp($kategori_filter, $kategori) === 0 ? ' selected' : ''; ?>><?php echo htmlspecialchars($kategori, ENT_QUOTES, 'UTF-8'); ?></option>
+                    <?php endforeach; ?>
+                </select>
             </label>
             <label class="katalog-filter-premium__field">
                 <span>Merek</span>

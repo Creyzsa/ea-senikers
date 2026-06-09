@@ -573,6 +573,38 @@ body.halaman-toko {
     padding: var(--toko-kontainer-pinggir);
 }
 
+.beranda-kategori {
+    margin-bottom: 1.5rem;
+}
+
+.beranda-kategori__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.beranda-kategori__judul {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.beranda-kategori__lihat {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--teks-aksen);
+    text-decoration: none;
+}
+
+.beranda-kategori__lihat:hover {
+    text-decoration: underline;
+    color: var(--teks-aksen-hover);
+}
+
 .blok-terlaris__header {
     display: flex;
     flex-wrap: wrap;
@@ -1032,13 +1064,47 @@ body.halaman-toko {
         font-size: 0.88rem;
     }
 
+    .beranda-kategori__header,
     .blok-terlaris__header {
         flex-direction: column;
         align-items: stretch;
     }
 
+    .beranda-kategori__lihat,
     .blok-terlaris__lihat {
         align-self: flex-start;
+    }
+
+    .beranda-kategori .kategori-feature-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .beranda-kategori .kategori-feature-card {
+        min-height: 8.75rem;
+        padding: 0.55rem 0.5rem 0.6rem;
+    }
+
+    .beranda-kategori .kategori-feature-card__label {
+        font-size: 0.62rem;
+    }
+
+    .beranda-kategori .kategori-feature-card strong {
+        font-size: 0.72rem;
+        padding-right: 1.35rem;
+        line-height: 1.2;
+    }
+
+    .beranda-kategori .kategori-feature-card__panah {
+        right: 0.45rem;
+        bottom: 0.55rem;
+        width: 1.45rem;
+        height: 1.45rem;
+    }
+
+    .beranda-kategori .kategori-feature-card__panah svg {
+        width: 14px;
+        height: 14px;
     }
 
     .grid-produk-terlaris,
@@ -2214,8 +2280,17 @@ body.halaman-toko {
         grid-template-columns: 1fr;
     }
 
+    .beranda-kategori .kategori-feature-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
     .kategori-feature-card {
         min-height: 14rem;
+    }
+
+    .beranda-kategori .kategori-feature-card {
+        min-height: 8.75rem;
     }
 
     .kategori-kondisi-card {
