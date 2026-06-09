@@ -734,7 +734,7 @@ function ulasan_perbarui(int $user_id, int $order_id, string $id_produk, int $ra
 function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 20): array
 {
     $hasil = supabase_rest_request('GET', '/rest/v1/ulasan', [
-        'select' => 'id,rating,komentar,created_at,user_id',
+        'select' => 'id,rating,komentar,created_at,user_id,order_id,edited_at',
         'id_produk' => 'eq.' . $id_produk,
         'order' => 'created_at.desc',
         'limit' => (string)$limit,

@@ -2856,6 +2856,39 @@ body.halaman-toko {
     border-radius: 8px;
     padding: 0.75rem;
 }
+.ulasan-item--milik-saya {
+    border-color: #c4b5fd;
+    background: #faf5ff;
+}
+.ulasan-badge-terkirim {
+    margin-left: auto;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+.ulasan-edit-form {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+}
+.ulasan-edit-hint {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.45;
+}
+.ulasan-edit-form textarea,
+.ulasan-edit-form select {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+.btn-ulasan--edit {
+    background: #b45309;
+}
 .ulasan-head {
     display: flex;
     align-items: center;
