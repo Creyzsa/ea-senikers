@@ -12,6 +12,11 @@ require_once __DIR__ . '/../integrasi/produk_gambar_storage.php';
 
 function katalog_url_gambar_produk(string $nama_file): string
 {
+    $nama_file = produk_gambar_nama_aman($nama_file);
+    if ($nama_file === '') {
+        return katalog_url_gambar_placeholder();
+    }
+
     $url = produk_gambar_url_untuk_tampil($nama_file);
 
     return $url !== '' ? $url : katalog_url_gambar_placeholder();

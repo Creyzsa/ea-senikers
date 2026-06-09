@@ -84,7 +84,21 @@ function produk_gambar_mime_dari_ekstensi(string $ext): string
 
 function produk_gambar_nama_aman(string $nama_file): string
 {
-    return basename(str_replace(['/', '\\'], '', $nama_file));
+    $nama_file = trim(str_replace('\\', '/', $nama_file));
+
+    return $nama_file === '' ? '' : basename($nama_file);
+}
+
+/**
+ * Apakah backend siap menerima upload (Supabase di Vercel / folder lokal di Laragon).
+ */
+function produk_gambar_siap_unggah(): bool
+{
+    if (!produk_gambar_pakai_cloud()) {
+        return true;
+    }
+
+    return supabase_url_dasar() !== '' && supabase_storage_api_key() !== '';
 }
 
 function produk_gambar_path_lokal(string $nama_file): string

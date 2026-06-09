@@ -185,6 +185,7 @@ function admin_produk_tambah(array $payload, array $stok_ukuran, array $files): 
         }
 
         admin_produk_simpan_stok_ukuran($pdo, $id_produk, $stok_ukuran);
+        admin_produk_upload_gambar($id_produk, $files, $pdo);
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
@@ -195,8 +196,6 @@ function admin_produk_tambah(array $payload, array $stok_ukuran, array $files): 
         }
         throw new RuntimeException('Gagal menambah produk ke database.', 0, $e);
     }
-
-    admin_produk_upload_gambar($id_produk, $files);
 
     return $id_produk;
 }
@@ -239,6 +238,7 @@ function admin_produk_update(string $id_produk, array $payload, array $stok_ukur
         }
 
         admin_produk_simpan_stok_ukuran($pdo, $id_produk, $stok_ukuran);
+        admin_produk_upload_gambar($id_produk, $files, $pdo);
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
@@ -249,8 +249,6 @@ function admin_produk_update(string $id_produk, array $payload, array $stok_ukur
         }
         throw new RuntimeException('Gagal memperbarui produk.', 0, $e);
     }
-
-    admin_produk_upload_gambar($id_produk, $files);
 }
 
 function admin_produk_hapus(string $id_produk): void
@@ -308,15 +306,40 @@ function admin_produk_hapus_gambar(string $id_produk, string $id_gambar): void
 }
 
 /**
- * Upload gambar untuk produk.
+ * @param array<string, mixed> $files
+ */
+function admin_produk_ada_file_gambar(array $files): bool
+{
+    $gambar_files = $files['gambar'] ?? [];
+    if (!is_array($gambar_files) || !isset($gambar_files['name'])) {
+        return false;
+    }
+    foreach ((array) ($gambar_files['error'] ?? []) as $err) {
+        if ((int) $err !== UPLOAD_ERR_NO_FILE) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Upload gambar untuk produk (dalam transaksi PDO bila disediakan).
  *
  * @param array<string, mixed> $files
  */
-function admin_produk_upload_gambar(string $id_produk, array $files): void
+function admin_produk_upload_gambar(string $id_produk, array $files, ?PDO $pdo = null): void
 {
     $gambar_files = $files['gambar'] ?? [];
     if (!is_array($gambar_files) || !isset($gambar_files['name'])) {
         return;
+    }
+
+    if (admin_produk_ada_file_gambar($files) && !produk_gambar_siap_unggah()) {
+        throw new RuntimeException(
+            'Upload gambar belum dikonfigurasi. Set SUPABASE_SERVICE_ROLE_KEY di Vercel '
+            . 'dan jalankan database/migrations/tahap5_supabase_storage_produk.sql.'
+        );
     }
 
     $names = (array) ($gambar_files['name'] ?? []);
@@ -324,7 +347,7 @@ function admin_produk_upload_gambar(string $id_produk, array $files): void
     $errors = (array) ($gambar_files['error'] ?? []);
     $sizes = (array) ($gambar_files['size'] ?? []);
 
-    $pdo = koneksi_database();
+    $pdo = $pdo ?? koneksi_database();
     $stmtUrutan = $pdo->prepare('SELECT COALESCE(MAX(urutan), -1) AS maks FROM produk_gambar WHERE id_produk = :id');
     $stmtUrutan->execute(['id' => $id_produk]);
     $urutan = (int) (($stmtUrutan->fetch()['maks'] ?? -1));

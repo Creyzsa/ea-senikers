@@ -86,7 +86,12 @@ function pesanan_url_gambar_item(array $item): string
         return $raw;
     }
 
-    return katalog_url_gambar_produk($raw);
+    $nama = produk_gambar_nama_aman($raw);
+    if ($nama === '' || $nama === 'namafile.jpg') {
+        return katalog_url_gambar_placeholder();
+    }
+
+    return katalog_url_gambar_produk($nama);
 }
 
 /**
