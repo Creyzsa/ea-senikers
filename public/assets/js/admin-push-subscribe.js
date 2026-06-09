@@ -43,7 +43,7 @@
     }
 
     function pesanIzinDitutup() {
-        return 'Popup izin ditutup. Klik "Aktifkan push" lagi, lalu pilih **Izinkan** / **Allow** pada popup browser.';
+        return 'Popup izin ditutup. Klik "Aktifkan push" lagi, lalu pilih Izinkan / Allow pada popup browser.';
     }
 
     function htmlBantuanResetIzin() {
@@ -202,7 +202,7 @@
 
         daftarSw()
             .then(function () {
-                setStatus('Meminta izin notifikasi… Pilih **Izinkan** pada popup browser.', 'netral');
+                setStatus('Meminta izin notifikasi… Pilih Izinkan pada popup browser.', 'netral');
                 return mintaIzinNotifikasi();
             })
             .then(function (permission) {
