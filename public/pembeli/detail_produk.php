@@ -276,50 +276,77 @@ $u_checkout = aplikasi_url('checkout');
         $ulasan_form = $sudah_login ? ulasan_konteks_form($id_pengguna, $id, $order_id_param) : ['order_id' => 0, 'status' => 'tidak_berhak', 'ulasan' => null];
         $ulasan_status = (string) ($ulasan_form['status'] ?? 'tidak_berhak');
         $ulasan_order = (int) ($ulasan_form['order_id'] ?? 0);
-        $ulasan_labels = ulasan_label_rating();
-        $ulasan_pratinjau = ulasan_batas_pratinjau_detail();
-        $ulasan_list = ulasan_ambil_untuk_produk($id, $ulasan_pratinjau);
-        if ($sudah_login && $ulasan_status === 'bisa_edit' && is_array($ulasan_form['ulasan'] ?? null)) {
-            $oid_edit = (int) ($ulasan_form['order_id'] ?? 0);
-            $sudah_tampil = false;
-            foreach ($ulasan_list as $baris) {
-                if ((int) ($baris['order_id'] ?? 0) === $oid_edit) {
-                    $sudah_tampil = true;
-                    break;
-                }
-            }
-            if (!$sudah_tampil && $oid_edit > 0) {
-                $baris_edit = $ulasan_form['ulasan'];
-                $baris_edit['user_id'] = $id_pengguna;
-                $baris_edit['order_id'] = $oid_edit;
-                $baris_edit['id_produk'] = $id;
-                array_unshift($ulasan_list, $baris_edit);
-                if (count($ulasan_list) > $ulasan_pratinjau + 1) {
-                    $ulasan_list = array_slice($ulasan_list, 0, $ulasan_pratinjau + 1);
-                }
-            }
-        }
-        $u_semua_ulasan = aplikasi_url('ulasan-produk?id=' . rawurlencode($id));
+        $ulasan_labels = [5 => '5 ★ Sangat Puas', 4 => '4 ★ Puas', 3 => '3 ★ Cukup', 2 => '2 ★ Kurang', 1 => '1 ★ Kecewa'];
+        $ulasan_limit = max(1, min(100, $jml_ulasan > 0 ? $jml_ulasan : 50));
+        $ulasan_list = ulasan_ambil_untuk_produk($id, $ulasan_limit);
         ?>
         <?php if ($ulasan_list !== []): ?>
-        <p class="ulasan-subjudul">Setiap pembeli bisa memberi ulasan setelah pesanan <strong>selesai</strong>. Beli berulang = ulasan baru.</p>
-        <?php ulasan_render_kartu_daftar($ulasan_list, $id, $id_pengguna, $ulasan_labels); ?>
-        <?php if ($jml_ulasan > $ulasan_pratinjau): ?>
-            <p class="ulasan-lihat-semua">
-                <a href="<?php echo htmlspecialchars($u_semua_ulasan, ENT_QUOTES, 'UTF-8'); ?>">
-                    Lihat semua <?php echo (int) $jml_ulasan; ?> ulasan &rarr;
-                </a>
-            </p>
-        <?php endif; ?>
+        <p class="ulasan-subjudul">Ulasan dari pembeli lain membantu Anda menilai kualitas produk.</p>
+        <div class="ulasan-list">
+            <?php foreach ($ulasan_list as $u): ?>
+            <?php
+            $oid_review = (int) ($u['order_id'] ?? 0);
+            $ulasan_user = (int) ($u['user_id'] ?? 0);
+            $ulasan_milik_saya = $id_pengguna > 0 && $ulasan_user === $id_pengguna;
+            $status_item = ($ulasan_milik_saya && $oid_review > 0)
+                ? ulasan_status_untuk_order($id_pengguna, $oid_review, $id)
+                : ($ulasan_milik_saya ? 'dikunci' : 'orang_lain');
+            $nama_ulasan = ulasan_nama_tampilan($u, $id_pengguna);
+            $inisial = ulasan_inisial_nama($nama_ulasan === 'Anda' ? (string) ($u['nama_pengguna'] ?? 'A') : $nama_ulasan);
+            $rating_item = (int) ($u['rating'] ?? 0);
+            $komentar_item = (string) ($u['komentar'] ?? '');
+            $tgl_item = date('d M Y', strtotime((string) ($u['created_at'] ?? 'now')));
+            ?>
+            <div class="ulasan-item<?php echo $ulasan_milik_saya ? ' ulasan-item--milik-saya' : ''; ?>">
+                <div class="ulasan-head">
+                    <span class="ulasan-avatar" aria-hidden="true"><?php echo htmlspecialchars($inisial, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <div class="ulasan-head-meta">
+                        <div class="ulasan-head-baris">
+                            <strong><?php echo htmlspecialchars($nama_ulasan, ENT_QUOTES, 'UTF-8'); ?></strong>
+                            <?php if (!$ulasan_milik_saya): ?>
+                                <span class="ulasan-badge-pembeli">Pembeli</span>
+                            <?php endif; ?>
+                            <span class="ulasan-rating-angka"><?php echo $rating_item; ?>.0</span>
+                            <span class="stars" aria-label="Rating <?php echo $rating_item; ?> dari 5"><?php echo str_repeat('★', $rating_item); ?></span>
+                        </div>
+                        <time class="ulasan-waktu"><?php echo htmlspecialchars($tgl_item, ENT_QUOTES, 'UTF-8'); ?></time>
+                    </div>
+                    <?php if ($ulasan_milik_saya && $status_item === 'dikunci'): ?>
+                        <span class="ulasan-badge-terkirim">Ulasan terkirim</span>
+                    <?php endif; ?>
+                </div>
+
+                <?php if ($ulasan_milik_saya && $status_item === 'bisa_edit'): ?>
+                <form method="post" class="ulasan-edit-form">
+                    <input type="hidden" name="order_id" value="<?php echo $oid_review; ?>">
+                    <input type="hidden" name="id_produk" value="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
+                    <p class="ulasan-edit-hint">Ulasan Anda — bisa diedit <strong>1 kali</strong>. Setelah disimpan, tidak bisa diubah lagi.</p>
+                    <div class="form-row">
+                        <label for="rating-edit-<?php echo $oid_review; ?>">Rating</label>
+                        <select id="rating-edit-<?php echo $oid_review; ?>" name="rating" required>
+                            <?php for ($star = 5; $star >= 1; $star--): ?>
+                                <option value="<?php echo $star; ?>"<?php echo $rating_item === $star ? ' selected' : ''; ?>><?php echo $ulasan_labels[$star]; ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+                    <textarea name="komentar" placeholder="Bagaimana kondisi & pengalaman Anda dengan produk ini?" required rows="3"><?php echo htmlspecialchars($komentar_item, ENT_QUOTES, 'UTF-8'); ?></textarea>
+                    <button type="submit" name="aksi" value="edit_ulasan" class="btn-ulasan btn-ulasan--edit">Simpan Perubahan Ulasan</button>
+                </form>
+                <?php else: ?>
+                <p class="ulasan-text"><?php echo nl2br(htmlspecialchars($komentar_item, ENT_QUOTES, 'UTF-8')); ?></p>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
         <?php else: ?>
-            <p class="no-review">Belum ada ulasan. Beri ulasan setelah pesanan Anda selesai.</p>
+            <p class="no-review">Belum ada ulasan. Jadilah yang pertama setelah beli!</p>
         <?php endif; ?>
 
         <?php if ($sudah_login && $ulasan_status === 'belum'): ?>
         <form method="post" class="form-ulasan">
             <input type="hidden" name="order_id" value="<?php echo $ulasan_order; ?>">
             <input type="hidden" name="id_produk" value="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
-            <p class="form-ulasan-hint">1 ulasan per pesanan yang sudah <strong>selesai</strong>. Beli produk ini lagi? Setelah pesanan berikutnya selesai, Anda bisa ulas lagi.</p>
+            <p class="form-ulasan-hint">Satu ulasan per pesanan. Jika membeli produk ini lagi, Anda bisa memberi ulasan baru.</p>
             <div class="form-row">
                 <label for="rating-baru">Rating</label>
                 <select id="rating-baru" name="rating" required>

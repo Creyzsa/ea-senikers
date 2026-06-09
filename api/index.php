@@ -38,7 +38,6 @@ $cleanRoutes = [
     'bantuan' => 'pembeli/bantuan_pembeli.php',
     'cara-membersihkan' => 'pembeli/cara_membersihkan_sepatu.php',
     'detail-produk' => 'pembeli/detail_produk.php',
-    'ulasan-produk' => 'pembeli/ulasan_produk.php',
     'keranjang' => 'pembeli/keranjang_pembeli.php',
     'akun' => 'pembeli/akun_pembeli.php',
     'pesanan' => 'pembeli/pesanan_pembeli.php',

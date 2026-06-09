@@ -920,30 +920,8 @@ function ulasan_inisial_nama(string $nama): string
     return strtoupper(substr($nama, 0, 1));
 }
 
-/** Jumlah ulasan pratinjau di halaman detail produk. */
-function ulasan_batas_pratinjau_detail(): int
-{
-    return 3;
-}
-
-/** Label dropdown rating ulasan. */
-function ulasan_label_rating(): array
-{
-    return [
-        5 => '5 ★ Sangat Puas',
-        4 => '4 ★ Puas',
-        3 => '3 ★ Cukup',
-        2 => '2 ★ Kurang',
-        1 => '1 ★ Kecewa',
-    ];
-}
-
-/**
- * Ambil ulasan publik untuk 1 produk (PDO utama — andal walau REST/RLS bermasalah).
- *
- * @return list<array<string, mixed>>
- */
-function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 50, int $offset = 0): array
+/** Ambil semua ulasan publik untuk 1 produk (PDO utama — andal walau REST/RLS bermasalah). */
+function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 50): array
 {
     if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id_produk)) {
         return [];
@@ -954,9 +932,8 @@ function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 50, int $offs
     if ($limit > 100) {
         $limit = 100;
     }
-    $offset = max(0, $offset);
 
-    $pdo_hasil = _db_call(function () use ($id_produk, $limit, $offset) {
+    $pdo_hasil = _db_call(function () use ($id_produk, $limit) {
         $pdo = koneksi_database();
         $stmt = $pdo->prepare(
             'SELECT u.id, u.rating, u.komentar, u.created_at, u.user_id, u.order_id, u.edited_at,
@@ -965,109 +942,31 @@ function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 50, int $offs
              LEFT JOIN users us ON us.id = u.user_id
              WHERE u.id_produk = :p
              ORDER BY u.created_at DESC
-             LIMIT :lim OFFSET :off'
+             LIMIT :lim'
         );
         $stmt->bindValue('p', $id_produk);
         $stmt->bindValue('lim', $limit, PDO::PARAM_INT);
-        $stmt->bindValue('off', $offset, PDO::PARAM_INT);
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return is_array($rows) ? $rows : [];
     }, null);
 
-    if (is_array($pdo_hasil)) {
+    if (is_array($pdo_hasil) && $pdo_hasil !== []) {
         return ulasan_lengkapi_nama_pengguna($pdo_hasil);
     }
 
-    $range_end = $offset + $limit - 1;
     $hasil = supabase_rest_request('GET', '/rest/v1/ulasan', [
         'select' => 'id,rating,komentar,created_at,user_id,order_id,edited_at',
         'id_produk' => 'eq.' . $id_produk,
         'order' => 'created_at.desc',
-        'offset' => (string) $offset,
         'limit' => (string) $limit,
     ]);
     if (!$hasil['ok'] || !is_array($hasil['data'])) {
-        return [];
+        return is_array($pdo_hasil) ? ulasan_lengkapi_nama_pengguna($pdo_hasil) : [];
     }
 
     return ulasan_lengkapi_nama_pengguna($hasil['data']);
-}
-
-/**
- * Render daftar kartu ulasan (detail produk & halaman semua ulasan).
- *
- * @param list<array<string, mixed>> $ulasan_list
- */
-function ulasan_render_kartu_daftar(
-    array $ulasan_list,
-    string $id_produk,
-    int $viewer_user_id,
-    ?array $ulasan_labels = null
-): void {
-    if ($ulasan_list === []) {
-        return;
-    }
-    $ulasan_labels ??= ulasan_label_rating();
-    ?>
-    <div class="ulasan-list">
-        <?php foreach ($ulasan_list as $u): ?>
-        <?php
-        $oid_review = (int) ($u['order_id'] ?? 0);
-        $ulasan_user = (int) ($u['user_id'] ?? 0);
-        $ulasan_milik_saya = $viewer_user_id > 0 && $ulasan_user === $viewer_user_id;
-        $status_item = ($ulasan_milik_saya && $oid_review > 0)
-            ? ulasan_status_untuk_order($viewer_user_id, $oid_review, $id_produk)
-            : ($ulasan_milik_saya ? 'dikunci' : 'orang_lain');
-        $nama_ulasan = ulasan_nama_tampilan($u, $viewer_user_id);
-        $inisial = ulasan_inisial_nama($nama_ulasan === 'Anda' ? (string) ($u['nama_pengguna'] ?? 'A') : $nama_ulasan);
-        $rating_item = (int) ($u['rating'] ?? 0);
-        $komentar_item = (string) ($u['komentar'] ?? '');
-        $tgl_item = date('d M Y', strtotime((string) ($u['created_at'] ?? 'now')));
-        ?>
-        <div class="ulasan-item<?php echo $ulasan_milik_saya ? ' ulasan-item--milik-saya' : ''; ?>">
-            <div class="ulasan-head">
-                <span class="ulasan-avatar" aria-hidden="true"><?php echo htmlspecialchars($inisial, ENT_QUOTES, 'UTF-8'); ?></span>
-                <div class="ulasan-head-meta">
-                    <div class="ulasan-head-baris">
-                        <strong><?php echo htmlspecialchars($nama_ulasan, ENT_QUOTES, 'UTF-8'); ?></strong>
-                        <?php if (!$ulasan_milik_saya): ?>
-                            <span class="ulasan-badge-pembeli">Pembeli</span>
-                        <?php endif; ?>
-                        <span class="ulasan-rating-angka"><?php echo $rating_item; ?>.0</span>
-                        <span class="stars" aria-label="Rating <?php echo $rating_item; ?> dari 5"><?php echo str_repeat('★', $rating_item); ?></span>
-                    </div>
-                    <time class="ulasan-waktu"><?php echo htmlspecialchars($tgl_item, ENT_QUOTES, 'UTF-8'); ?></time>
-                </div>
-                <?php if ($ulasan_milik_saya && $status_item === 'dikunci'): ?>
-                    <span class="ulasan-badge-terkirim">Ulasan terkirim</span>
-                <?php endif; ?>
-            </div>
-
-            <?php if ($ulasan_milik_saya && $status_item === 'bisa_edit'): ?>
-            <form method="post" class="ulasan-edit-form">
-                <input type="hidden" name="order_id" value="<?php echo $oid_review; ?>">
-                <input type="hidden" name="id_produk" value="<?php echo htmlspecialchars($id_produk, ENT_QUOTES, 'UTF-8'); ?>">
-                <p class="ulasan-edit-hint">Ulasan Anda — bisa diedit <strong>1 kali</strong>. Setelah disimpan, tidak bisa diubah lagi.</p>
-                <div class="form-row">
-                    <label for="rating-edit-<?php echo $oid_review; ?>">Rating</label>
-                    <select id="rating-edit-<?php echo $oid_review; ?>" name="rating" required>
-                        <?php for ($star = 5; $star >= 1; $star--): ?>
-                            <option value="<?php echo $star; ?>"<?php echo $rating_item === $star ? ' selected' : ''; ?>><?php echo htmlspecialchars($ulasan_labels[$star], ENT_QUOTES, 'UTF-8'); ?></option>
-                        <?php endfor; ?>
-                    </select>
-                </div>
-                <textarea name="komentar" placeholder="Bagaimana kondisi & pengalaman Anda dengan produk ini?" required rows="3"><?php echo htmlspecialchars($komentar_item, ENT_QUOTES, 'UTF-8'); ?></textarea>
-                <button type="submit" name="aksi" value="edit_ulasan" class="btn-ulasan btn-ulasan--edit">Simpan Perubahan Ulasan</button>
-            </form>
-            <?php else: ?>
-            <p class="ulasan-text"><?php echo nl2br(htmlspecialchars($komentar_item, ENT_QUOTES, 'UTF-8')); ?></p>
-            <?php endif; ?>
-        </div>
-        <?php endforeach; ?>
-    </div>
-    <?php
 }
 
 /** Wishlist */
@@ -1256,10 +1155,6 @@ function katalog_render_kartu_produk(
             <ul class="kartu-premium__meta">
                 <li><span class="kartu-premium__meta-label">Ukuran</span> <?php echo htmlspecialchars(katalog_ukuran_ringkas_kartu($p), ENT_QUOTES, 'UTF-8'); ?></li>
                 <li><span class="kartu-premium__meta-label">Kondisi</span> <?php echo htmlspecialchars(katalog_persen_kondisi_kartu($p), ENT_QUOTES, 'UTF-8'); ?></li>
-                <li>
-                    <span class="kartu-premium__meta-label">Terjual</span>
-                    <span class="kartu-premium__terjual"><?php echo htmlspecialchars(katalog_teks_terjual_kartu($p), ENT_QUOTES, 'UTF-8'); ?></span>
-                </li>
                 <li><?php katalog_render_rating_kartu($p, 'kartu-premium__rating'); ?></li>
             </ul>
             <p class="kartu-premium__harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga), ENT_QUOTES, 'UTF-8'); ?></p>
