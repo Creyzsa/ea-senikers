@@ -3,63 +3,17 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/admin_produk_repositori.php';
+require_once __DIR__ . '/brand_logo_repositori.php';
 require_once __DIR__ . '/../integrasi/brand_logo_storage.php';
-
-function admin_brand_logo_simpan_ke_file(): string
-{
-    return __DIR__ . '/../brand_logo_admin.json';
-}
 
 /**
  * @return array<string, string> nama brand => nama_file logo
  */
 function admin_brand_logo_muat_map(): array
 {
-    $path = admin_brand_logo_simpan_ke_file();
-    if (!is_file($path)) {
-        return [];
-    }
+    brand_logo_migrasi_json_ke_db();
 
-    try {
-        $raw = json_decode(file_get_contents($path) ?: '{}', true, 512, JSON_THROW_ON_ERROR);
-    } catch (Throwable $e) {
-        return [];
-    }
-
-    if (!is_array($raw)) {
-        return [];
-    }
-
-    $hasil = [];
-    foreach ($raw as $brand => $nama_file) {
-        $brand = trim((string) $brand);
-        $nama_file = produk_gambar_nama_aman((string) $nama_file);
-        if ($brand !== '' && $nama_file !== '') {
-            $hasil[$brand] = $nama_file;
-        }
-    }
-
-    return $hasil;
-}
-
-/**
- * @param array<string, string> $map
- */
-function admin_brand_logo_tulis_map(array $map): bool
-{
-    $path = admin_brand_logo_simpan_ke_file();
-    $dir = dirname($path);
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
-        return false;
-    }
-
-    ksort($map, SORT_NATURAL | SORT_FLAG_CASE);
-    $json = json_encode($map, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    if (!is_string($json)) {
-        return false;
-    }
-
-    return file_put_contents($path, $json . "\n", LOCK_EX) !== false;
+    return brand_logo_muat_map();
 }
 
 function admin_brand_logo_slug(string $brand): string
@@ -122,8 +76,9 @@ function admin_brand_logo_unggah(string $brand, array $file_logo): void
     }
     if (!brand_logo_siap_unggah()) {
         throw new RuntimeException(
-            'Upload logo belum dikonfigurasi. Set SUPABASE_SERVICE_ROLE_KEY di Vercel '
-            . 'dan jalankan database/migrations/tahap5_supabase_storage_produk.sql.'
+            'Upload logo belum dikonfigurasi. Set SUPABASE_SERVICE_ROLE_KEY di Vercel, '
+            . 'jalankan database/migrations/tahap5_supabase_storage_produk.sql, '
+            . 'dan database/migrations/tahap9_brand_logo.sql.'
         );
     }
 
@@ -164,9 +119,8 @@ function admin_brand_logo_unggah(string $brand, array $file_logo): void
     if ($lama !== '' && $lama !== $nama_file) {
         brand_logo_hapus($lama);
     }
-    $map[$brand] = $nama_file;
 
-    if (!admin_brand_logo_tulis_map($map)) {
+    if (!brand_logo_simpan_untuk_brand($brand, $nama_file)) {
         brand_logo_hapus($nama_file);
         throw new RuntimeException('Gagal menyimpan data logo brand.');
     }
@@ -185,8 +139,7 @@ function admin_brand_logo_hapus_untuk_brand(string $brand): void
     }
 
     $nama_file = (string) $map[$brand];
-    unset($map[$brand]);
-    if (!admin_brand_logo_tulis_map($map)) {
+    if (!brand_logo_hapus_dari_penyimpanan($brand)) {
         throw new RuntimeException('Gagal menghapus data logo brand.');
     }
 

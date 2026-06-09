@@ -359,32 +359,12 @@ function katalog_daftar_ukuran_default(): array
  */
 function katalog_brand_logo_url(string $brand, string $fallback = ''): string
 {
-    static $map = null;
-    if ($map === null) {
-        $path = __DIR__ . '/../brand_logo_admin.json';
-        $map = [];
-        if (is_file($path)) {
-            try {
-                $raw = json_decode(file_get_contents($path) ?: '{}', true, 512, JSON_THROW_ON_ERROR);
-                if (is_array($raw)) {
-                    foreach ($raw as $nama_brand => $nama_file) {
-                        $nama_brand = trim((string) $nama_brand);
-                        $nama_file = trim((string) $nama_file);
-                        if ($nama_brand !== '' && $nama_file !== '') {
-                            $map[$nama_brand] = $nama_file;
-                        }
-                    }
-                }
-            } catch (Throwable $e) {
-                $map = [];
-            }
-        }
-    }
+    require_once __DIR__ . '/brand_logo_repositori.php';
+    require_once __DIR__ . '/../integrasi/brand_logo_storage.php';
 
     $brand = trim($brand);
-    $nama_file = (string) ($map[$brand] ?? '');
+    $nama_file = (string) (brand_logo_muat_map()[$brand] ?? '');
     if ($nama_file !== '') {
-        require_once __DIR__ . '/../integrasi/brand_logo_storage.php';
         $url = brand_logo_url_untuk_tampil($nama_file);
         if ($url !== '') {
             return $url;
