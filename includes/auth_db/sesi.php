@@ -89,11 +89,75 @@ function sesi_hapus_cookie_auth(): void
 }
 
 /**
- * Pulihkan $_SESSION dari cookie token jika sesi PHP kosong (umum di Vercel).
+ * Apakah pengguna sebelumnya memilih "Ingat saya" di perangkat ini?
+ */
+function sesi_ingat_saya_aktif(): bool
+{
+    return !empty($_COOKIE[EASENIKERS_COOKIE_INGAT]) && $_COOKIE[EASENIKERS_COOKIE_INGAT] === '1';
+}
+
+/**
+ * Hapus cookie pembantu "Ingat saya".
+ */
+function sesi_hapus_cookie_ingat(): void
+{
+    $opsi = sesi_opsi_cookie();
+    setcookie(EASENIKERS_COOKIE_INGAT, '', [
+        'path' => $opsi['path'],
+        'domain' => $opsi['domain'],
+        'secure' => $opsi['secure'],
+        'httponly' => $opsi['httponly'],
+        'samesite' => $opsi['samesite'],
+        'expires' => time() - 3600,
+    ]);
+}
+
+/**
+ * Perbarui access_token memakai refresh_token bila "Ingat saya" aktif (token Supabase ~1 jam).
+ */
+function sesi_perbarui_token_jika_perlu(): void
+{
+    if (!sesi_ingat_saya_aktif() || !sudah_masuk()) {
+        return;
+    }
+
+    $at = trim((string) ($_SESSION['access_token'] ?? $_COOKIE[EASENIKERS_COOKIE_AT] ?? ''));
+    $rt = trim((string) ($_SESSION['refresh_token'] ?? $_COOKIE[EASENIKERS_COOKIE_RT] ?? ''));
+    if ($rt === '') {
+        return;
+    }
+
+    require_once __DIR__ . '/supabase_auth.php';
+    if ($at !== '' && supabase_auth_ambil_user_dengan_token($at) !== null) {
+        if ($at !== trim((string) ($_SESSION['access_token'] ?? ''))) {
+            $_SESSION['access_token'] = $at;
+        }
+
+        return;
+    }
+
+    $baru = supabase_auth_refresh_session($rt);
+    if ($baru === null) {
+        return;
+    }
+
+    $_SESSION['access_token'] = $baru['access_token'];
+    $_SESSION['refresh_token'] = $baru['refresh_token'];
+    sesi_simpan_cookie_auth($baru['access_token'], $baru['refresh_token'], true);
+}
+
+/**
+ * Pulihkan $_SESSION dari cookie token jika "Ingat saya" aktif (umum di Vercel/serverless).
  */
 function sesi_muat_dari_cookie_auth(): void
 {
+    if (!sesi_ingat_saya_aktif()) {
+        return;
+    }
+
     if (sudah_masuk()) {
+        sesi_perbarui_token_jika_perlu();
+
         return;
     }
 
@@ -103,30 +167,24 @@ function sesi_muat_dari_cookie_auth(): void
         return;
     }
 
-    if ($at !== '') {
-        require_once __DIR__ . '/supabase_auth.php';
-        if (supabase_auth_ambil_user_dengan_token($at) !== null) {
-            easenikers_sesi_login_dari_token_supabase($at, $rt);
+    require_once __DIR__ . '/supabase_auth.php';
 
+    // Refresh token dulu — access token di cookie biasanya sudah kadaluarsa setelah beberapa jam.
+    if ($rt !== '') {
+        $baru = supabase_auth_refresh_session($rt);
+        if ($baru !== null && easenikers_sesi_login_dari_token_supabase($baru['access_token'], $baru['refresh_token']) !== null) {
             return;
         }
     }
 
-    if ($rt !== '') {
-        require_once __DIR__ . '/supabase_auth.php';
-        $baru = supabase_auth_refresh_session($rt);
-        if ($baru !== null) {
-            $ingat = !empty($_COOKIE[EASENIKERS_COOKIE_INGAT]) && $_COOKIE[EASENIKERS_COOKIE_INGAT] === '1';
-            easenikers_sesi_login_dari_token_supabase($baru['access_token'], $baru['refresh_token']);
-            if (sudah_masuk()) {
-                sesi_simpan_cookie_auth($baru['access_token'], $baru['refresh_token'], $ingat);
-            }
-
+    if ($at !== '' && supabase_auth_ambil_user_dengan_token($at) !== null) {
+        if (easenikers_sesi_login_dari_token_supabase($at, $rt) !== null) {
             return;
         }
     }
 
     sesi_hapus_cookie_auth();
+    sesi_hapus_cookie_ingat();
 }
 
 /** Kunci $_SESSION untuk token reset sandi (alur email Supabase). */
@@ -157,7 +215,7 @@ function easenikers_konfirmasi_https(): bool
 }
 
 if (session_status() === PHP_SESSION_NONE) {
-    $tetap_masuk = !empty($_COOKIE[EASENIKERS_COOKIE_INGAT]) && $_COOKIE[EASENIKERS_COOKIE_INGAT] === '1';
+    $tetap_masuk = sesi_ingat_saya_aktif();
     // Hanya perpanjang umur file sesi di server jika mode "tetap masuk" — bukan untuk semua pengunjung.
     if ($tetap_masuk) {
         ini_set('session.gc_maxlifetime', (string) EASENIKERS_SESI_INGAT_DETIK);
@@ -253,6 +311,7 @@ function sesi_ganti_ke_mode_sementara(array $data): void
     }
 
     setcookie(EASENIKERS_COOKIE_INGAT, '', array_merge($opts_hapus, ['expires' => time() - 3600]));
+    sesi_hapus_cookie_auth();
 
     session_set_cookie_params([
         'lifetime' => 0,
@@ -285,23 +344,31 @@ function sesi_ganti_ke_mode_sementara(array $data): void
  */
 function sesi_setelah_login_supabase(array $data, bool $ingat_saya): void
 {
+    $refresh_token = trim((string) ($data['refresh_token'] ?? ''));
+
     if ($ingat_saya) {
-        sesi_perbarui_id_aman();
-        $_SESSION['id_pengguna'] = $data['id_pengguna'];
-        $_SESSION['nama_pengguna'] = $data['nama_pengguna'];
-        $_SESSION['peran'] = $data['peran'];
-        $_SESSION['email_pengguna'] = $data['email_pengguna'];
-        $_SESSION['access_token'] = $data['access_token'];
-        $_SESSION['refresh_token'] = $data['refresh_token'] ?? '';
-        sesi_terapkan_tetap_masuk(true);
-    } else {
-        sesi_ganti_ke_mode_sementara($data);
+        if ($refresh_token === '') {
+            $ingat_saya = false;
+        } else {
+            sesi_perbarui_id_aman();
+            $_SESSION['id_pengguna'] = $data['id_pengguna'];
+            $_SESSION['nama_pengguna'] = $data['nama_pengguna'];
+            $_SESSION['peran'] = $data['peran'];
+            $_SESSION['email_pengguna'] = $data['email_pengguna'];
+            $_SESSION['access_token'] = $data['access_token'];
+            $_SESSION['refresh_token'] = $refresh_token;
+            sesi_terapkan_tetap_masuk(true);
+            sesi_simpan_cookie_auth((string) $data['access_token'], $refresh_token, true);
+
+            return;
+        }
     }
 
+    sesi_ganti_ke_mode_sementara($data);
     sesi_simpan_cookie_auth(
         (string) ($data['access_token'] ?? ''),
-        (string) ($data['refresh_token'] ?? ''),
-        $ingat_saya
+        $refresh_token,
+        false
     );
 }
 
@@ -315,13 +382,15 @@ function sesi_perbarui_id_aman(): void
     }
 }
 
-/** Apakah pengguna sudah login? (Supabase: access_token + email; kompatibilitas: id_pengguna lama) */
+/** Apakah pengguna sudah login? (Supabase: access_token + email; kompatibilitas: id_pengguna > 0) */
 function sudah_masuk(): bool
 {
     if (!empty($_SESSION['access_token']) && !empty($_SESSION['email_pengguna'])) {
         return true;
     }
-    return isset($_SESSION['id_pengguna']);
+
+    return ((int) ($_SESSION['id_pengguna'] ?? 0)) > 0
+        && !empty($_SESSION['nama_pengguna']);
 }
 
 /**
@@ -487,8 +556,8 @@ function sesi_hancurkan_total(): void
             'samesite' => 'Lax',
         ];
         setcookie(session_name(), '', $opts);
-        setcookie(EASENIKERS_COOKIE_INGAT, '', array_merge($opts, ['expires' => time() - 3600]));
     }
+    sesi_hapus_cookie_ingat();
     sesi_hapus_cookie_auth();
     session_destroy();
 }
@@ -538,8 +607,7 @@ function easenikers_sesi_login_dari_token_supabase(string $access_token, string 
         'refresh_token' => $refresh_token,
     ];
 
-    $ingat = !empty($_COOKIE[EASENIKERS_COOKIE_INGAT]) && $_COOKIE[EASENIKERS_COOKIE_INGAT] === '1';
-    sesi_setelah_login_supabase($data_sesi, $ingat);
+    sesi_setelah_login_supabase($data_sesi, sesi_ingat_saya_aktif());
 
     return $peran;
 }

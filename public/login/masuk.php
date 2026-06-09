@@ -226,7 +226,7 @@ $pesan_konfirmasi_gagal = isset($_GET['konfirmasi']) && $_GET['konfirmasi'] === 
             </div>
             <div class="grup-ingat-saya">
                 <label class="label-ingat-saya" title="Tetap login setelah menutup browser. Gunakan Keluar untuk mengakhiri sesi.">
-                    <input class="kotak-ingat-saya" type="checkbox" name="ingat_saya" value="1"<?php echo !empty($_POST['ingat_saya']) ? ' checked' : ''; ?>>
+                    <input class="kotak-ingat-saya" type="checkbox" name="ingat_saya" value="1"<?php echo (!empty($_POST['ingat_saya']) || (empty($_POST) && sesi_ingat_saya_aktif())) ? ' checked' : ''; ?>>
                     <span>Ingat saya</span>
                 </label>
             </div>
