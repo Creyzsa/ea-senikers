@@ -205,7 +205,7 @@ body.halaman-admin {
 }
 
 .admin-salam strong {
-    color: var(--teks-aksen);
+    color: var(--brand-red);
     font-weight: 600;
 }
 
