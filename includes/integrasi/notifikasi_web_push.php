@@ -72,6 +72,9 @@ function web_push_encrypt_payload(string $payload, string $p256dh_b64, string $a
 {
     $user_public = web_push_base64url_decode($p256dh_b64);
     $auth_secret = web_push_base64url_decode($auth_b64);
+    if (strlen($user_public) === 64) {
+        $user_public = "\x04" . $user_public;
+    }
     if (strlen($user_public) !== 65 || $user_public[0] !== "\x04") {
         throw new RuntimeException('Kunci p256dh langganan tidak valid.');
     }
@@ -102,13 +105,21 @@ function web_push_encrypt_payload(string $payload, string $p256dh_b64, string $a
     if (!is_string($shared) || $shared === '') {
         throw new RuntimeException('Gagal ECDH untuk enkripsi push.');
     }
+    $shared = str_pad($shared, 32, "\x00", STR_PAD_LEFT);
 
     $salt = random_bytes(16);
-    $ikm = web_push_hkdf($auth_secret, $shared, "Content-Encoding: auth\x00", 32);
+    // aes128gcm (RFC 8188): IKM memakai WebPush: info + kunci publik UA & lokal
+    $ikm = web_push_hkdf(
+        $auth_secret,
+        $shared,
+        "WebPush: info\x00" . $user_public . $local_public,
+        32
+    );
     $cek = web_push_hkdf($salt, $ikm, "Content-Encoding: aes128gcm\x00", 16);
     $nonce = web_push_hkdf($salt, $ikm, "Content-Encoding: nonce\x00", 12);
 
-    $record = "\x00" . pack('N', strlen($payload)) . $payload;
+    // Plaintext aes128gcm: payload + delimiter 0x02
+    $record = $payload . "\x02";
     $tag = '';
     $ciphertext = openssl_encrypt($record, 'aes-128-gcm', $cek, OPENSSL_RAW_DATA, $nonce, $tag, '', 16);
     if ($ciphertext === false) {
@@ -147,6 +158,19 @@ function web_push_ec_public_to_pem(string $public_raw): string
     return $pem;
 }
 
+function web_push_normalisasi_pem_privat(string $pem): string
+{
+    $pem = trim(str_replace(['\\n', '\r\n'], "\n", $pem));
+    if ($pem === '') {
+        return $pem;
+    }
+    if (!str_contains($pem, 'BEGIN')) {
+        return $pem;
+    }
+
+    return $pem . "\n";
+}
+
 function web_push_jwt_vapid(string $endpoint, string $subject, string $private_pem): string
 {
     $parts = parse_url($endpoint);
@@ -163,6 +187,7 @@ function web_push_jwt_vapid(string $endpoint, string $subject, string $private_p
     ], JSON_UNESCAPED_SLASHES));
 
     $unsigned = $header . '.' . $claims;
+    $private_pem = web_push_normalisasi_pem_privat($private_pem);
     $key = openssl_pkey_get_private($private_pem);
     if ($key === false) {
         throw new RuntimeException('Kunci privat VAPID tidak valid.');

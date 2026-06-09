@@ -155,7 +155,7 @@
         }
         if (subscription) {
             tampilkanBantuan(false);
-            setStatus('Push aktif di perangkat ini. Notifikasi akan muncul meski tab ditutup.', 'sukses');
+            setStatus('Terdaftar di browser ini. Klik Tes Push untuk uji kirim dari server (bukan cuma status lokal).', 'sukses');
         } else if (Notification.permission === 'denied') {
             setStatus(pesanIzinDitolak(), 'error');
             tampilkanBantuan(true, htmlBantuanResetIzin());
@@ -238,7 +238,7 @@
                         throw new Error((hasil && hasil.pesan) || 'Gagal menyimpan langganan');
                     }
                     perbaruiTombol(subscription);
-                    setStatus('Push berhasil diaktifkan di perangkat ini.', 'sukses');
+                    setStatus('Terdaftar di browser ini. Klik Tes Push untuk memastikan server bisa mengirim notifikasi.', 'sukses');
                     return subscription;
                 });
             })

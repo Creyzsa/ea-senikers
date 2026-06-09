@@ -173,8 +173,9 @@ $push_db_siap = admin_notifikasi_kolom_push_tersedia();
                     </header>
                     <p class="admin-meta">
                         Notifikasi push dikirim ke perangkat admin meski browser ditutup (butuh HTTPS).
-                        Saat push diterima: <strong>getar</strong> + <strong>bunyi sistem</strong> + notifikasi OS.
-                        Jika tab admin masih terbuka, getar &amp; bunyi kustom juga diputar.
+                        <strong>Aktifkan push</strong> = daftar perangkat di browser.
+                        <strong>Tes Push</strong> = uji kirim dari server (yang dipakai saat pembayaran masuk).
+                        Saat push diterima: getar + bunyi sistem + notifikasi OS.
                     </p>
                     <label class="admin-check admin-check--blok">
                         <input type="checkbox" name="push_aktif" value="1"<?php echo !empty($cfg['push_aktif']) ? ' checked' : ''; ?>>

@@ -841,12 +841,14 @@ function admin_notifikasi_tes_push(): array
 
     $sukses = 0;
     $gagal = 0;
+    $pesan_gagal_terakhir = '';
     foreach ($subs as $sub) {
         $hasil = web_push_kirim_satu($sub, $payload, $vapid_send);
         if ($hasil['ok']) {
             $sukses++;
         } else {
             $gagal++;
+            $pesan_gagal_terakhir = (string) ($hasil['pesan'] ?? '');
             if (!empty($hasil['hapus'])) {
                 admin_push_hapus_langganan((string) $sub['endpoint']);
             }
@@ -857,5 +859,11 @@ function admin_notifikasi_tes_push(): array
         return ['ok' => true, 'pesan' => 'Tes push terkirim ke ' . $sukses . ' perangkat.' . ($gagal > 0 ? ' (' . $gagal . ' gagal)' : '')];
     }
 
-    return ['ok' => false, 'pesan' => 'Tes push gagal ke semua perangkat. Coba aktifkan ulang push di browser.'];
+    $hint = 'Langganan di browser sudah ada, tapi server gagal mengirim. ';
+    if ($pesan_gagal_terakhir !== '') {
+        $hint .= 'Detail: ' . $pesan_gagal_terakhir . ' ';
+    }
+    $hint .= 'Klik Nonaktifkan push lalu Aktifkan push lagi di perangkat ini, kemudian Tes Push.';
+
+    return ['ok' => false, 'pesan' => $hint];
 }
