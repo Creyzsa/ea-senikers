@@ -63,6 +63,9 @@
                     var baru = doc.querySelector(targetSel);
                     if (baru) {
                         target.innerHTML = baru.innerHTML;
+                        if (typeof window.adminSiapkanTabel === 'function') {
+                            window.adminSiapkanTabel(target);
+                        }
                     }
                     if (window.history && window.history.replaceState) {
                         window.history.replaceState(null, '', url);

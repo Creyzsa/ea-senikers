@@ -429,7 +429,7 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                         </thead>
                         <tbody>
                         <?php if ($daftarProduk === []): ?>
-                            <tr>
+                            <tr class="admin-tr-kosong">
                                 <td colspan="7">Belum ada produk atau hasil pencarian kosong.</td>
                             </tr>
                         <?php else: ?>

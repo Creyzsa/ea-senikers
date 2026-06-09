@@ -14,6 +14,7 @@ body.halaman-admin {
     font-family: var(--font-body);
     color: var(--teks-utama);
     background: var(--abu-latar-alt);
+    overflow-x: clip;
 }
 
 /* ——— Layout ——— */
@@ -21,6 +22,8 @@ body.halaman-admin {
     display: flex;
     min-height: 100vh;
     min-height: 100dvh;
+    max-width: 100%;
+    overflow-x: clip;
 }
 
 /* Sidebar = bilah biru sama seperti header toko */
@@ -111,8 +114,10 @@ body.halaman-admin {
 .admin-utama {
     flex: 1;
     min-width: 0;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
+    overflow-x: clip;
 }
 
 /* Bilah atas area konten — putih, selaras kartu toko */
@@ -187,6 +192,7 @@ body.halaman-admin {
     max-width: 1200px;
     width: 100%;
     margin: 0 auto;
+    overflow-x: clip;
 }
 
 .admin-isi-dashboard {
@@ -1343,6 +1349,7 @@ body.admin-menu-terbuka {
     border-radius: var(--radius);
     box-shadow: var(--bayangan-kartu);
     overflow: hidden;
+    max-width: 100%;
 }
 
 .admin-kartu__header {
@@ -2090,6 +2097,17 @@ body.admin-menu-terbuka {
 }
 
 @media (max-width: 768px) {
+    .admin-isi,
+    .admin-isi-dashboard,
+    .admin-konten {
+        max-width: 100%;
+        overflow-x: clip;
+    }
+
+    .admin-grafik__kaki span {
+        font-size: 0.62rem;
+    }
+
     .admin-judul-besar {
         font-size: 1.25rem;
     }
@@ -2132,36 +2150,14 @@ body.admin-menu-terbuka {
     }
 
     .admin-chip-bar {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        flex-wrap: wrap;
+        overflow-x: visible;
         gap: 0.4rem;
-        padding-bottom: 0.2rem;
-        scrollbar-width: none;
-    }
-
-    .admin-chip-bar::-webkit-scrollbar {
-        display: none;
-    }
-
-    .admin-chip {
-        flex-shrink: 0;
     }
 
     .admin-pil-strip {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        padding-bottom: 0.15rem;
-    }
-
-    .admin-pil-strip::-webkit-scrollbar {
-        display: none;
-    }
-
-    .admin-pil-dat {
-        flex-shrink: 0;
+        flex-wrap: wrap;
+        overflow-x: visible;
     }
 
     .admin-form-konten .admin-form-grid,
@@ -2258,24 +2254,130 @@ body.admin-menu-terbuka {
         justify-content: center;
     }
 
-    .admin-tabel-wrap,
-    .admin-tabel-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    .halaman-admin .admin-tabel-wrap,
+    .halaman-admin .admin-tabel-wrapper {
+        overflow-x: visible;
     }
 
-    .admin-kartu .admin-tabel th,
-    .admin-kartu .admin-tabel td,
-    .admin-tabel th,
-    .admin-tabel td {
-        padding: 0.55rem 0.65rem;
-        font-size: 0.8rem;
+    .halaman-admin .admin-kartu .admin-tabel-wrap,
+    .halaman-admin .admin-panel .admin-tabel-wrap {
+        padding: 0 0.85rem 0.85rem;
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        background: transparent;
     }
 
-    .admin-tabel--padat th,
-    .admin-tabel--padat td {
-        padding: 0.5rem 0.6rem;
-        font-size: 0.78rem;
+    .halaman-admin .admin-tabel {
+        width: 100%;
+        min-width: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .halaman-admin .admin-tabel thead {
+        display: none;
+    }
+
+    .halaman-admin .admin-tabel tbody tr {
+        display: block;
+        margin-bottom: 0.75rem;
+        padding: 0.85rem;
+        background: var(--abu-kartu);
+        border: 1px solid var(--abu-tepi);
+        border-radius: var(--radius);
+        box-shadow: var(--bayangan-kartu);
+    }
+
+    .halaman-admin .admin-tabel tbody tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .halaman-admin .admin-tabel tbody tr.admin-tr-kosong,
+    .halaman-admin .admin-tabel tbody tr:has(td[colspan]) {
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .halaman-admin .admin-tabel td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.65rem;
+        padding: 0.45rem 0;
+        border: none;
+        border-bottom: 1px solid var(--abu-tepi);
+        font-size: 0.82rem;
+        text-align: right;
+        word-break: break-word;
+    }
+
+    .halaman-admin .admin-tabel td:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .halaman-admin .admin-tabel td:first-child {
+        padding-top: 0;
+    }
+
+    .halaman-admin .admin-tabel td::before {
+        content: attr(data-label);
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--teks-redup);
+        text-align: left;
+        flex: 0 0 38%;
+        max-width: 38%;
+        padding-top: 0.1rem;
+    }
+
+    .halaman-admin .admin-tabel td[colspan] {
+        display: block;
+        text-align: center;
+        padding: 0.5rem 0;
+        border: none;
+    }
+
+    .halaman-admin .admin-tabel td[colspan]::before {
+        display: none;
+    }
+
+    .halaman-admin .admin-tabel td[data-label="Aksi"],
+    .halaman-admin .admin-tabel td[data-label="Produk"],
+    .halaman-admin .admin-tabel td[data-label="Pembeli"],
+    .halaman-admin .admin-tabel td[data-label="Pelapor"],
+    .halaman-admin .admin-tabel td[data-label="Deskripsi"] {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: left;
+    }
+
+    .halaman-admin .admin-tabel td[data-label="Aksi"]::before,
+    .halaman-admin .admin-tabel td[data-label="Produk"]::before,
+    .halaman-admin .admin-tabel td[data-label="Pembeli"]::before,
+    .halaman-admin .admin-tabel td[data-label="Pelapor"]::before,
+    .halaman-admin .admin-tabel td[data-label="Deskripsi"]::before {
+        max-width: none;
+        flex: none;
+        margin-bottom: 0.2rem;
+    }
+
+    .halaman-admin .admin-tabel td[data-label="Foto"] {
+        justify-content: flex-start;
+        gap: 0.5rem;
+    }
+
+    .halaman-admin .admin-tabel td .admin-aksi-sel,
+    .halaman-admin .admin-tabel td .admin-laporan-status {
+        width: 100%;
+    }
+
+    .halaman-admin .admin-detail-produk-baris {
+        width: 100%;
     }
 
     .admin-detail-produk-baris {
@@ -2335,20 +2437,6 @@ body.admin-menu-terbuka {
     .admin-kartu .admin-form-konten {
         padding-left: 0.85rem;
         padding-right: 0.85rem;
-    }
-
-    .admin-kartu .admin-tabel-wrap {
-        border-left: none;
-        border-right: none;
-        border-radius: 0;
-    }
-
-    .admin-kartu .admin-tabel {
-        min-width: 36rem;
-    }
-
-    .admin-tabel-wrap .admin-tabel--padat {
-        min-width: 32rem;
     }
 
     .admin-panel {

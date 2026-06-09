@@ -39,6 +39,9 @@
             chipLama.innerHTML = chipBaru.innerHTML;
         }
         hasilLama.innerHTML = hasilBaru.innerHTML;
+        if (typeof window.adminSiapkanTabel === 'function') {
+            window.adminSiapkanTabel(hasilLama);
+        }
 
         return idLama !== idBaru;
     }
