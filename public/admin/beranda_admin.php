@@ -191,7 +191,8 @@ if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
                     <div class="admin-hero-owner__teks">
                         <p class="admin-hero-owner__salam"><?php echo htmlspecialchars($salam_waktu, ENT_QUOTES, 'UTF-8'); ?>, <strong><?php echo $nama; ?></strong></p>
                         <h1 class="admin-hero-owner__judul">Ringkasan toko Anda</h1>
-                        <p class="admin-hero-owner__sub">Pantau pendapatan, pesanan, stok, dan aktivitas pembeli dari satu tempat. <?php echo $tanggal_tampil; ?></p>
+                        <p class="admin-hero-owner__sub">Pantau pendapatan, pesanan, stok, dan aktivitas pembeli dari satu tempat.</p>
+                        <p class="admin-hero-owner__tanggal"><?php echo $tanggal_tampil; ?></p>
                     </div>
                     <div class="admin-hero-owner__aksi">
                         <span class="admin-hero-owner__lencana">Owner / Admin</span>
