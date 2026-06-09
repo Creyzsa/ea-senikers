@@ -527,6 +527,51 @@ function user_pernah_beli_produk(int $user_id, string $id_produk): bool
     }, false);
 }
 
+/** Pastikan kolom edited_at ada (migrasi tahap4_1 belum dijalankan di Supabase). */
+function ulasan_pastikan_skema_edited_at(PDO $pdo): void
+{
+    static $sudah = false;
+    if ($sudah) {
+        return;
+    }
+    $sudah = true;
+
+    try {
+        $stmt = $pdo->query(
+            "SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'ulasan' AND column_name = 'edited_at'
+             LIMIT 1"
+        );
+        if ($stmt && $stmt->fetchColumn()) {
+            return;
+        }
+        $pdo->exec('ALTER TABLE ulasan ADD COLUMN IF NOT EXISTS edited_at TIMESTAMPTZ');
+    } catch (Throwable $e) {
+        error_log('[ulasan_pastikan_skema_edited_at] ' . $e->getMessage());
+    }
+}
+
+/** Fragment SELECT edited_at — aman walau kolom belum ada. */
+function ulasan_sql_kolom_edited_at(string $alias = 'u'): string
+{
+    static $ada = null;
+    if ($ada === null) {
+        $ada = (bool) (_db_call(static function (): bool {
+            $pdo = koneksi_database();
+            ulasan_pastikan_skema_edited_at($pdo);
+            $stmt = $pdo->query(
+                "SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = 'public' AND table_name = 'ulasan' AND column_name = 'edited_at'
+                 LIMIT 1"
+            );
+
+            return (bool) ($stmt && $stmt->fetchColumn());
+        }, false) ?? false);
+    }
+
+    return $ada ? ($alias . '.edited_at') : 'NULL::timestamptz AS edited_at';
+}
+
 /** Cocokkan baris order_items dengan produk (id_produk atau nama produk lama). */
 function ulasan_sql_item_produk_cocok(string $alias_item = 'oi'): string
 {
@@ -575,11 +620,13 @@ function ulasan_ambil_untuk_order(int $user_id, int $order_id, string $id_produk
     }
     return _db_call(function () use ($user_id, $order_id, $id_produk) {
         $pdo = koneksi_database();
+        ulasan_pastikan_skema_edited_at($pdo);
+        $kolom_edit = ulasan_sql_kolom_edited_at('ulasan');
         $stmt = $pdo->prepare(
-            'SELECT id, rating, komentar, created_at, edited_at
+            "SELECT id, rating, komentar, created_at, {$kolom_edit}
              FROM ulasan
-             WHERE user_id = :u AND order_id = :o AND id_produk = :p
-             LIMIT 1'
+             WHERE user_id = :u AND order_id = :o AND id_produk = CAST(:p AS uuid)
+             LIMIT 1"
         );
         $stmt->execute(['u' => $user_id, 'o' => $order_id, 'p' => $id_produk]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -674,9 +721,9 @@ function ulasan_refresh_produk_stats(string $id_produk): void
         $pdo = koneksi_database();
         $stmt = $pdo->prepare(
             'UPDATE produk SET
-                jumlah_ulasan = COALESCE((SELECT COUNT(*)::int FROM ulasan WHERE id_produk = :p), 0),
-                rating_rata   = COALESCE((SELECT AVG(rating)::numeric(3,2) FROM ulasan WHERE id_produk = :p), 0)
-             WHERE id_produk = :p'
+                jumlah_ulasan = COALESCE((SELECT COUNT(*)::int FROM ulasan WHERE id_produk = CAST(:p AS uuid)), 0),
+                rating_rata   = COALESCE((SELECT AVG(rating)::numeric(3,2) FROM ulasan WHERE id_produk = CAST(:p AS uuid)), 0)
+             WHERE id_produk = CAST(:p AS uuid)'
         );
         $stmt->execute(['p' => $id_produk]);
     }, null);
@@ -714,9 +761,10 @@ function ulasan_buat(int $user_id, int $order_id, string $id_produk, int $rating
 
     try {
         $pdo = koneksi_database();
+        ulasan_pastikan_skema_edited_at($pdo);
         $stmt = $pdo->prepare(
             'INSERT INTO ulasan (user_id, id_produk, order_id, rating, komentar)
-             VALUES (:u, :p, :o, :r, :k)'
+             VALUES (:u, CAST(:p AS uuid), :o, :r, :k)'
         );
         $stmt->execute([
             'u' => $user_id,
@@ -770,10 +818,11 @@ function ulasan_perbarui(int $user_id, int $order_id, string $id_produk, int $ra
 
     try {
         $pdo = koneksi_database();
+        ulasan_pastikan_skema_edited_at($pdo);
         $stmt = $pdo->prepare(
             'UPDATE ulasan
              SET rating = :r, komentar = :k, edited_at = NOW()
-             WHERE user_id = :u AND order_id = :o AND id_produk = :p AND edited_at IS NULL'
+             WHERE user_id = :u AND order_id = :o AND id_produk = CAST(:p AS uuid) AND edited_at IS NULL'
         );
         $stmt->execute([
             'u' => $user_id,
@@ -814,7 +863,7 @@ function ulasan_stats_untuk_produk(string $id_produk): array
         $pdo = koneksi_database();
         $stmt = $pdo->prepare(
             'SELECT COUNT(*)::int AS jumlah, COALESCE(AVG(rating), 0)::float AS rata
-             FROM ulasan WHERE id_produk = :p'
+             FROM ulasan WHERE id_produk = CAST(:p AS uuid)'
         );
         $stmt->execute(['p' => $id_produk]);
         $hasil = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -935,14 +984,16 @@ function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 50): array
 
     $pdo_hasil = _db_call(function () use ($id_produk, $limit) {
         $pdo = koneksi_database();
+        ulasan_pastikan_skema_edited_at($pdo);
+        $kolom_edit = ulasan_sql_kolom_edited_at('u');
         $stmt = $pdo->prepare(
-            'SELECT u.id, u.rating, u.komentar, u.created_at, u.user_id, u.order_id, u.edited_at,
-                    COALESCE(NULLIF(TRIM(us.username), \'\'), \'Pembeli\') AS nama_pengguna
+            "SELECT u.id, u.rating, u.komentar, u.created_at, u.user_id, u.order_id, {$kolom_edit},
+                    COALESCE(NULLIF(TRIM(us.username), ''), 'Pembeli') AS nama_pengguna
              FROM ulasan u
              LEFT JOIN users us ON us.id = u.user_id
-             WHERE u.id_produk = :p
+             WHERE u.id_produk = CAST(:p AS uuid)
              ORDER BY u.created_at DESC
-             LIMIT :lim'
+             LIMIT :lim"
         );
         $stmt->bindValue('p', $id_produk);
         $stmt->bindValue('lim', $limit, PDO::PARAM_INT);
@@ -952,18 +1003,19 @@ function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 50): array
         return is_array($rows) ? $rows : [];
     }, null);
 
-    if (is_array($pdo_hasil) && $pdo_hasil !== []) {
+    if (is_array($pdo_hasil)) {
         return ulasan_lengkapi_nama_pengguna($pdo_hasil);
     }
 
     $hasil = supabase_rest_request('GET', '/rest/v1/ulasan', [
-        'select' => 'id,rating,komentar,created_at,user_id,order_id,edited_at',
+        'select' => 'id,rating,komentar,created_at,user_id,order_id',
+        'select' => $select_rest,
         'id_produk' => 'eq.' . $id_produk,
         'order' => 'created_at.desc',
         'limit' => (string) $limit,
     ]);
     if (!$hasil['ok'] || !is_array($hasil['data'])) {
-        return is_array($pdo_hasil) ? ulasan_lengkapi_nama_pengguna($pdo_hasil) : [];
+        return [];
     }
 
     return ulasan_lengkapi_nama_pengguna($hasil['data']);
