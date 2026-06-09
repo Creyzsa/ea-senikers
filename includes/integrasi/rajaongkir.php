@@ -76,7 +76,7 @@ function jne_web_warmup_session(bool $paksa = false): void
     }
 
     curl_exec($ch);
-    curl_close($ch);
+    // curl_close() removed: deprecated in PHP 8.5, no-op since PHP 8.0 (handle auto-closed)
 }
 
 /** Pesan error JNE yang lebih mudah dipahami pembeli. */
@@ -204,7 +204,7 @@ function jne_web_request(string $path, array $query = [], bool $ulang_setelah_wa
     $raw = curl_exec($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $err_curl = (string) curl_error($ch);
-    curl_close($ch);
+    // curl_close() removed: deprecated in PHP 8.5, no-op since PHP 8.0 (handle auto-closed)
     $raw_str = is_string($raw) ? $raw : '';
 
     if ($raw === false) {
