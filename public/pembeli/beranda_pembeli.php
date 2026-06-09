@@ -25,6 +25,7 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $__wa) {
 }
 
 $semua_produk = katalog_ambil_semua_produk();
+$ringkasan_kondisi = katalog_ringkasan_kondisi_beranda($semua_produk);
 $ringkasan_kategori = katalog_ringkasan_kategori_beranda($semua_produk);
 $ringkasan_brand = katalog_ringkasan_brand($semua_produk);
 $produk_terlaris = pesanan_produk_terlaris_gabung_katalog(4);
@@ -138,6 +139,31 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                     </div>
                 </article>
             </div>
+
+            <section class="beranda-kondisi" aria-labelledby="judul-beranda-kondisi">
+                <div class="beranda-kondisi__header">
+                    <div>
+                        <p class="section-eyebrow">Kondisi</p>
+                        <h2 id="judul-beranda-kondisi" class="beranda-kondisi__judul">Baru atau bekas?</h2>
+                    </div>
+                    <a class="beranda-kondisi__lihat" href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>">Semua produk &rarr;</a>
+                </div>
+                <div class="kategori-kondisi-grid beranda-kondisi__grid">
+                    <?php foreach ($ringkasan_kondisi as $kondisi_item): ?>
+                        <a class="kategori-kondisi-card <?php echo htmlspecialchars((string) $kondisi_item['kelas'], ENT_QUOTES, 'UTF-8'); ?>"
+                           href="<?php echo htmlspecialchars((string) $kondisi_item['url'], ENT_QUOTES, 'UTF-8'); ?>">
+                            <div class="kategori-kondisi-card__media">
+                                <img src="<?php echo htmlspecialchars((string) $kondisi_item['gambar'], ENT_QUOTES, 'UTF-8'); ?>" alt="" width="120" height="120" loading="lazy">
+                            </div>
+                            <div class="kategori-kondisi-card__isi">
+                                <strong><?php echo htmlspecialchars((string) $kondisi_item['nama'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                                <span><?php echo (int) $kondisi_item['jumlah']; ?> produk · <?php echo htmlspecialchars((string) $kondisi_item['deskripsi'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                <span class="kategori-kondisi-card__cta">Lihat koleksi</span>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </section>
 
             <section class="beranda-kategori" aria-labelledby="judul-beranda-kategori">
                 <div class="beranda-kategori__header">

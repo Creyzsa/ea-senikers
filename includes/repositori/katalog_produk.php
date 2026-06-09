@@ -385,6 +385,67 @@ function katalog_daftar_kategori_produk(): array
 }
 
 /**
+ * Ringkasan kondisi Baru / Bekas untuk kartu di beranda.
+ *
+ * @param list<array<string, mixed>> $daftar_produk
+ * @return list<array{
+ *   kondisi: string,
+ *   nama: string,
+ *   deskripsi: string,
+ *   jumlah: int,
+ *   gambar: string,
+ *   url: string,
+ *   kelas: string
+ * }>
+ */
+function katalog_ringkasan_kondisi_beranda(array $daftar_produk): array
+{
+    $map = [
+        'Baru' => [
+            'kondisi' => 'Baru',
+            'nama' => 'Baru',
+            'deskripsi' => 'Sneaker original belum dipakai',
+            'jumlah' => 0,
+            'gambar' => katalog_url_gambar_placeholder(),
+            'url' => aplikasi_url('produk?kondisi=' . rawurlencode('Baru')),
+            'kelas' => 'kategori-kondisi-card--baru',
+        ],
+        'Second' => [
+            'kondisi' => 'Second',
+            'nama' => 'Bekas',
+            'deskripsi' => 'Preloved terkurasi · kondisi transparan',
+            'jumlah' => 0,
+            'gambar' => katalog_url_gambar_placeholder(),
+            'url' => aplikasi_url('produk?kondisi=' . rawurlencode('Second')),
+            'kelas' => 'kategori-kondisi-card--preloved',
+        ],
+    ];
+
+    foreach ($daftar_produk as $produk) {
+        if (!is_array($produk)) {
+            continue;
+        }
+        $kondisi = trim((string) ($produk['kondisi'] ?? ''));
+        if ($kondisi === '') {
+            continue;
+        }
+
+        $kunci = strcasecmp($kondisi, 'Baru') === 0 ? 'Baru' : 'Second';
+        if (strcasecmp($kondisi, 'Baru') !== 0) {
+            $map['Second']['kondisi'] = $kondisi;
+            $map['Second']['url'] = aplikasi_url('produk?kondisi=' . rawurlencode($kondisi));
+        }
+
+        $map[$kunci]['jumlah']++;
+        if ($map[$kunci]['jumlah'] === 1) {
+            $map[$kunci]['gambar'] = katalog_url_gambar_utama($produk);
+        }
+    }
+
+    return array_values($map);
+}
+
+/**
  * Ringkasan kategori untuk kartu di beranda.
  *
  * @param list<array<string, mixed>> $daftar_produk
