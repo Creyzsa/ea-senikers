@@ -385,7 +385,7 @@ function katalog_daftar_kategori_produk(): array
 }
 
 /**
- * Ringkasan kondisi Baru / Bekas untuk kartu di beranda.
+ * Ringkasan kondisi Baru / Preloved untuk kartu di beranda.
  *
  * @param list<array<string, mixed>> $daftar_produk
  * @return list<array{
@@ -412,7 +412,7 @@ function katalog_ringkasan_kondisi_beranda(array $daftar_produk): array
         ],
         'Second' => [
             'kondisi' => 'Second',
-            'nama' => 'Bekas',
+            'nama' => 'Preloved',
             'deskripsi' => 'Preloved terkurasi · kondisi transparan',
             'jumlah' => 0,
             'gambar' => katalog_url_gambar_placeholder(),

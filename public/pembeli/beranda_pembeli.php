@@ -144,7 +144,7 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                 <div class="beranda-kondisi__header">
                     <div>
                         <p class="section-eyebrow">Kondisi</p>
-                        <h2 id="judul-beranda-kondisi" class="beranda-kondisi__judul">Baru atau bekas?</h2>
+                        <h2 id="judul-beranda-kondisi" class="beranda-kondisi__judul">Baru atau preloved?</h2>
                     </div>
                     <a class="beranda-kondisi__lihat" href="<?php echo htmlspecialchars($tautan_produk, ENT_QUOTES, 'UTF-8'); ?>">Semua produk &rarr;</a>
                 </div>
