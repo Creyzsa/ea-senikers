@@ -343,6 +343,18 @@
     text-decoration: underline;
 }
 
+.pd-produk-item__ulasan--edit {
+    color: #b45309;
+}
+
+.pd-produk-item__ulasan-done {
+    display: inline-block;
+    margin-top: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+
 /* Pengiriman dengan ikon */
 .pd-pengiriman-list {
     list-style: none;

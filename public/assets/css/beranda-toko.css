@@ -2877,6 +2877,21 @@ body.halaman-toko {
     display: grid;
     gap: 0.5rem;
 }
+.form-ulasan-hint {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #6b7280;
+    line-height: 1.45;
+}
+.ulasan-locked {
+    margin: 0.5rem 0 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+    background: #f9fafb;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+}
 .form-ulasan textarea,
 .form-ulasan select {
     border: 1px solid var(--color-border);

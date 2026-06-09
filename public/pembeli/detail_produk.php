@@ -22,21 +22,30 @@ $produk = $id !== '' ? katalog_ambil_produk_ber_id($id) : null;
 $urls_gambar = [];
 
 // Handle POST ulasan & wishlist (hanya jika login & produk ada)
-// Ulasan hanya setelah pesanan selesai (produk sudah diterima pembeli)
+// Ulasan: 1 per pesanan selesai, boleh edit sekali, lalu dikunci
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $produk !== null && $sudah_login) {
     $aksi = (string)($_POST['aksi'] ?? '');
-    if ($aksi === 'tambah_ulasan') {
-        if ($id_pengguna > 0 && user_pernah_beli_produk($id_pengguna, $id)) {
-            $rating = (int)($_POST['rating'] ?? 0);
-            $kom = trim((string)($_POST['komentar'] ?? ''));
-            if (ulasan_tambah($id_pengguna, $id, $rating, $kom)) {
-                $qs = strpos($_SERVER['REQUEST_URI'], '?') !== false ? '&' : '?';
-                header('Location: ' . $_SERVER['REQUEST_URI'] . $qs . 'ulasan_ok=1');
-                exit;
+    if ($aksi === 'tambah_ulasan' || $aksi === 'edit_ulasan') {
+        $order_id_ulasan = (int)($_POST['order_id'] ?? 0);
+        $rating = (int)($_POST['rating'] ?? 0);
+        $kom = trim((string)($_POST['komentar'] ?? ''));
+        $ok = false;
+        if ($id_pengguna > 0 && $order_id_ulasan > 0) {
+            if ($aksi === 'tambah_ulasan') {
+                $ok = ulasan_buat($id_pengguna, $order_id_ulasan, $id, $rating, $kom);
             } else {
-                $_SESSION['flash_keranjang_error'] = 'Gagal mengirim ulasan (mungkin koneksi database bermasalah atau data invalid).';
+                $ok = ulasan_perbarui($id_pengguna, $order_id_ulasan, $id, $rating, $kom);
             }
         }
+        if ($ok) {
+            $qs = strpos($_SERVER['REQUEST_URI'], '?') !== false ? '&' : '?';
+            $param = $aksi === 'edit_ulasan' ? 'ulasan_edit_ok=1' : 'ulasan_ok=1';
+            header('Location: ' . $_SERVER['REQUEST_URI'] . $qs . $param);
+            exit;
+        }
+        $_SESSION['flash_keranjang_error'] = $aksi === 'edit_ulasan'
+            ? 'Ulasan tidak bisa diedit (sudah pernah diedit atau pesanan tidak valid).'
+            : 'Gagal mengirim ulasan (pesanan sudah diulas atau belum selesai).';
         header('Location: ' . $_SERVER['REQUEST_URI']);
         exit;
     } elseif ($aksi === 'tambah_wishlist' || $aksi === 'hapus_wishlist') {
@@ -277,25 +286,49 @@ $u_checkout = aplikasi_url('checkout');
             <p class="no-review">Belum ada ulasan. Jadilah yang pertama setelah beli!</p>
         <?php endif; ?>
 
-        <?php if ($sudah_login && user_pernah_beli_produk($id_pengguna, $id)): ?>
+        <?php
+        $order_id_param = isset($_GET['order_id']) ? (int) $_GET['order_id'] : 0;
+        $ulasan_form = $sudah_login ? ulasan_konteks_form($id_pengguna, $id, $order_id_param) : ['order_id' => 0, 'status' => 'tidak_berhak', 'ulasan' => null];
+        $ulasan_status = (string) ($ulasan_form['status'] ?? 'tidak_berhak');
+        $ulasan_order = (int) ($ulasan_form['order_id'] ?? 0);
+        $ulasan_existing = is_array($ulasan_form['ulasan'] ?? null) ? $ulasan_form['ulasan'] : null;
+        ?>
+        <?php if ($sudah_login && in_array($ulasan_status, ['belum', 'bisa_edit'], true)): ?>
         <form method="post" class="form-ulasan">
+            <input type="hidden" name="order_id" value="<?php echo $ulasan_order; ?>">
             <input type="hidden" name="id_produk" value="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>">
+            <p class="form-ulasan-hint">
+                <?php if ($ulasan_status === 'bisa_edit'): ?>
+                    Anda dapat mengedit ulasan ini <strong>satu kali</strong>. Setelah disimpan, ulasan tidak bisa diubah lagi.
+                <?php else: ?>
+                    Satu ulasan per pesanan. Jika membeli produk ini lagi, Anda bisa memberi ulasan baru.
+                <?php endif; ?>
+            </p>
             <div class="form-row">
                 <label>Rating</label>
                 <select name="rating" required>
-                    <option value="5">5 ★ Sangat Puas</option>
-                    <option value="4">4 ★ Puas</option>
-                    <option value="3">3 ★ Cukup</option>
-                    <option value="2">2 ★ Kurang</option>
-                    <option value="1">1 ★ Kecewa</option>
+                    <?php for ($star = 5; $star >= 1; $star--): ?>
+                        <?php
+                        $labels = [5 => '5 ★ Sangat Puas', 4 => '4 ★ Puas', 3 => '3 ★ Cukup', 2 => '2 ★ Kurang', 1 => '1 ★ Kecewa'];
+                        $sel = (int) ($ulasan_existing['rating'] ?? 5) === $star ? ' selected' : '';
+                        ?>
+                        <option value="<?php echo $star; ?>"<?php echo $sel; ?>><?php echo $labels[$star]; ?></option>
+                    <?php endfor; ?>
                 </select>
             </div>
-            <textarea name="komentar" placeholder="Bagaimana kondisi & pengalaman Anda dengan produk ini?" required rows="3"></textarea>
-            <button type="submit" name="aksi" value="tambah_ulasan" class="btn-ulasan">Kirim Ulasan</button>
+            <textarea name="komentar" placeholder="Bagaimana kondisi & pengalaman Anda dengan produk ini?" required rows="3"><?php echo htmlspecialchars((string) ($ulasan_existing['komentar'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></textarea>
+            <button type="submit" name="aksi" value="<?php echo $ulasan_status === 'bisa_edit' ? 'edit_ulasan' : 'tambah_ulasan'; ?>" class="btn-ulasan">
+                <?php echo $ulasan_status === 'bisa_edit' ? 'Simpan Perubahan Ulasan' : 'Kirim Ulasan'; ?>
+            </button>
         </form>
+        <?php elseif ($sudah_login && $ulasan_status === 'dikunci' && $ulasan_existing !== null): ?>
+            <p class="ulasan-locked">Ulasan untuk pesanan ini sudah dikirim dan tidak bisa diubah lagi.</p>
         <?php endif; ?>
         <?php if (isset($_GET['ulasan_ok'])): ?>
             <p class="flash-success">Terima kasih! Ulasan Anda telah dikirim.</p>
+        <?php endif; ?>
+        <?php if (isset($_GET['ulasan_edit_ok'])): ?>
+            <p class="flash-success">Ulasan berhasil diperbarui. Ulasan ini sekarang dikunci dan tidak bisa diedit lagi.</p>
         <?php endif; ?>
     </section>
 

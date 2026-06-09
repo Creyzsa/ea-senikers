@@ -362,10 +362,19 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
                                         <span class="pd-chip">Qty <strong><?php echo (int) $qty; ?></strong></span>
                                     </div>
                                     <p class="pd-produk-item__harga"><?php echo htmlspecialchars(katalog_format_rupiah($sub_baris), ENT_QUOTES, 'UTF-8'); ?></p>
-                                    <?php if (in_array($status, ['shipped', 'completed'])): ?>
-                                        <?php $pid = (string) ($it['id_produk'] ?? ''); ?>
-                                        <?php if ($pid !== ''): ?>
-                                            <a class="pd-produk-item__ulasan" href="<?php echo htmlspecialchars(aplikasi_url('detail-produk?id=' . rawurlencode($pid)), ENT_QUOTES, 'UTF-8'); ?>">Beri ulasan</a>
+                                    <?php if ($status === 'completed'): ?>
+                                        <?php
+                                        $pid = (string) ($it['id_produk'] ?? '');
+                                        $ulasan_status_item = ($pid !== '' && $id_pengguna > 0)
+                                            ? ulasan_status_untuk_order($id_pengguna, $order_id, $pid)
+                                            : 'tidak_berhak';
+                                        ?>
+                                        <?php if ($pid !== '' && $ulasan_status_item === 'belum'): ?>
+                                            <a class="pd-produk-item__ulasan" href="<?php echo htmlspecialchars(aplikasi_url('detail-produk?id=' . rawurlencode($pid) . '&order_id=' . $order_id), ENT_QUOTES, 'UTF-8'); ?>">Beri ulasan</a>
+                                        <?php elseif ($pid !== '' && $ulasan_status_item === 'bisa_edit'): ?>
+                                            <a class="pd-produk-item__ulasan pd-produk-item__ulasan--edit" href="<?php echo htmlspecialchars(aplikasi_url('detail-produk?id=' . rawurlencode($pid) . '&order_id=' . $order_id), ENT_QUOTES, 'UTF-8'); ?>">Edit ulasan (1x)</a>
+                                        <?php elseif ($pid !== '' && $ulasan_status_item === 'dikunci'): ?>
+                                            <span class="pd-produk-item__ulasan-done">Ulasan terkirim</span>
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
