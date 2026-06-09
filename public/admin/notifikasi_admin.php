@@ -100,6 +100,7 @@ $poll_url = htmlspecialchars(aplikasi_url('api/admin_notifikasi_poll.php'), ENT_
 $vapid_url = htmlspecialchars(aplikasi_url('api/admin_push_vapid.php'), ENT_QUOTES, 'UTF-8');
 $subscribe_url = htmlspecialchars(aplikasi_url('api/admin_push_subscribe.php'), ENT_QUOTES, 'UTF-8');
 $sw_url = htmlspecialchars(aplikasi_url('sw-admin-notifikasi.js'), ENT_QUOTES, 'UTF-8');
+$push_db_siap = admin_notifikasi_kolom_push_tersedia();
 
 ?>
 <!DOCTYPE html>
@@ -128,6 +129,12 @@ $sw_url = htmlspecialchars(aplikasi_url('sw-admin-notifikasi.js'), ENT_QUOTES, '
         <main class="admin-isi">
             <h1 class="admin-judul-besar">Notifikasi admin</h1>
             <p class="admin-salam">Atur Telegram, email SMTP, Web Push, dan notifikasi browser (getar &amp; bunyi) saat pembayaran masuk.</p>
+
+            <?php if (!$push_db_siap): ?>
+                <div class="admin-alert admin-alert--error">
+                    <?php echo htmlspecialchars(admin_notifikasi_pesan_migrasi_tahap11(), ENT_QUOTES, 'UTF-8'); ?>
+                </div>
+            <?php endif; ?>
 
             <?php if (is_array($flash)): ?>
                 <div class="admin-alert admin-alert--<?php echo htmlspecialchars((string) (($flash['jenis'] ?? '') === 'error' ? 'error' : 'sukses'), ENT_QUOTES, 'UTF-8'); ?>">

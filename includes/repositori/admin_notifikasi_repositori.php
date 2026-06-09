@@ -13,6 +13,40 @@ function admin_notifikasi_bool_db(bool $nilai): string
     return $nilai ? 'true' : 'false';
 }
 
+function admin_notifikasi_pesan_migrasi_tahap11(): string
+{
+    return 'Kolom Web Push belum ada di database. Buka Supabase → SQL Editor, jalankan file database/migrations/tahap11_admin_push.sql, lalu simpan lagi.';
+}
+
+/**
+ * Cek apakah migrasi tahap11 (push_aktif, vapid_*) sudah dijalankan.
+ */
+function admin_notifikasi_kolom_push_tersedia(): bool
+{
+    static $tersedia = null;
+    if ($tersedia !== null) {
+        return $tersedia;
+    }
+
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare(
+            "SELECT 1
+             FROM information_schema.columns
+             WHERE table_schema = 'public'
+               AND table_name = 'admin_notifikasi_pengaturan'
+               AND column_name = 'push_aktif'
+             LIMIT 1"
+        );
+        $stmt->execute();
+        $tersedia = (bool) $stmt->fetchColumn();
+    } catch (Throwable $e) {
+        $tersedia = false;
+    }
+
+    return $tersedia;
+}
+
 /**
  * Isi ulang token/password dari DB bila field password dikosongkan browser saat submit.
  *
@@ -153,60 +187,97 @@ function admin_notifikasi_simpan_pengaturan(array $data): bool
     if ($payload['vapid_private_key'] === '') {
         $payload['vapid_private_key'] = (string) $simpan_lama['vapid_private_key'];
     }
-    if ($payload['push_aktif'] && ($payload['vapid_public_key'] === '' || $payload['vapid_private_key'] === '')) {
+    $push_siap = admin_notifikasi_kolom_push_tersedia();
+    if (!$push_siap && $payload['push_aktif']) {
+        throw new RuntimeException(admin_notifikasi_pesan_migrasi_tahap11());
+    }
+
+    if ($push_siap && $payload['push_aktif'] && ($payload['vapid_public_key'] === '' || $payload['vapid_private_key'] === '')) {
         $vapid = admin_notifikasi_pastikan_vapid_keys($payload);
         $payload['vapid_public_key'] = $vapid['vapid_public_key'];
         $payload['vapid_private_key'] = $vapid['vapid_private_key'];
     }
 
+    $params_dasar = [
+        'tt' => $payload['telegram_bot_token'],
+        'tc' => $payload['telegram_chat_id'],
+        'ta' => admin_notifikasi_bool_db((bool) $payload['telegram_aktif']),
+        'sh' => $payload['smtp_host'],
+        'sp' => $payload['smtp_port'],
+        'su' => $payload['smtp_user'],
+        'spw' => $payload['smtp_pass'],
+        'sf' => $payload['smtp_from'],
+        'st' => $payload['smtp_to'],
+        'ea' => admin_notifikasi_bool_db((bool) $payload['email_aktif']),
+        'ba' => admin_notifikasi_bool_db((bool) $payload['notif_browser_aktif']),
+    ];
+
     try {
         $pdo = koneksi_database();
-        $stmt = $pdo->prepare(
-            'INSERT INTO admin_notifikasi_pengaturan (
-                id, telegram_bot_token, telegram_chat_id, telegram_aktif,
-                smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, smtp_to,
-                email_aktif, notif_browser_aktif, push_aktif, vapid_public_key, vapid_private_key, updated_at
-             ) VALUES (
-                1, :tt, :tc, :ta, :sh, :sp, :su, :spw, :sf, :st, :ea, :ba, :pa, :vpk, :vpv, NOW()
-             )
-             ON CONFLICT (id) DO UPDATE SET
-                telegram_bot_token = EXCLUDED.telegram_bot_token,
-                telegram_chat_id = EXCLUDED.telegram_chat_id,
-                telegram_aktif = EXCLUDED.telegram_aktif,
-                smtp_host = EXCLUDED.smtp_host,
-                smtp_port = EXCLUDED.smtp_port,
-                smtp_user = EXCLUDED.smtp_user,
-                smtp_pass = EXCLUDED.smtp_pass,
-                smtp_from = EXCLUDED.smtp_from,
-                smtp_to = EXCLUDED.smtp_to,
-                email_aktif = EXCLUDED.email_aktif,
-                notif_browser_aktif = EXCLUDED.notif_browser_aktif,
-                push_aktif = EXCLUDED.push_aktif,
-                vapid_public_key = EXCLUDED.vapid_public_key,
-                vapid_private_key = EXCLUDED.vapid_private_key,
-                updated_at = NOW()'
-        );
-        $stmt->execute([
-            'tt' => $payload['telegram_bot_token'],
-            'tc' => $payload['telegram_chat_id'],
-            'ta' => admin_notifikasi_bool_db((bool) $payload['telegram_aktif']),
-            'sh' => $payload['smtp_host'],
-            'sp' => $payload['smtp_port'],
-            'su' => $payload['smtp_user'],
-            'spw' => $payload['smtp_pass'],
-            'sf' => $payload['smtp_from'],
-            'st' => $payload['smtp_to'],
-            'ea' => admin_notifikasi_bool_db((bool) $payload['email_aktif']),
-            'ba' => admin_notifikasi_bool_db((bool) $payload['notif_browser_aktif']),
-            'pa' => admin_notifikasi_bool_db((bool) $payload['push_aktif']),
-            'vpk' => $payload['vapid_public_key'],
-            'vpv' => $payload['vapid_private_key'],
-        ]);
+        if ($push_siap) {
+            $stmt = $pdo->prepare(
+                'INSERT INTO admin_notifikasi_pengaturan (
+                    id, telegram_bot_token, telegram_chat_id, telegram_aktif,
+                    smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, smtp_to,
+                    email_aktif, notif_browser_aktif, push_aktif, vapid_public_key, vapid_private_key, updated_at
+                 ) VALUES (
+                    1, :tt, :tc, :ta, :sh, :sp, :su, :spw, :sf, :st, :ea, :ba, :pa, :vpk, :vpv, NOW()
+                 )
+                 ON CONFLICT (id) DO UPDATE SET
+                    telegram_bot_token = EXCLUDED.telegram_bot_token,
+                    telegram_chat_id = EXCLUDED.telegram_chat_id,
+                    telegram_aktif = EXCLUDED.telegram_aktif,
+                    smtp_host = EXCLUDED.smtp_host,
+                    smtp_port = EXCLUDED.smtp_port,
+                    smtp_user = EXCLUDED.smtp_user,
+                    smtp_pass = EXCLUDED.smtp_pass,
+                    smtp_from = EXCLUDED.smtp_from,
+                    smtp_to = EXCLUDED.smtp_to,
+                    email_aktif = EXCLUDED.email_aktif,
+                    notif_browser_aktif = EXCLUDED.notif_browser_aktif,
+                    push_aktif = EXCLUDED.push_aktif,
+                    vapid_public_key = EXCLUDED.vapid_public_key,
+                    vapid_private_key = EXCLUDED.vapid_private_key,
+                    updated_at = NOW()'
+            );
+            $stmt->execute($params_dasar + [
+                'pa' => admin_notifikasi_bool_db((bool) $payload['push_aktif']),
+                'vpk' => $payload['vapid_public_key'],
+                'vpv' => $payload['vapid_private_key'],
+            ]);
+        } else {
+            $stmt = $pdo->prepare(
+                'INSERT INTO admin_notifikasi_pengaturan (
+                    id, telegram_bot_token, telegram_chat_id, telegram_aktif,
+                    smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, smtp_to,
+                    email_aktif, notif_browser_aktif, updated_at
+                 ) VALUES (
+                    1, :tt, :tc, :ta, :sh, :sp, :su, :spw, :sf, :st, :ea, :ba, NOW()
+                 )
+                 ON CONFLICT (id) DO UPDATE SET
+                    telegram_bot_token = EXCLUDED.telegram_bot_token,
+                    telegram_chat_id = EXCLUDED.telegram_chat_id,
+                    telegram_aktif = EXCLUDED.telegram_aktif,
+                    smtp_host = EXCLUDED.smtp_host,
+                    smtp_port = EXCLUDED.smtp_port,
+                    smtp_user = EXCLUDED.smtp_user,
+                    smtp_pass = EXCLUDED.smtp_pass,
+                    smtp_from = EXCLUDED.smtp_from,
+                    smtp_to = EXCLUDED.smtp_to,
+                    email_aktif = EXCLUDED.email_aktif,
+                    notif_browser_aktif = EXCLUDED.notif_browser_aktif,
+                    updated_at = NOW()'
+            );
+            $stmt->execute($params_dasar);
+        }
 
         return true;
     } catch (Throwable $e) {
         $rls = database_pesan_error_rls($e);
         $detail = trim($e->getMessage());
+        if (str_contains($detail, 'push_aktif') || str_contains($detail, '42703')) {
+            throw new RuntimeException(admin_notifikasi_pesan_migrasi_tahap11(), 0, $e);
+        }
         $pesan = $rls
             ?? ($detail !== ''
                 ? 'Gagal menyimpan pengaturan notifikasi: ' . $detail
