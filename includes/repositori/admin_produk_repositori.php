@@ -16,6 +16,32 @@ function admin_daftar_ukuran_default(): array
     return katalog_daftar_ukuran_default();
 }
 
+/** Kategori produk yang bisa dipilih admin (dropdown). */
+function admin_daftar_kategori_produk(): array
+{
+    return [
+        'Sneaker',
+        'Sport Sneaker',
+        'Running',
+    ];
+}
+
+/**
+ * Opsi kategori untuk form — menyertakan nilai lama jika belum ada di daftar.
+ *
+ * @return list<string>
+ */
+function admin_kategori_produk_opsi_form(string $kategori_saat_ini = ''): array
+{
+    $opsi = admin_daftar_kategori_produk();
+    $kategori_saat_ini = trim($kategori_saat_ini);
+    if ($kategori_saat_ini !== '' && !in_array($kategori_saat_ini, $opsi, true)) {
+        array_unshift($opsi, $kategori_saat_ini);
+    }
+
+    return $opsi;
+}
+
 /**
  * Ubah input angka (mis. "1.500.000") menjadi integer non-negatif.
  */
@@ -102,6 +128,9 @@ function admin_produk_validasi_payload(array $payload): array
     }
     if ($kategori === '') {
         throw new RuntimeException('Kategori wajib diisi.');
+    }
+    if (!in_array($kategori, admin_daftar_kategori_produk(), true)) {
+        throw new RuntimeException('Kategori produk tidak valid.');
     }
     if (!in_array($kondisi, ['Baru', 'Second'], true)) {
         throw new RuntimeException('Kondisi produk tidak valid.');

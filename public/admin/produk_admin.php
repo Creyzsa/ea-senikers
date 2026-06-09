@@ -24,7 +24,7 @@ $editId = trim((string) ($_GET['edit'] ?? ''));
 $form = [
     'nama_produk' => '',
     'brand' => '',
-    'kategori' => 'Sneakers',
+    'kategori' => 'Sneaker',
     'kondisi' => 'Baru',
     'harga' => '',
     'berat_gram' => '1000',
@@ -96,6 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if ($form['kategori'] === '') {
             $errors[] = 'Kategori wajib diisi.';
+        } elseif (!in_array($form['kategori'], admin_daftar_kategori_produk(), true)) {
+            $errors[] = 'Kategori produk tidak valid.';
         }
         if (!in_array($form['kondisi'], ['Baru', 'Second'], true)) {
             $errors[] = 'Kondisi produk tidak valid.';
@@ -323,7 +325,16 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                         </label>
                         <label class="admin-field">
                             <span>Kategori</span>
-                            <input type="text" name="kategori" value="<?php echo htmlspecialchars($form['kategori'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="100">
+                            <select name="kategori" required>
+                                <?php foreach (admin_kategori_produk_opsi_form($form['kategori']) as $opsi_kategori): ?>
+                                    <option value="<?php echo htmlspecialchars($opsi_kategori, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $form['kategori'] === $opsi_kategori ? ' selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($opsi_kategori, ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php if (!in_array($opsi_kategori, admin_daftar_kategori_produk(), true)): ?>
+                                            (belum di daftar — pilih kategori baru)
+                                        <?php endif; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </label>
                         <label class="admin-field">
                             <span>Kondisi</span>
