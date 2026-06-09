@@ -619,7 +619,7 @@ function pesanan_perbarui_status_dan_stok(int $order_id, string $status_baru, ?c
         if ($status_baru === 'paid' && $status_lama !== 'paid') {
             try {
                 require_once __DIR__ . '/admin_notifikasi_repositori.php';
-                admin_notifikasi_pembayaran_masuk($order_id);
+                admin_notifikasi_pembayaran_masuk($order_id, pesanan_notifikasi_jalur_pembayaran());
             } catch (Throwable $e) {
                 error_log('[admin_notifikasi_pembayaran_masuk] ' . $e->getMessage());
             }
@@ -640,9 +640,40 @@ function pesanan_perbarui_status_dan_stok(int $order_id, string $status_baru, ?c
     }
 }
 
-function pesanan_set_status_oleh_id(int $order_id, string $status_baru): bool
+/** @var 'pakasir'|'server' */
+$GLOBALS['_pesanan_notifikasi_jalur'] = 'server';
+
+/**
+ * @param 'pakasir'|'server' $jalur
+ */
+function pesanan_notifikasi_jalur_pembayaran_set(string $jalur): void
 {
-    return pesanan_perbarui_status_dan_stok($order_id, $status_baru);
+    $GLOBALS['_pesanan_notifikasi_jalur'] = $jalur === 'pakasir' ? 'pakasir' : 'server';
+}
+
+/**
+ * @return 'pakasir'|'server'
+ */
+function pesanan_notifikasi_jalur_pembayaran(): string
+{
+    $jalur = $GLOBALS['_pesanan_notifikasi_jalur'] ?? 'server';
+
+    return $jalur === 'pakasir' ? 'pakasir' : 'server';
+}
+
+function pesanan_notifikasi_jalur_pembayaran_reset(): void
+{
+    $GLOBALS['_pesanan_notifikasi_jalur'] = 'server';
+}
+
+function pesanan_set_status_oleh_id(int $order_id, string $status_baru, string $notif_jalur = 'server'): bool
+{
+    pesanan_notifikasi_jalur_pembayaran_set($notif_jalur);
+    try {
+        return pesanan_perbarui_status_dan_stok($order_id, $status_baru);
+    } finally {
+        pesanan_notifikasi_jalur_pembayaran_reset();
+    }
 }
 
 function pesanan_cek_tabel_ada(): bool

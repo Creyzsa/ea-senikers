@@ -116,7 +116,7 @@ $metode_kode = (string) ($verif['payment_method'] ?? '');
 $label_bayar = 'Pakasir · ' . pakasir_label_metode($metode_kode);
 pesanan_perbarui_metode_bayar($order_id, $label_bayar);
 
-$ok = pesanan_set_status_oleh_id($order_id, 'paid');
+$ok = pesanan_set_status_oleh_id($order_id, 'paid', 'pakasir');
 if (!$ok) {
     http_response_code(500);
     echo json_encode(['ok' => false, 'pesan' => 'Gagal memperbarui status.']);

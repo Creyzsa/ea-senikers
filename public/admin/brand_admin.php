@@ -167,4 +167,6 @@ $admin_nav_aktif = 'brand';
         </main>
     </div>
 </div>
-<?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php';
+<?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php'; ?>
+</body>
+</html>

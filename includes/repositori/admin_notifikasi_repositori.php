@@ -288,9 +288,118 @@ function admin_notifikasi_simpan_pengaturan(array $data): bool
 }
 
 /**
- * Dipanggil saat pesanan berubah ke status paid.
+ * Simpan chat_id dari webhook Telegram (/start) tanpa mengubah field lain.
  */
-function admin_notifikasi_pembayaran_masuk(int $order_id): void
+function admin_notifikasi_simpan_chat_id_telegram(string $chat_id): bool
+{
+    $chat_id = trim($chat_id);
+    if ($chat_id === '') {
+        return false;
+    }
+
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare(
+            'INSERT INTO admin_notifikasi_pengaturan (id, telegram_chat_id, updated_at)
+             VALUES (1, :cid, NOW())
+             ON CONFLICT (id) DO UPDATE SET
+                telegram_chat_id = EXCLUDED.telegram_chat_id,
+                updated_at = NOW()'
+        );
+
+        return $stmt->execute(['cid' => $chat_id]);
+    } catch (Throwable $e) {
+        error_log('[admin_notifikasi_simpan_chat_id_telegram] ' . $e->getMessage());
+
+        return false;
+    }
+}
+
+/**
+ * Proses update masuk dari webhook Telegram (pesan /start, dll.).
+ *
+ * @param array<string, mixed> $update
+ * @param array<string, mixed> $cfg
+ */
+function admin_notifikasi_telegram_proses_webhook_update(array $update, array $cfg): void
+{
+    $pesan = notifikasi_telegram_ekstrak_pesan_update($update);
+    if ($pesan === null) {
+        return;
+    }
+
+    $bot_token = trim((string) ($cfg['telegram_bot_token'] ?? ''));
+    $chat_id = (string) $pesan['chat_id'];
+    $teks = strtolower(trim((string) $pesan['text']));
+    if ($bot_token === '' || $chat_id === '') {
+        return;
+    }
+
+    if ($teks === '/start' || str_starts_with($teks, '/start ')) {
+        admin_notifikasi_simpan_chat_id_telegram($chat_id);
+        $label = trim((string) $pesan['label']);
+        $sapa = $label !== '' ? '@' . $label : 'admin';
+        $balasan = '<b>EA SENIKERS</b> — bot notifikasi admin terhubung.' . "\n"
+            . 'Chat ID Anda: <code>' . htmlspecialchars($chat_id, ENT_QUOTES, 'UTF-8') . '</code>' . "\n"
+            . 'Halo ' . htmlspecialchars($sapa, ENT_QUOTES, 'UTF-8') . ', Anda akan menerima notifikasi pembayaran di sini.';
+        notifikasi_telegram_kirim($bot_token, $chat_id, $balasan, true);
+
+        return;
+    }
+
+    if ($teks === '/status') {
+        $info = notifikasi_telegram_info_webhook($bot_token);
+        $url = $info['ok'] ? (string) $info['url'] : '';
+        $aktif = $url !== '' && str_contains($url, 'telegram_webhook.php');
+        $balasan = '<b>Status webhook Telegram</b>' . "\n"
+            . ($aktif ? 'Webhook aktif.' : 'Webhook belum terdaftar.')
+            . "\n" . 'URL: <code>' . htmlspecialchars(notifikasi_telegram_url_webhook(), ENT_QUOTES, 'UTF-8') . '</code>';
+        notifikasi_telegram_kirim($bot_token, $chat_id, $balasan, true);
+    }
+}
+
+/**
+ * @return array{ok: bool, pesan: string}
+ */
+function admin_notifikasi_daftarkan_webhook_telegram(array $cfg): array
+{
+    $token = trim((string) ($cfg['telegram_bot_token'] ?? ''));
+    if ($token === '') {
+        return ['ok' => false, 'pesan' => 'Isi Bot Token terlebih dahulu.'];
+    }
+
+    $hasil = notifikasi_telegram_daftarkan_webhook($token);
+    if (!$hasil['ok']) {
+        return ['ok' => false, 'pesan' => (string) ($hasil['pesan'] ?? 'Gagal mendaftarkan webhook.')];
+    }
+
+    return ['ok' => true, 'pesan' => (string) $hasil['pesan']];
+}
+
+/**
+ * @return array{ok: bool, pesan: string}
+ */
+function admin_notifikasi_hapus_webhook_telegram(array $cfg): array
+{
+    $token = trim((string) ($cfg['telegram_bot_token'] ?? ''));
+    if ($token === '') {
+        return ['ok' => false, 'pesan' => 'Isi Bot Token terlebih dahulu.'];
+    }
+
+    $hasil = notifikasi_telegram_hapus_webhook($token);
+    if (!$hasil['ok']) {
+        return ['ok' => false, 'pesan' => (string) ($hasil['pesan'] ?? 'Gagal menghapus webhook.')];
+    }
+
+    return ['ok' => true, 'pesan' => (string) $hasil['pesan']];
+}
+
+/**
+ * Dipanggil saat pesanan berubah ke status paid.
+ *
+ * @param 'pakasir'|'server' $jalur
+ */
+function admin_notifikasi_pembayaran_masuk(int $order_id, string $jalur = 'server'): void
 {
     if ($order_id <= 0) {
         return;
@@ -307,8 +416,9 @@ function admin_notifikasi_pembayaran_masuk(int $order_id): void
     }
 
     $cfg = admin_notifikasi_muat_pengaturan();
-    $pesan = admin_notifikasi_format_pesan_pembayaran($detail, false);
-    $pesan_html = admin_notifikasi_format_pesan_pembayaran($detail, true);
+    $jalur = $jalur === 'pakasir' ? 'pakasir' : 'server';
+    $pesan = admin_notifikasi_format_pesan_pembayaran($detail, false, $jalur);
+    $pesan_html = admin_notifikasi_format_pesan_pembayaran($detail, true, $jalur);
 
     if ($cfg['telegram_aktif']) {
         $hasil = notifikasi_telegram_kirim(
@@ -318,7 +428,7 @@ function admin_notifikasi_pembayaran_masuk(int $order_id): void
             true
         );
         if (!$hasil['ok']) {
-            error_log('[notifikasi_telegram] ' . $hasil['pesan']);
+            error_log('[notifikasi_telegram:' . $jalur . '] ' . $hasil['pesan']);
         }
     }
 
@@ -413,19 +523,21 @@ function admin_notifikasi_catat_event(array $detail): int
 /**
  * @param array{order_id: int, total_price: int, payment_method: string, customer_name: string} $detail
  */
-function admin_notifikasi_format_pesan_pembayaran(array $detail, bool $html): string
+function admin_notifikasi_format_pesan_pembayaran(array $detail, bool $html, string $jalur = 'server'): string
 {
     $order_id = (int) $detail['order_id'];
     $total = number_format((int) $detail['total_price'], 0, ',', '.');
     $metode = (string) $detail['payment_method'];
     $nama = (string) $detail['customer_name'];
     $url = aplikasi_url('admin/detail_pesanan_admin.php?id=' . $order_id);
+    $sumber = $jalur === 'pakasir' ? 'Webhook Pakasir' : 'Server';
 
     if ($html) {
         $baris = [
             '<b>Pembayaran masuk</b>',
             'Pesanan #' . $order_id,
             'Total: Rp ' . $total,
+            'Jalur: ' . htmlspecialchars($sumber, ENT_QUOTES, 'UTF-8'),
         ];
         if ($metode !== '') {
             $baris[] = 'Metode: ' . htmlspecialchars($metode, ENT_QUOTES, 'UTF-8');
@@ -442,6 +554,7 @@ function admin_notifikasi_format_pesan_pembayaran(array $detail, bool $html): st
         'Pembayaran masuk',
         'Pesanan #' . $order_id,
         'Total: Rp ' . $total,
+        'Jalur: ' . $sumber,
     ];
     if ($metode !== '') {
         $baris[] = 'Metode: ' . $metode;

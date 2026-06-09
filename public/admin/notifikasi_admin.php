@@ -58,6 +58,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $errors[] = (string) $hasil['pesan'];
                 }
+            } elseif ($aksi === 'daftarkan_webhook_telegram') {
+                if (trim((string) ($cfg_post['telegram_bot_token'] ?? '')) !== '') {
+                    admin_notifikasi_simpan_pengaturan($cfg_post);
+                }
+                $hasil = admin_notifikasi_daftarkan_webhook_telegram($cfg_post);
+                if ($hasil['ok']) {
+                    $_SESSION['flash_admin_notifikasi'] = ['jenis' => 'sukses', 'teks' => (string) $hasil['pesan']];
+                } else {
+                    $errors[] = (string) $hasil['pesan'];
+                }
+            } elseif ($aksi === 'hapus_webhook_telegram') {
+                $hasil = admin_notifikasi_hapus_webhook_telegram($cfg_post);
+                if ($hasil['ok']) {
+                    $_SESSION['flash_admin_notifikasi'] = ['jenis' => 'sukses', 'teks' => (string) $hasil['pesan']];
+                } else {
+                    $errors[] = (string) $hasil['pesan'];
+                }
             } elseif ($aksi === 'tes_email') {
                 $hasil = admin_notifikasi_tes_email($cfg_post);
                 if ($hasil['ok']) {
@@ -86,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = $e->getMessage();
         }
 
-        if ($errors === [] && ($aksi === 'simpan' || $aksi === 'ambil_chat_id')) {
+        if ($errors === [] && in_array($aksi, ['simpan', 'ambil_chat_id', 'daftarkan_webhook_telegram', 'hapus_webhook_telegram'], true)) {
             header('Location: ' . aplikasi_url('admin/notifikasi_admin.php'));
             exit;
         }
@@ -94,6 +111,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $cfg = admin_notifikasi_muat_pengaturan();
+$__telegram_webhook_url = notifikasi_telegram_url_webhook();
+$__telegram_webhook_info = ['ok' => false, 'url' => '', 'pending' => 0];
+if (trim((string) ($cfg['telegram_bot_token'] ?? '')) !== '') {
+    $__telegram_webhook_info = notifikasi_telegram_info_webhook((string) $cfg['telegram_bot_token']);
+}
+$__telegram_webhook_aktif = $__telegram_webhook_info['ok']
+    && trim((string) ($__telegram_webhook_info['url'] ?? '')) !== ''
+    && str_contains((string) $__telegram_webhook_info['url'], 'telegram_webhook.php');
 $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
 $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF-8');
 $poll_url = htmlspecialchars(aplikasi_url('api/admin_notifikasi_poll.php'), ENT_QUOTES, 'UTF-8');
@@ -203,10 +228,25 @@ $push_db_siap = admin_notifikasi_kolom_push_tersedia();
                         <h2 id="judul-notif-telegram">Koneksi Telegram</h2>
                     </header>
                     <p class="admin-meta">
+                        <strong>2 webhook + server ke Telegram:</strong><br>
+                        1) <strong>Webhook Pakasir</strong> → deteksi pembayaran → server kirim notifikasi ke Telegram (jalur <em>Pakasir</em>).<br>
+                        2) <strong>Webhook Telegram</strong> → Telegram memberi tahu server saat ada pesan bot (mis. <code>/start</code> untuk simpan Chat ID).<br>
+                        3) <strong>Server</strong> → kirim notifikasi pembayaran ke Telegram lewat Bot API (jalur <em>Server</em>, mis. sinkron manual dari halaman bayar).
+                    </p>
+                    <p class="admin-meta">
+                        <strong>Webhook URL Telegram</strong> (didaftarkan otomatis lewat tombol di bawah):<br>
+                        <code><?php echo htmlspecialchars($__telegram_webhook_url, ENT_QUOTES, 'UTF-8'); ?></code><br>
+                        Status: <?php echo $__telegram_webhook_aktif ? '<strong>aktif</strong>' : 'belum terdaftar'; ?>
+                        <?php if ($__telegram_webhook_aktif && (int) ($__telegram_webhook_info['pending'] ?? 0) > 0): ?>
+                            — antrean: <?php echo (int) $__telegram_webhook_info['pending']; ?>
+                        <?php endif; ?>
+                    </p>
+                    <p class="admin-meta">
+                        <strong>Setup bot:</strong><br>
                         1) Tempel <strong>Bot Token</strong> dari @BotFather.<br>
-                        2) Buka bot di Telegram, kirim <code>/start</code>.<br>
-                        3) Klik <strong>Ambil Chat ID</strong> atau isi manual Chat ID.<br>
-                        Pengaturan disimpan di Supabase (aman untuk Vercel).
+                        2) Klik <strong>Daftarkan webhook Telegram</strong> (butuh HTTPS).<br>
+                        3) Buka bot di Telegram, kirim <code>/start</code> — Chat ID tersimpan otomatis.<br>
+                        Alternatif: <strong>Ambil Chat ID</strong> (polling; hapus webhook dulu jika gagal).
                     </p>
                     <label class="admin-check admin-check--blok">
                         <input type="checkbox" name="telegram_aktif" value="1"<?php echo !empty($cfg['telegram_aktif']) ? ' checked' : ''; ?>>
@@ -221,6 +261,8 @@ $push_db_siap = admin_notifikasi_kolom_push_tersedia();
                         <input type="text" id="telegram-chat-id" name="telegram_chat_id" value="<?php echo htmlspecialchars((string) $cfg['telegram_chat_id'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" placeholder="contoh: 123456789">
                     </div>
                     <div class="admin-form-aksi admin-form-aksi--inline">
+                        <button type="submit" class="admin-btn admin-btn--sekunder" formaction="" onclick="document.getElementById('notifikasi-aksi').value='daftarkan_webhook_telegram';">Daftarkan webhook Telegram</button>
+                        <button type="submit" class="admin-btn admin-btn--sekunder" formaction="" onclick="document.getElementById('notifikasi-aksi').value='hapus_webhook_telegram';">Hapus webhook Telegram</button>
                         <button type="submit" class="admin-btn admin-btn--sekunder" formaction="" onclick="document.getElementById('notifikasi-aksi').value='ambil_chat_id';">Ambil Chat ID</button>
                         <button type="submit" class="admin-btn admin-btn--sekunder" formaction="" onclick="document.getElementById('notifikasi-aksi').value='tes_telegram';">Tes Telegram</button>
                     </div>

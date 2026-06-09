@@ -229,3 +229,5 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
     </div>
 <script src="../assets/js/pencarian-langsung.js" defer></script>
 <?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php'; ?>
+</body>
+</html>

@@ -440,7 +440,7 @@ function pakasir_sinkronkan_pesanan_db(int $order_id_db, int $amount, string $st
         require_once __DIR__ . '/../repositori/pesanan_repositori.php';
         $label = 'Pakasir · ' . pakasir_label_metode((string) ($detail['payment_method'] ?? ''));
         pesanan_perbarui_metode_bayar($order_id_db, $label);
-        pesanan_set_status_oleh_id($order_id_db, 'paid');
+        pesanan_set_status_oleh_id($order_id_db, 'paid', 'server');
 
         return 'paid';
     }

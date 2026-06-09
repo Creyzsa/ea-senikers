@@ -223,8 +223,10 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                                 Mulai dengan <strong>Sandbox</strong> untuk uji coba.
                             </p>
                             <p class="admin-form-keterangan">
-                                <strong>Webhook URL</strong> (isi di dashboard Pakasir):<br>
-                                <code><?php echo htmlspecialchars($__pakasir_webhook, ENT_QUOTES, 'UTF-8'); ?></code>
+                                <strong>Webhook URL Pakasir</strong> (isi di dashboard Pakasir):<br>
+                                <code><?php echo htmlspecialchars($__pakasir_webhook, ENT_QUOTES, 'UTF-8'); ?></code><br>
+                                Webhook kedua (Telegram Bot) ada di <a href="<?php echo htmlspecialchars(aplikasi_url('admin/notifikasi_admin.php'), ENT_QUOTES, 'UTF-8'); ?>">Notifikasi admin</a>.
+                                Setelah <code>paid</code>, server mengirim ke Telegram (jalur Pakasir atau Server).
                             </p>
                             <div class="admin-form-grid">
                                 <div class="admin-field">
