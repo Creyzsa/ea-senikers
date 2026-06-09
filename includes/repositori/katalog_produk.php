@@ -800,21 +800,144 @@ function ulasan_perbarui(int $user_id, int $order_id, string $id_produk, int $ra
     }
 }
 
-/** Ambil ulasan untuk 1 produk (PDO utama — andal walau REST/RLS bermasalah). */
-function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 20): array
+/** Jumlah ulasan untuk satu produk. */
+/**
+ * @return array{jumlah: int, rata: float}
+ */
+function ulasan_stats_untuk_produk(string $id_produk): array
+{
+    if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id_produk)) {
+        return ['jumlah' => 0, 'rata' => 0.0];
+    }
+
+    $row = _db_call(function () use ($id_produk) {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)::int AS jumlah, COALESCE(AVG(rating), 0)::float AS rata
+             FROM ulasan WHERE id_produk = :p'
+        );
+        $stmt->execute(['p' => $id_produk]);
+        $hasil = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return is_array($hasil) ? $hasil : ['jumlah' => 0, 'rata' => 0.0];
+    }, ['jumlah' => 0, 'rata' => 0.0]) ?? ['jumlah' => 0, 'rata' => 0.0];
+
+    return [
+        'jumlah' => (int) ($row['jumlah'] ?? 0),
+        'rata' => (float) ($row['rata'] ?? 0),
+    ];
+}
+
+function ulasan_hitung_untuk_produk(string $id_produk): int
+{
+    return ulasan_stats_untuk_produk($id_produk)['jumlah'];
+}
+
+/**
+ * Lengkapi nama pengguna untuk baris ulasan (cadangan REST tanpa join).
+ *
+ * @param list<array<string, mixed>> $rows
+ * @return list<array<string, mixed>>
+ */
+function ulasan_lengkapi_nama_pengguna(array $rows): array
+{
+    if ($rows === []) {
+        return [];
+    }
+
+    $perlu = [];
+    foreach ($rows as $i => $row) {
+        $nama = trim((string) ($row['nama_pengguna'] ?? ''));
+        if ($nama !== '' && strcasecmp($nama, 'Pembeli') !== 0) {
+            continue;
+        }
+        $uid = (int) ($row['user_id'] ?? 0);
+        if ($uid > 0) {
+            $perlu[$uid] = true;
+        }
+    }
+
+    if ($perlu === []) {
+        return $rows;
+    }
+
+    $peta = _db_call(function () use ($perlu) {
+        $pdo = koneksi_database();
+        $ids = array_keys($perlu);
+        $placeholder = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $pdo->prepare(
+            "SELECT id, COALESCE(NULLIF(TRIM(username), ''), 'Pembeli') AS nama
+             FROM users WHERE id IN ({$placeholder})"
+        );
+        $stmt->execute($ids);
+        $hasil = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $baris) {
+            $hasil[(int) ($baris['id'] ?? 0)] = (string) ($baris['nama'] ?? 'Pembeli');
+        }
+
+        return $hasil;
+    }, []) ?? [];
+
+    foreach ($rows as $i => $row) {
+        $nama = trim((string) ($row['nama_pengguna'] ?? ''));
+        if ($nama !== '' && strcasecmp($nama, 'Pembeli') !== 0) {
+            continue;
+        }
+        $uid = (int) ($row['user_id'] ?? 0);
+        $rows[$i]['nama_pengguna'] = $peta[$uid] ?? 'Pembeli';
+    }
+
+    return $rows;
+}
+
+/** Nama tampilan ulasan: "Anda" untuk pemilik sesi, username untuk pembeli lain. */
+function ulasan_nama_tampilan(array $row, int $viewer_user_id): string
+{
+    $uid = (int) ($row['user_id'] ?? 0);
+    if ($viewer_user_id > 0 && $uid === $viewer_user_id) {
+        return 'Anda';
+    }
+
+    $nama = trim((string) ($row['nama_pengguna'] ?? ''));
+    if ($nama === '' || strcasecmp($nama, 'Pembeli') === 0) {
+        return $uid > 0 ? 'Pembeli #' . $uid : 'Pembeli';
+    }
+
+    return $nama;
+}
+
+/** Inisial avatar dari nama pengguna. */
+function ulasan_inisial_nama(string $nama): string
+{
+    $nama = trim($nama);
+    if ($nama === '' || strcasecmp($nama, 'Pembeli') === 0) {
+        return 'P';
+    }
+    if (function_exists('mb_substr')) {
+        return mb_strtoupper(mb_substr($nama, 0, 1, 'UTF-8'), 'UTF-8');
+    }
+
+    return strtoupper(substr($nama, 0, 1));
+}
+
+/** Ambil semua ulasan publik untuk 1 produk (PDO utama — andal walau REST/RLS bermasalah). */
+function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 50): array
 {
     if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id_produk)) {
         return [];
     }
-    if ($limit < 1 || $limit > 50) {
-        $limit = 20;
+    if ($limit < 1) {
+        $limit = 1;
+    }
+    if ($limit > 100) {
+        $limit = 100;
     }
 
     $pdo_hasil = _db_call(function () use ($id_produk, $limit) {
         $pdo = koneksi_database();
         $stmt = $pdo->prepare(
             'SELECT u.id, u.rating, u.komentar, u.created_at, u.user_id, u.order_id, u.edited_at,
-                    COALESCE(us.username, \'Pembeli\') AS nama_pengguna
+                    COALESCE(NULLIF(TRIM(us.username), \'\'), \'Pembeli\') AS nama_pengguna
              FROM ulasan u
              LEFT JOIN users us ON us.id = u.user_id
              WHERE u.id_produk = :p
@@ -830,7 +953,7 @@ function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 20): array
     }, null);
 
     if (is_array($pdo_hasil) && $pdo_hasil !== []) {
-        return $pdo_hasil;
+        return ulasan_lengkapi_nama_pengguna($pdo_hasil);
     }
 
     $hasil = supabase_rest_request('GET', '/rest/v1/ulasan', [
@@ -840,10 +963,10 @@ function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 20): array
         'limit' => (string) $limit,
     ]);
     if (!$hasil['ok'] || !is_array($hasil['data'])) {
-        return is_array($pdo_hasil) ? $pdo_hasil : [];
+        return is_array($pdo_hasil) ? ulasan_lengkapi_nama_pengguna($pdo_hasil) : [];
     }
 
-    return $hasil['data'];
+    return ulasan_lengkapi_nama_pengguna($hasil['data']);
 }
 
 /** Wishlist */

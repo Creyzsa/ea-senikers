@@ -120,6 +120,13 @@ $u_checkout = aplikasi_url('checkout');
         $harga = (int) ($produk['harga'] ?? 0);
         $deskripsi = (string) ($produk['deskripsi'] ?? '');
         $chip_kondisi = strcasecmp($kondisi, 'Baru') === 0 ? 'detail-panel__chip--baru' : 'detail-panel__chip--second';
+        $ulasan_stats = ulasan_stats_untuk_produk($id);
+        $jml_ulasan = (int) ($ulasan_stats['jumlah'] ?? 0);
+        $rata_ulasan = (float) ($ulasan_stats['rata'] ?? 0);
+        if ($jml_ulasan <= 0) {
+            $jml_ulasan = (int) ($produk['jumlah_ulasan'] ?? 0);
+            $rata_ulasan = (float) ($produk['rating_rata'] ?? 0);
+        }
         $ada_ukuran_siap = false;
         foreach ($ukuran as $u) {
             if ((int) ($u['stok'] ?? 0) > 0) {
@@ -157,8 +164,8 @@ $u_checkout = aplikasi_url('checkout');
                     <?php if (($produk['terjual'] ?? 0) > 0): ?>
                         <span class="info-badge sold-badge"><?= (int)$produk['terjual'] ?>+ terjual</span>
                     <?php endif; ?>
-                    <?php if (($produk['jumlah_ulasan'] ?? 0) > 0): ?>
-                        <span class="info-badge rating-badge">★ <?= number_format((float)($produk['rating_rata'] ?? 0), 1) ?> (<?= (int)$produk['jumlah_ulasan'] ?> ulasan)</span>
+                    <?php if ($jml_ulasan > 0): ?>
+                        <span class="info-badge rating-badge">★ <?= number_format($rata_ulasan, 1) ?> (<?= $jml_ulasan ?> ulasan)</span>
                     <?php endif; ?>
                 </div>
 
@@ -257,11 +264,10 @@ $u_checkout = aplikasi_url('checkout');
     <section class="detail-ulasan">
         <h2 class="detail-panel__subjudul">Ulasan & Rating</h2>
         <div class="detail-rating-summary">
-            <?php $rata = (float)($produk['rating_rata'] ?? 0); $jml = (int)($produk['jumlah_ulasan'] ?? 0); ?>
-            <div class="rating-big">★ <?= number_format($rata, 1) ?></div>
+            <div class="rating-big">★ <?php echo number_format($rata_ulasan, 1); ?></div>
             <div class="rating-meta">
-                <div><?= $jml ?> ulasan</div>
-                <div><?= (int)($produk['terjual'] ?? 0) ?>+ terjual</div>
+                <div><?php echo $jml_ulasan; ?> ulasan pembeli</div>
+                <div><?php echo (int)($produk['terjual'] ?? 0); ?>+ terjual</div>
             </div>
         </div>
 
@@ -271,30 +277,40 @@ $u_checkout = aplikasi_url('checkout');
         $ulasan_status = (string) ($ulasan_form['status'] ?? 'tidak_berhak');
         $ulasan_order = (int) ($ulasan_form['order_id'] ?? 0);
         $ulasan_labels = [5 => '5 ★ Sangat Puas', 4 => '4 ★ Puas', 3 => '3 ★ Cukup', 2 => '2 ★ Kurang', 1 => '1 ★ Kecewa'];
-        $ulasan_list = ulasan_ambil_untuk_produk($id, 5);
-        if ($ulasan_list):
+        $ulasan_limit = max(1, min(100, $jml_ulasan > 0 ? $jml_ulasan : 50));
+        $ulasan_list = ulasan_ambil_untuk_produk($id, $ulasan_limit);
         ?>
+        <?php if ($ulasan_list !== []): ?>
+        <p class="ulasan-subjudul">Ulasan dari pembeli lain membantu Anda menilai kualitas produk.</p>
         <div class="ulasan-list">
             <?php foreach ($ulasan_list as $u): ?>
             <?php
             $oid_review = (int) ($u['order_id'] ?? 0);
             $ulasan_user = (int) ($u['user_id'] ?? 0);
-            $ulasan_milik_saya = $id_pengguna > 0 && $ulasan_user === $id_pengguna && $oid_review > 0;
-            $status_item = $ulasan_milik_saya
+            $ulasan_milik_saya = $id_pengguna > 0 && $ulasan_user === $id_pengguna;
+            $status_item = ($ulasan_milik_saya && $oid_review > 0)
                 ? ulasan_status_untuk_order($id_pengguna, $oid_review, $id)
-                : 'orang_lain';
-            $nama_ulasan = $ulasan_milik_saya
-                ? 'Anda'
-                : (string) ($u['nama_pengguna'] ?? (is_array($u['users'] ?? null) ? (string) ($u['users']['nama_pengguna'] ?? 'Pembeli') : 'Pembeli'));
+                : ($ulasan_milik_saya ? 'dikunci' : 'orang_lain');
+            $nama_ulasan = ulasan_nama_tampilan($u, $id_pengguna);
+            $inisial = ulasan_inisial_nama($nama_ulasan === 'Anda' ? (string) ($u['nama_pengguna'] ?? 'A') : $nama_ulasan);
             $rating_item = (int) ($u['rating'] ?? 0);
             $komentar_item = (string) ($u['komentar'] ?? '');
             $tgl_item = date('d M Y', strtotime((string) ($u['created_at'] ?? 'now')));
             ?>
             <div class="ulasan-item<?php echo $ulasan_milik_saya ? ' ulasan-item--milik-saya' : ''; ?>">
                 <div class="ulasan-head">
-                    <strong><?php echo htmlspecialchars($nama_ulasan, ENT_QUOTES, 'UTF-8'); ?></strong>
-                    <span class="stars"><?php echo str_repeat('★', $rating_item); ?></span>
-                    <time><?php echo htmlspecialchars($tgl_item, ENT_QUOTES, 'UTF-8'); ?></time>
+                    <span class="ulasan-avatar" aria-hidden="true"><?php echo htmlspecialchars($inisial, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <div class="ulasan-head-meta">
+                        <div class="ulasan-head-baris">
+                            <strong><?php echo htmlspecialchars($nama_ulasan, ENT_QUOTES, 'UTF-8'); ?></strong>
+                            <?php if (!$ulasan_milik_saya): ?>
+                                <span class="ulasan-badge-pembeli">Pembeli</span>
+                            <?php endif; ?>
+                            <span class="ulasan-rating-angka"><?php echo $rating_item; ?>.0</span>
+                            <span class="stars" aria-label="Rating <?php echo $rating_item; ?> dari 5"><?php echo str_repeat('★', $rating_item); ?></span>
+                        </div>
+                        <time class="ulasan-waktu"><?php echo htmlspecialchars($tgl_item, ENT_QUOTES, 'UTF-8'); ?></time>
+                    </div>
                     <?php if ($ulasan_milik_saya && $status_item === 'dikunci'): ?>
                         <span class="ulasan-badge-terkirim">Ulasan terkirim</span>
                     <?php endif; ?>
