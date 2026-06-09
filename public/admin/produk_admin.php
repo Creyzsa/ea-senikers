@@ -468,5 +468,6 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
     </div>
 </div>
 <script src="../assets/js/pencarian-langsung.js" defer></script>
+<?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php'; ?>
 </body>
 </html>

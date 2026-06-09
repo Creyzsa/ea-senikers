@@ -305,5 +305,6 @@ if ($aksi === 'cek_ongkir') {
         </div>
     </div>
 
+<?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php'; ?>
 </body>
 </html>

@@ -1107,43 +1107,119 @@ body.halaman-admin {
     background: var(--brand-gray-light);
 }
 
+.admin-nav-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-right: 0.35rem;
+    padding: 0;
+    border: 1px solid var(--abu-tepi);
+    border-radius: var(--radius);
+    background: var(--abu-latar);
+    color: var(--teks-utama);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background var(--adm-trans), border-color var(--adm-trans);
+}
+
+.admin-nav-toggle:hover {
+    background: #fff;
+    border-color: #d4d4d4;
+}
+
+.admin-nav-toggle:focus-visible {
+    outline: 2px solid var(--teks-aksen);
+    outline-offset: 2px;
+}
+
+.admin-nav-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.admin-nav-overlay--aktif {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+body.admin-menu-terbuka {
+    overflow: hidden;
+}
+
 @media (max-width: 880px) {
+    .admin-nav-toggle {
+        display: inline-flex;
+    }
+
     .admin-cangkang {
         flex-direction: column;
     }
 
     .admin-sisi {
-        position: relative;
-        width: 100%;
-        min-height: unset;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-        padding: 0.75rem 0 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: min(17.5rem, 88vw);
+        min-height: 100dvh;
+        padding: 1rem 0 1.25rem;
+        transform: translateX(-105%);
+        transition: transform 0.28s ease;
+        z-index: 50;
+        box-shadow: 4px 0 28px rgba(0, 0, 0, 0.18);
+    }
+
+    .admin-sisi.admin-sisi--terbuka {
+        transform: translateX(0);
     }
 
     .admin-sisi__merek {
-        padding-bottom: 0.75rem;
+        padding-bottom: 1rem;
     }
 
     .admin-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
-        padding-bottom: 0.85rem;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        overflow-y: auto;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
     }
 
     .admin-nav__tautan {
-        flex: 1 1 auto;
-        min-width: calc(50% - 0.35rem);
-        justify-content: center;
+        flex: 0 0 auto;
+        min-width: 0;
+        justify-content: flex-start;
     }
 
     .admin-sisi__kaki {
-        display: none;
+        display: block;
+    }
+
+    .admin-utama {
+        width: 100%;
+    }
+
+    .admin-bilah {
+        justify-content: flex-start;
+    }
+
+    .admin-pengguna {
+        margin-left: auto;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .admin-stat,
-    .admin-grafik__batang {
+    .admin-grafik__batang,
+    .admin-sisi,
+    .admin-nav-overlay {
         transition: none;
     }
 
@@ -1989,4 +2065,319 @@ body.halaman-admin {
 
 .admin-laporan-bukti:hover {
     text-decoration: underline;
+}
+
+/* ——— Responsif: seluruh halaman admin ——— */
+
+@media (max-width: 1024px) {
+    .admin-isi {
+        padding: clamp(1rem, 2.5vw, 1.5rem);
+    }
+
+    .admin-isi-dashboard {
+        padding: 0.85rem clamp(0.85rem, 2vw, 1.25rem) 1rem;
+    }
+
+    .admin-kop-halaman {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-kop-halaman .admin-btn,
+    .admin-kop-halaman .admin-tombol {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-judul-besar {
+        font-size: 1.25rem;
+    }
+
+    .admin-salam {
+        font-size: 0.88rem;
+        margin-bottom: 1rem;
+    }
+
+    .admin-judul-baris {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-kartu__header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .admin-kartu__header h2 {
+        font-size: 0.95rem;
+    }
+
+    .admin-cari {
+        width: 100%;
+    }
+
+    .admin-cari input[type="search"],
+    .admin-cari input[type="text"] {
+        min-width: 0;
+        max-width: none;
+        width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .admin-cari .admin-btn,
+    .admin-cari .admin-tombol {
+        flex: 1 1 auto;
+    }
+
+    .admin-chip-bar {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 0.4rem;
+        padding-bottom: 0.2rem;
+        scrollbar-width: none;
+    }
+
+    .admin-chip-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .admin-chip {
+        flex-shrink: 0;
+    }
+
+    .admin-pil-strip {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.15rem;
+    }
+
+    .admin-pil-strip::-webkit-scrollbar {
+        display: none;
+    }
+
+    .admin-pil-dat {
+        flex-shrink: 0;
+    }
+
+    .admin-form-konten .admin-form-grid,
+    .admin-form .admin-form-grid,
+    .admin-form-produk .admin-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-field--full {
+        grid-column: 1;
+    }
+
+    .admin-form-aksi {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-form-aksi .admin-btn,
+    .admin-form-aksi .admin-tombol {
+        width: 100%;
+    }
+
+    .admin-panel-produk__judul {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-stok-grid {
+        grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+    }
+
+    .admin-galeri-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .admin-perlu-tindakan__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-hero-owner {
+        padding: 1rem;
+    }
+
+    .admin-hero-owner__aksi {
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .admin-aksi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-aktivitas li {
+        flex-wrap: wrap;
+        gap: 0.35rem 0.65rem;
+    }
+
+    .admin-aktivitas__waktu {
+        white-space: normal;
+        width: 100%;
+        padding-left: calc(8px + 0.75rem);
+    }
+
+    .admin-progress-pesanan {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.45rem;
+    }
+
+    .admin-laporan-status {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .admin-laporan-status select,
+    .admin-laporan-status .admin-btn {
+        width: 100%;
+    }
+
+    .admin-aksi-sel {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-aksi-sel .admin-btn,
+    .admin-aksi-sel .admin-tombol,
+    .admin-aksi-sel form {
+        width: 100%;
+    }
+
+    .admin-aksi-sel .admin-btn,
+    .admin-aksi-sel .admin-tombol {
+        justify-content: center;
+    }
+
+    .admin-tabel-wrap,
+    .admin-tabel-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-kartu .admin-tabel th,
+    .admin-kartu .admin-tabel td,
+    .admin-tabel th,
+    .admin-tabel td {
+        padding: 0.55rem 0.65rem;
+        font-size: 0.8rem;
+    }
+
+    .admin-tabel--padat th,
+    .admin-tabel--padat td {
+        padding: 0.5rem 0.6rem;
+        font-size: 0.78rem;
+    }
+
+    .admin-detail-produk-baris {
+        flex-wrap: wrap;
+    }
+
+    .admin-form-keterangan code {
+        word-break: break-all;
+    }
+
+    .paginasi {
+        justify-content: center;
+        gap: 0.35rem;
+    }
+
+    .paginasi__item {
+        min-width: 2.25rem;
+        padding: 0.4rem 0.55rem;
+        font-size: 0.82rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-bilah {
+        padding: 0.6rem 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .admin-pengguna {
+        padding: 0.3rem 0.55rem 0.3rem 0.35rem;
+        font-size: 0.8rem;
+    }
+
+    .admin-pengguna__nama {
+        max-width: 5.5rem;
+    }
+
+    .admin-tombol-keluar {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .admin-tombol-keluar svg {
+        display: none;
+    }
+
+    .admin-stat__nilai {
+        font-size: 1.25rem;
+    }
+
+    .admin-stat__tren {
+        min-height: 0;
+    }
+
+    .admin-kartu__header,
+    .admin-form-konten,
+    .admin-kartu .admin-form-konten {
+        padding-left: 0.85rem;
+        padding-right: 0.85rem;
+    }
+
+    .admin-kartu .admin-tabel-wrap {
+        border-left: none;
+        border-right: none;
+        border-radius: 0;
+    }
+
+    .admin-kartu .admin-tabel {
+        min-width: 36rem;
+    }
+
+    .admin-tabel-wrap .admin-tabel--padat {
+        min-width: 32rem;
+    }
+
+    .admin-panel {
+        padding: 0.85rem 0.9rem;
+    }
+
+    .admin-btn,
+    .admin-tombol {
+        padding: 0.5rem 0.85rem;
+        font-size: 0.84rem;
+    }
+
+    .admin-btn--mini,
+    .admin-tombol--mini {
+        padding: 0.35rem 0.55rem;
+        font-size: 0.76rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .admin-pengguna__nama {
+        display: none;
+    }
+
+    .admin-stok-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .admin-galeri-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }

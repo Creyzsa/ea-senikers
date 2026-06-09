@@ -310,5 +310,6 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
         </div>
     </div>
 
+<?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php'; ?>
 </body>
 </html>

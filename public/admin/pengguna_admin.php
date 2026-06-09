@@ -158,5 +158,6 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('admin/pengguna_admin.php'), $q_nila
         </div>
     </div>
 <script src="../assets/js/pencarian-langsung.js" defer></script>
+<?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php'; ?>
 </body>
 </html>

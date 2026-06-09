@@ -476,5 +476,6 @@ if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
         </div>
     </div>
 
+<?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php'; ?>
 </body>
 </html>

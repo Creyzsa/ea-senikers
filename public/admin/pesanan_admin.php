@@ -274,5 +274,6 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
     </div>
 <script src="../assets/js/pencarian-langsung.js" defer></script>
 <script src="../assets/js/admin-pesanan-realtime.js" defer></script>
+<?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php'; ?>
 </body>
 </html>
