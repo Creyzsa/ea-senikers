@@ -137,7 +137,7 @@ function web_push_encrypt_payload(string $payload, string $p256dh_b64, string $a
     if ($user_key === false) {
         throw new RuntimeException('Kunci publik langganan tidak dapat dibaca.');
     }
-    $shared = openssl_pkey_derive($user_key, $local_key, 256);
+    $shared = openssl_pkey_derive($user_key, $local_key);
     if (!is_string($shared) || $shared === '') {
         throw new RuntimeException('Gagal ECDH untuk enkripsi push.');
     }
@@ -331,7 +331,7 @@ function web_push_kirim_satu(array $subscription, string $payload_json, array $v
     $body = curl_exec($ch);
     $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $err = curl_error($ch);
-    curl_close($ch);
+    // curl_close() dihapus: deprecated PHP 8.5, handle ditutup otomatis sejak PHP 8.0
 
     if ($body === false) {
         return ['ok' => false, 'pesan' => 'Push gagal: ' . $err, 'status' => $status];
