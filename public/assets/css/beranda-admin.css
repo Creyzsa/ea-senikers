@@ -190,7 +190,84 @@ body.halaman-admin {
 }
 
 .admin-isi-dashboard {
-    max-width: 1280px;
+    max-width: none;
+    width: 100%;
+    padding: 1rem clamp(1rem, 2vw, 1.5rem) 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.admin-isi-dashboard > .admin-hero-owner,
+.admin-isi-dashboard > .admin-perlu-tindakan,
+.admin-isi-dashboard > .admin-grid-stat,
+.admin-isi-dashboard > .admin-chip-bar,
+.admin-isi-dashboard > .admin-baris-tiga,
+.admin-isi-dashboard > .admin-baris-dua {
+    margin-bottom: 0;
+}
+
+.admin-isi-dashboard .admin-hero-owner {
+    padding: 1rem 1.15rem;
+}
+
+.admin-isi-dashboard .admin-perlu-tindakan {
+    padding: 0.85rem 1rem;
+}
+
+.admin-isi-dashboard .admin-grid-stat {
+    gap: 0.75rem;
+}
+
+.admin-isi-dashboard .admin-stat {
+    padding: 0.85rem 0.95rem;
+}
+
+.admin-isi-dashboard .admin-stat__tren {
+    min-height: 0;
+    margin-top: 0.3rem;
+}
+
+.admin-isi-dashboard .admin-chip-bar {
+    margin: 0;
+    gap: 0.4rem;
+}
+
+.admin-isi-dashboard .admin-baris-tiga,
+.admin-isi-dashboard .admin-baris-dua {
+    gap: 0.75rem;
+}
+
+.admin-isi-dashboard .admin-baris-tiga__samping {
+    gap: 0.75rem;
+}
+
+.admin-isi-dashboard .admin-panel {
+    padding: 0.95rem 1.05rem;
+}
+
+.admin-isi-dashboard .admin-panel--ringkas {
+    padding: 0.8rem 0.9rem;
+}
+
+.admin-isi-dashboard .admin-panel__judul {
+    margin-bottom: 0.6rem;
+}
+
+.admin-isi-dashboard .admin-panel__kop {
+    margin-bottom: 0.6rem;
+}
+
+.admin-isi-dashboard .admin-grafik__sub {
+    margin-bottom: 0.45rem;
+}
+
+.admin-isi-dashboard .admin-grafik {
+    height: 132px;
+}
+
+.admin-isi-dashboard .admin-aktivitas li {
+    padding: 0.5rem 0;
 }
 
 .admin-judul-besar {
@@ -252,8 +329,15 @@ body.halaman-admin {
     margin: 0;
     max-width: 38rem;
     font-size: 0.86rem;
-    line-height: 1.55;
+    line-height: 1.45;
     color: rgba(255, 255, 255, 0.78);
+}
+
+.admin-hero-owner__tanggal {
+    margin: 0.35rem 0 0;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.62);
 }
 
 .admin-hero-owner__aksi {
@@ -762,8 +846,9 @@ body.halaman-admin {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    align-items: center;
+    align-items: stretch;
     min-width: 0;
+    height: 100%;
 }
 
 .admin-grafik__nilai-mini {
@@ -780,10 +865,12 @@ body.halaman-admin {
 }
 
 .admin-grafik__batang {
-    flex: 1;
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
     border-radius: 6px 6px 0 0;
     background: linear-gradient(180deg, var(--biru-tombol), rgba(214, 40, 40, 0.35));
-    min-height: 20%;
+    min-height: 6px;
     transition: opacity 0.2s;
 }
 
