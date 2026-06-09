@@ -515,16 +515,31 @@ function user_pernah_beli_produk(int $user_id, string $id_produk): bool
     }
     return _db_call(function () use ($user_id, $id_produk) {
         $pdo = koneksi_database();
+        $cocok = ulasan_sql_item_produk_cocok('oi');
         $stmt = $pdo->prepare(
-            'SELECT 1 FROM orders o
+            "SELECT 1 FROM orders o
              INNER JOIN order_items oi ON oi.order_id = o.id
-             WHERE o.user_id = :uid AND oi.id_produk = :pid
-               AND o.status = \'completed\'
-             LIMIT 1'
+             WHERE o.user_id = :uid AND o.status = 'completed' AND {$cocok}
+             LIMIT 1"
         );
         $stmt->execute(['uid' => $user_id, 'pid' => $id_produk]);
         return (bool) $stmt->fetch();
     }, false);
+}
+
+/** Cocokkan baris order_items dengan produk (id_produk atau nama produk lama). */
+function ulasan_sql_item_produk_cocok(string $alias_item = 'oi'): string
+{
+    $a = preg_replace('/[^a-z_]/', '', $alias_item) ?: 'oi';
+
+    return '(' . $a . '.id_produk = :pid OR (
+        ' . $a . '.id_produk IS NULL
+        AND EXISTS (
+            SELECT 1 FROM produk px
+            WHERE px.id_produk = :pid
+              AND LOWER(TRIM(' . $a . '.product_name)) = LOWER(TRIM(px.nama_produk))
+        )
+    ))';
 }
 
 /** Pesanan milik user, selesai, dan berisi produk ini. */
@@ -537,12 +552,13 @@ function ulasan_cek_order_eligible(int $user_id, int $order_id, string $id_produ
     }
     return _db_call(function () use ($user_id, $order_id, $id_produk) {
         $pdo = koneksi_database();
+        $cocok = ulasan_sql_item_produk_cocok('oi');
         $stmt = $pdo->prepare(
-            'SELECT 1 FROM orders o
+            "SELECT 1 FROM orders o
              INNER JOIN order_items oi ON oi.order_id = o.id
-             WHERE o.id = :oid AND o.user_id = :uid AND oi.id_produk = :pid
-               AND o.status = \'completed\'
-             LIMIT 1'
+             WHERE o.id = :oid AND o.user_id = :uid AND o.status = 'completed'
+               AND {$cocok}
+             LIMIT 1"
         );
         $stmt->execute(['oid' => $order_id, 'uid' => $user_id, 'pid' => $id_produk]);
         return (bool) $stmt->fetch();
@@ -618,14 +634,15 @@ function ulasan_konteks_form(int $user_id, string $id_produk, int $order_id_hint
 
     return _db_call(function () use ($user_id, $id_produk, $kosong) {
         $pdo = koneksi_database();
+        $cocok = ulasan_sql_item_produk_cocok('oi');
         $stmt = $pdo->prepare(
-            'SELECT o.id AS order_id
+            "SELECT DISTINCT o.id AS order_id
              FROM orders o
              INNER JOIN order_items oi ON oi.order_id = o.id
-             WHERE o.user_id = :u AND oi.id_produk = :p AND o.status = \'completed\'
-             ORDER BY o.created_at DESC'
+             WHERE o.user_id = :u AND o.status = 'completed' AND {$cocok}
+             ORDER BY o.created_at DESC"
         );
-        $stmt->execute(['u' => $user_id, 'p' => $id_produk]);
+        $stmt->execute(['u' => $user_id, 'pid' => $id_produk]);
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
         if (!is_array($orders) || $orders === []) {
             return $kosong;
@@ -665,83 +682,167 @@ function ulasan_refresh_produk_stats(string $id_produk): void
     }, null);
 }
 
-/** Kirim ulasan baru untuk satu pesanan (hanya sekali per pesanan). */
-function ulasan_buat(int $user_id, int $order_id, string $id_produk, int $rating, string $komentar): bool
+/**
+ * @return array{ok: bool, pesan: string}
+ */
+function ulasan_buat(int $user_id, int $order_id, string $id_produk, int $rating, string $komentar): array
 {
-    if ($user_id <= 0 || $order_id <= 0
-        || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id_produk)
-        || $rating < 1 || $rating > 5
-        || trim($komentar) === ''
-        || ulasan_status_untuk_order($user_id, $order_id, $id_produk) !== 'belum'
-    ) {
-        return false;
+    $gagal = static function (string $pesan): array {
+        return ['ok' => false, 'pesan' => $pesan];
+    };
+
+    if ($user_id <= 0) {
+        return $gagal('Akun belum dikenali. Silakan logout lalu login kembali.');
+    }
+    if ($order_id <= 0) {
+        return $gagal('Pesanan tidak valid. Buka ulasan dari halaman detail pesanan yang sudah selesai.');
+    }
+    if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id_produk)) {
+        return $gagal('Produk tidak valid.');
+    }
+    if ($rating < 1 || $rating > 5 || trim($komentar) === '') {
+        return $gagal('Rating dan komentar wajib diisi.');
     }
 
-    return _db_call(function () use ($user_id, $order_id, $id_produk, $rating, $komentar) {
+    $status = ulasan_status_untuk_order($user_id, $order_id, $id_produk);
+    if ($status === 'tidak_berhak') {
+        return $gagal('Pesanan belum selesai atau bukan milik Anda.');
+    }
+    if ($status === 'bisa_edit' || $status === 'dikunci') {
+        return $gagal('Ulasan untuk pesanan ini sudah ada. Edit lewat kartu ulasan Anda di atas.');
+    }
+
+    try {
         $pdo = koneksi_database();
         $stmt = $pdo->prepare(
             'INSERT INTO ulasan (user_id, id_produk, order_id, rating, komentar)
              VALUES (:u, :p, :o, :r, :k)'
         );
-        $ok = $stmt->execute([
+        $stmt->execute([
             'u' => $user_id,
             'p' => $id_produk,
             'o' => $order_id,
             'r' => $rating,
             'k' => trim($komentar),
         ]);
-        if ($ok) {
-            ulasan_refresh_produk_stats($id_produk);
+        ulasan_refresh_produk_stats($id_produk);
+
+        return ['ok' => true, 'pesan' => ''];
+    } catch (PDOException $e) {
+        error_log('[ulasan_buat] ' . $e->getMessage());
+        $rls = database_pesan_error_rls($e);
+        if ($rls !== null) {
+            return $gagal($rls);
         }
-        return $ok;
-    }, false);
+        if (str_contains($e->getMessage(), 'duplicate key') || str_contains($e->getMessage(), 'unique')) {
+            return $gagal('Ulasan untuk pesanan ini sudah tercatat.');
+        }
+
+        return $gagal('Gagal menyimpan ulasan ke database. Coba lagi.');
+    } catch (Throwable $e) {
+        error_log('[ulasan_buat] ' . $e->getMessage());
+
+        return $gagal('Gagal menyimpan ulasan. Coba lagi.');
+    }
 }
 
-/** Edit ulasan sekali setelah dikirim; setelah ini ulasan dikunci. */
-function ulasan_perbarui(int $user_id, int $order_id, string $id_produk, int $rating, string $komentar): bool
+/**
+ * @return array{ok: bool, pesan: string}
+ */
+function ulasan_perbarui(int $user_id, int $order_id, string $id_produk, int $rating, string $komentar): array
 {
+    $gagal = static function (string $pesan): array {
+        return ['ok' => false, 'pesan' => $pesan];
+    };
+
     if ($user_id <= 0 || $order_id <= 0
         || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id_produk)
         || $rating < 1 || $rating > 5
         || trim($komentar) === ''
-        || ulasan_status_untuk_order($user_id, $order_id, $id_produk) !== 'bisa_edit'
     ) {
-        return false;
+        return $gagal('Data ulasan tidak valid.');
     }
 
-    return _db_call(function () use ($user_id, $order_id, $id_produk, $rating, $komentar) {
+    $status = ulasan_status_untuk_order($user_id, $order_id, $id_produk);
+    if ($status !== 'bisa_edit') {
+        return $gagal('Ulasan ini tidak bisa diedit lagi.');
+    }
+
+    try {
         $pdo = koneksi_database();
         $stmt = $pdo->prepare(
             'UPDATE ulasan
              SET rating = :r, komentar = :k, edited_at = NOW()
              WHERE user_id = :u AND order_id = :o AND id_produk = :p AND edited_at IS NULL'
         );
-        $ok = $stmt->execute([
+        $stmt->execute([
             'u' => $user_id,
             'o' => $order_id,
             'p' => $id_produk,
             'r' => $rating,
             'k' => trim($komentar),
-        ]) && $stmt->rowCount() > 0;
-        if ($ok) {
-            ulasan_refresh_produk_stats($id_produk);
+        ]);
+        if ($stmt->rowCount() <= 0) {
+            return $gagal('Ulasan tidak ditemukan atau sudah pernah diedit.');
         }
-        return $ok;
-    }, false);
+        ulasan_refresh_produk_stats($id_produk);
+
+        return ['ok' => true, 'pesan' => ''];
+    } catch (PDOException $e) {
+        error_log('[ulasan_perbarui] ' . $e->getMessage());
+        $rls = database_pesan_error_rls($e);
+
+        return $gagal($rls ?? 'Gagal memperbarui ulasan.');
+    } catch (Throwable $e) {
+        error_log('[ulasan_perbarui] ' . $e->getMessage());
+
+        return $gagal('Gagal memperbarui ulasan.');
+    }
 }
 
-/** Ambil ulasan untuk 1 produk (dengan nama user jika ada). */
+/** Ambil ulasan untuk 1 produk (PDO utama — andal walau REST/RLS bermasalah). */
 function ulasan_ambil_untuk_produk(string $id_produk, int $limit = 20): array
 {
+    if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id_produk)) {
+        return [];
+    }
+    if ($limit < 1 || $limit > 50) {
+        $limit = 20;
+    }
+
+    $pdo_hasil = _db_call(function () use ($id_produk, $limit) {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare(
+            'SELECT u.id, u.rating, u.komentar, u.created_at, u.user_id, u.order_id, u.edited_at,
+                    COALESCE(us.username, \'Pembeli\') AS nama_pengguna
+             FROM ulasan u
+             LEFT JOIN users us ON us.id = u.user_id
+             WHERE u.id_produk = :p
+             ORDER BY u.created_at DESC
+             LIMIT :lim'
+        );
+        $stmt->bindValue('p', $id_produk);
+        $stmt->bindValue('lim', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return is_array($rows) ? $rows : [];
+    }, null);
+
+    if (is_array($pdo_hasil) && $pdo_hasil !== []) {
+        return $pdo_hasil;
+    }
+
     $hasil = supabase_rest_request('GET', '/rest/v1/ulasan', [
         'select' => 'id,rating,komentar,created_at,user_id,order_id,edited_at',
         'id_produk' => 'eq.' . $id_produk,
         'order' => 'created_at.desc',
-        'limit' => (string)$limit,
+        'limit' => (string) $limit,
     ]);
     if (!$hasil['ok'] || !is_array($hasil['data'])) {
-        return [];
+        return is_array($pdo_hasil) ? $pdo_hasil : [];
     }
+
     return $hasil['data'];
 }
 

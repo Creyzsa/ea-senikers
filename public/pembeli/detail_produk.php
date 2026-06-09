@@ -26,26 +26,25 @@ $urls_gambar = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $produk !== null && $sudah_login) {
     $aksi = (string)($_POST['aksi'] ?? '');
     if ($aksi === 'tambah_ulasan' || $aksi === 'edit_ulasan') {
+        $id_post = ambil_id_pengguna_efektif(true);
         $order_id_ulasan = (int)($_POST['order_id'] ?? 0);
         $rating = (int)($_POST['rating'] ?? 0);
         $kom = trim((string)($_POST['komentar'] ?? ''));
-        $ok = false;
-        if ($id_pengguna > 0 && $order_id_ulasan > 0) {
+        $hasil_ulasan = ['ok' => false, 'pesan' => 'Akun tidak dikenali. Silakan login ulang.'];
+        if ($id_post > 0) {
             if ($aksi === 'tambah_ulasan') {
-                $ok = ulasan_buat($id_pengguna, $order_id_ulasan, $id, $rating, $kom);
+                $hasil_ulasan = ulasan_buat($id_post, $order_id_ulasan, $id, $rating, $kom);
             } else {
-                $ok = ulasan_perbarui($id_pengguna, $order_id_ulasan, $id, $rating, $kom);
+                $hasil_ulasan = ulasan_perbarui($id_post, $order_id_ulasan, $id, $rating, $kom);
             }
         }
-        if ($ok) {
+        if (!empty($hasil_ulasan['ok'])) {
             $qs = strpos($_SERVER['REQUEST_URI'], '?') !== false ? '&' : '?';
             $param = $aksi === 'edit_ulasan' ? 'ulasan_edit_ok=1' : 'ulasan_ok=1';
             header('Location: ' . $_SERVER['REQUEST_URI'] . $qs . $param);
             exit;
         }
-        $_SESSION['flash_keranjang_error'] = $aksi === 'edit_ulasan'
-            ? 'Ulasan tidak bisa diedit (sudah pernah diedit atau pesanan tidak valid).'
-            : 'Gagal mengirim ulasan (pesanan sudah diulas atau belum selesai).';
+        $_SESSION['flash_keranjang_error'] = (string) ($hasil_ulasan['pesan'] ?? 'Gagal menyimpan ulasan.');
         header('Location: ' . $_SERVER['REQUEST_URI']);
         exit;
     } elseif ($aksi === 'tambah_wishlist' || $aksi === 'hapus_wishlist') {
@@ -286,7 +285,7 @@ $u_checkout = aplikasi_url('checkout');
                 : 'orang_lain';
             $nama_ulasan = $ulasan_milik_saya
                 ? 'Anda'
-                : (is_array($u['users'] ?? null) ? (string) ($u['users']['nama_pengguna'] ?? 'Pembeli') : 'Pembeli');
+                : (string) ($u['nama_pengguna'] ?? (is_array($u['users'] ?? null) ? (string) ($u['users']['nama_pengguna'] ?? 'Pembeli') : 'Pembeli'));
             $rating_item = (int) ($u['rating'] ?? 0);
             $komentar_item = (string) ($u['komentar'] ?? '');
             $tgl_item = date('d M Y', strtotime((string) ($u['created_at'] ?? 'now')));
