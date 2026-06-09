@@ -400,6 +400,53 @@ function katalog_ringkasan_kategori_beranda(array $daftar_produk): array
 }
 
 /**
+ * Ringkasan brand untuk beranda / filter setelah pilih kategori.
+ *
+ * @param list<array<string, mixed>> $daftar_produk
+ * @return list<array{nama: string, jumlah: int, gambar: string, url: string}>
+ */
+function katalog_ringkasan_brand(array $daftar_produk, string $kategori_filter = ''): array
+{
+    $kategori_filter = trim($kategori_filter);
+    $map = [];
+
+    foreach ($daftar_produk as $produk) {
+        if (!is_array($produk)) {
+            continue;
+        }
+
+        $brand = trim((string) ($produk['brand'] ?? ''));
+        $kategori = trim((string) ($produk['kategori'] ?? ''));
+        if ($brand === '') {
+            continue;
+        }
+        if ($kategori_filter !== '' && strcasecmp($kategori, $kategori_filter) !== 0) {
+            continue;
+        }
+
+        if (!isset($map[$brand])) {
+            $params = ['brand' => $brand];
+            if ($kategori_filter !== '') {
+                $params['kategori'] = $kategori_filter;
+            }
+            $map[$brand] = [
+                'nama' => $brand,
+                'jumlah' => 0,
+                'gambar' => katalog_url_gambar_utama($produk),
+                'url' => aplikasi_url('produk?' . http_build_query($params)),
+            ];
+        }
+
+        $map[$brand]['jumlah']++;
+    }
+
+    $hasil = array_values($map);
+    usort($hasil, static fn (array $a, array $b): int => strnatcasecmp((string) $a['nama'], (string) $b['nama']));
+
+    return $hasil;
+}
+
+/**
  * Lengkapi produk_ukuran dengan semua ukuran default; yang tidak ada di DB = stok 0.
  *
  * @param array<string, mixed> $produk

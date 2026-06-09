@@ -605,6 +605,101 @@ body.halaman-toko {
     color: var(--teks-aksen-hover);
 }
 
+.beranda-brand {
+    margin-bottom: 1.5rem;
+}
+
+.beranda-brand__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.beranda-brand__judul {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.beranda-brand__lihat {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--teks-aksen);
+    text-decoration: none;
+}
+
+.beranda-brand__lihat:hover {
+    text-decoration: underline;
+    color: var(--teks-aksen-hover);
+}
+
+.beranda-brand__kosong {
+    margin: 0;
+    padding: 1rem 1.1rem;
+    font-size: 0.88rem;
+    color: var(--teks-redup);
+    background: var(--abu-kartu);
+    border: 1px dashed var(--abu-tepi);
+    border-radius: var(--radius);
+}
+
+.kategori-brand-card--aktif {
+    border-color: var(--brand-red);
+    box-shadow: 0 0 0 2px rgba(214, 40, 40, 0.15);
+}
+
+.katalog-pilih-brand {
+    margin: 0 0 1.25rem;
+    padding: 1rem 1.1rem;
+    background: #fff;
+    border: 1px solid var(--abu-tepi);
+    border-radius: var(--radius);
+    box-shadow: var(--bayangan-kartu);
+}
+
+.katalog-pilih-brand__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+}
+
+.katalog-pilih-brand__judul {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.katalog-pilih-brand__kategori {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--brand-red);
+    background: rgba(214, 40, 40, 0.08);
+    border-radius: 999px;
+    vertical-align: middle;
+}
+
+.katalog-pilih-brand__reset {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--teks-aksen);
+    text-decoration: none;
+}
+
+.katalog-pilih-brand__reset:hover {
+    text-decoration: underline;
+}
+
 .blok-terlaris__header {
     display: flex;
     flex-wrap: wrap;
@@ -1065,12 +1160,14 @@ body.halaman-toko {
     }
 
     .beranda-kategori__header,
+    .beranda-brand__header,
     .blok-terlaris__header {
         flex-direction: column;
         align-items: stretch;
     }
 
     .beranda-kategori__lihat,
+    .beranda-brand__lihat,
     .blok-terlaris__lihat {
         align-self: flex-start;
     }

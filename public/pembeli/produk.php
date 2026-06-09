@@ -102,6 +102,9 @@ foreach (['q' => $q, 'brand' => $brand_filter, 'kondisi' => $kondisi_filter, 'ka
 $pg = paginasi_hitung($total_tersaring, paginasi_halaman_dari_query('hal'), 12);
 $daftar_tersaring_hal = paginasi_potong($daftar_tersaring, $pg);
 $pg_url = paginasi_pembuat_url(aplikasi_url('produk'), $pg_params, 'hal');
+$brand_pilihan_kategori = $kategori_filter !== ''
+    ? katalog_ringkasan_brand($daftar_produk, $kategori_filter)
+    : [];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -207,6 +210,35 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('produk'), $pg_params, 'hal');
                 <a class="katalog-filter-premium__tombol katalog-filter-premium__tombol--reset" href="<?php echo htmlspecialchars(aplikasi_url('produk'), ENT_QUOTES, 'UTF-8'); ?>">Reset</a>
             </div>
         </form>
+
+        <?php if ($kategori_filter !== '' && $brand_pilihan_kategori !== []): ?>
+            <section class="katalog-pilih-brand" aria-labelledby="judul-pilih-brand">
+                <div class="katalog-pilih-brand__header">
+                    <h2 id="judul-pilih-brand" class="katalog-pilih-brand__judul">
+                        Pilih brand
+                        <span class="katalog-pilih-brand__kategori"><?php echo htmlspecialchars($kategori_filter, ENT_QUOTES, 'UTF-8'); ?></span>
+                    </h2>
+                    <a class="katalog-pilih-brand__reset" href="<?php echo htmlspecialchars(produk_url_filter(['kategori' => $kategori_filter, 'kondisi' => $kondisi_filter, 'sort' => $sort]), ENT_QUOTES, 'UTF-8'); ?>">Semua brand</a>
+                </div>
+                <div class="katalog-pilih-brand__grid kategori-brand-grid">
+                    <?php foreach ($brand_pilihan_kategori as $brand_item): ?>
+                        <?php
+                        $brand_aktif = $brand_filter !== '' && strcasecmp($brand_filter, (string) $brand_item['nama']) === 0;
+                        $kelas_brand = 'kategori-brand-card' . ($brand_aktif ? ' kategori-brand-card--aktif' : '');
+                        ?>
+                        <a class="<?php echo htmlspecialchars($kelas_brand, ENT_QUOTES, 'UTF-8'); ?>" href="<?php echo htmlspecialchars((string) $brand_item['url'], ENT_QUOTES, 'UTF-8'); ?>"<?php echo $brand_aktif ? ' aria-current="true"' : ''; ?>>
+                            <div class="kategori-brand-card__media">
+                                <img class="kategori-brand-card__gambar" src="<?php echo htmlspecialchars((string) $brand_item['gambar'], ENT_QUOTES, 'UTF-8'); ?>" alt="" width="200" height="200" loading="lazy">
+                            </div>
+                            <div class="kategori-brand-card__isi">
+                                <strong><?php echo htmlspecialchars((string) $brand_item['nama'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                                <span><?php echo (int) $brand_item['jumlah']; ?> produk</span>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        <?php endif; ?>
 
         <div id="hasil-katalog">
             <?php include __DIR__ . '/../../includes/komponen/isi_katalog_produk.php'; ?>

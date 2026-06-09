@@ -26,6 +26,7 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $__wa) {
 
 $semua_produk = katalog_ambil_semua_produk();
 $ringkasan_kategori = katalog_ringkasan_kategori_beranda($semua_produk);
+$ringkasan_brand = katalog_ringkasan_brand($semua_produk);
 $produk_terlaris = pesanan_produk_terlaris_gabung_katalog(4);
 if ($produk_terlaris === [] && $semua_produk !== []) {
     $produk_terlaris = array_slice($semua_produk, 0, 4);
@@ -156,6 +157,33 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
                         </a>
                     <?php endforeach; ?>
                 </div>
+            </section>
+
+            <section class="beranda-brand" aria-labelledby="judul-beranda-brand">
+                <div class="beranda-brand__header">
+                    <div>
+                        <p class="section-eyebrow">Brand</p>
+                        <h2 id="judul-beranda-brand" class="beranda-brand__judul">Belanja berdasarkan merek</h2>
+                    </div>
+                    <a class="beranda-brand__lihat" href="<?php echo htmlspecialchars($u_kategori_halaman, ENT_QUOTES, 'UTF-8'); ?>#judul-merek">Semua brand &rarr;</a>
+                </div>
+                <?php if ($ringkasan_brand === []): ?>
+                    <p class="beranda-brand__kosong">Brand akan muncul otomatis ketika katalog produk sudah terisi.</p>
+                <?php else: ?>
+                    <div class="beranda-brand__grid kategori-brand-grid">
+                        <?php foreach ($ringkasan_brand as $brand_item): ?>
+                            <a class="kategori-brand-card" href="<?php echo htmlspecialchars((string) $brand_item['url'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <div class="kategori-brand-card__media">
+                                    <img class="kategori-brand-card__gambar" src="<?php echo htmlspecialchars((string) $brand_item['gambar'], ENT_QUOTES, 'UTF-8'); ?>" alt="" width="200" height="200" loading="lazy">
+                                </div>
+                                <div class="kategori-brand-card__isi">
+                                    <strong><?php echo htmlspecialchars((string) $brand_item['nama'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                                    <span><?php echo (int) $brand_item['jumlah']; ?> produk</span>
+                                </div>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </section>
 
             <div class="blok-terlaris__header">
