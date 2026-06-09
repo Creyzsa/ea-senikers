@@ -35,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'smtp_to' => (string) ($_POST['smtp_to'] ?? ''),
             'email_aktif' => !empty($_POST['email_aktif']),
             'notif_browser_aktif' => !empty($_POST['notif_browser_aktif']),
+            'push_aktif' => !empty($_POST['push_aktif']),
         ]);
 
         try {
@@ -64,6 +65,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $errors[] = (string) $hasil['pesan'];
                 }
+            } elseif ($aksi === 'tes_push') {
+                if (!empty($cfg_post['push_aktif'])) {
+                    admin_notifikasi_simpan_pengaturan($cfg_post);
+                }
+                $hasil = admin_notifikasi_tes_push();
+                if ($hasil['ok']) {
+                    $_SESSION['flash_admin_notifikasi'] = ['jenis' => 'sukses', 'teks' => (string) $hasil['pesan']];
+                } else {
+                    $errors[] = (string) $hasil['pesan'];
+                }
             } else {
                 admin_notifikasi_simpan_pengaturan($cfg_post);
                 $_SESSION['flash_admin_notifikasi'] = [
@@ -86,6 +97,9 @@ $cfg = admin_notifikasi_muat_pengaturan();
 $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
 $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF-8');
 $poll_url = htmlspecialchars(aplikasi_url('api/admin_notifikasi_poll.php'), ENT_QUOTES, 'UTF-8');
+$vapid_url = htmlspecialchars(aplikasi_url('api/admin_push_vapid.php'), ENT_QUOTES, 'UTF-8');
+$subscribe_url = htmlspecialchars(aplikasi_url('api/admin_push_subscribe.php'), ENT_QUOTES, 'UTF-8');
+$sw_url = htmlspecialchars(aplikasi_url('sw-admin-notifikasi.js'), ENT_QUOTES, 'UTF-8');
 
 ?>
 <!DOCTYPE html>
@@ -104,20 +118,13 @@ $poll_url = htmlspecialchars(aplikasi_url('api/admin_notifikasi_poll.php'), ENT_
 
     <div class="admin-utama">
         <header class="admin-bilah">
-            <div class="admin-pengguna">
-                <span class="admin-pengguna__ikon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                </span>
-                <span class="admin-pengguna__nama"><?php echo $nama; ?></span>
-            </div>
+            <?php include __DIR__ . '/../../includes/komponen/admin_bilah_pengguna.php'; ?>
             <a class="admin-tombol-keluar" href="<?php echo $urlKeluar; ?>">Keluar</a>
         </header>
 
         <main class="admin-isi">
             <h1 class="admin-judul-besar">Notifikasi admin</h1>
-            <p class="admin-salam">Atur Telegram, email SMTP, dan notifikasi browser (getar &amp; bunyi) saat pembayaran masuk.</p>
+            <p class="admin-salam">Atur Telegram, email SMTP, Web Push, dan notifikasi browser (getar &amp; bunyi) saat pembayaran masuk.</p>
 
             <?php if (is_array($flash)): ?>
                 <div class="admin-alert admin-alert--<?php echo htmlspecialchars((string) (($flash['jenis'] ?? '') === 'error' ? 'error' : 'sukses'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -141,13 +148,42 @@ $poll_url = htmlspecialchars(aplikasi_url('api/admin_notifikasi_poll.php'), ENT_
 
                 <section class="admin-kartu" aria-labelledby="judul-notif-browser">
                     <header class="admin-kartu__header">
-                        <h2 id="judul-notif-browser">Notifikasi browser</h2>
+                        <h2 id="judul-notif-browser">Notifikasi browser (tab terbuka)</h2>
                     </header>
                     <p class="admin-meta">Saat panel admin terbuka, sistem memeriksa pembayaran baru setiap 12 detik. Jika ada pesanan berstatus <strong>paid</strong>, perangkat akan bergetar dan berbunyi.</p>
                     <label class="admin-check">
                         <input type="checkbox" name="notif_browser_aktif" value="1"<?php echo !empty($cfg['notif_browser_aktif']) ? ' checked' : ''; ?>>
                         Aktifkan getar &amp; bunyi di panel admin
                     </label>
+                </section>
+
+                <section class="admin-kartu" aria-labelledby="judul-notif-push">
+                    <header class="admin-kartu__header">
+                        <h2 id="judul-notif-push">Web Push (tab tertutup / HP)</h2>
+                    </header>
+                    <p class="admin-meta">
+                        Notifikasi push dikirim ke perangkat admin meski browser ditutup (butuh HTTPS).
+                        Saat push diterima: <strong>getar</strong> + <strong>bunyi sistem</strong> + notifikasi OS.
+                        Jika tab admin masih terbuka, getar &amp; bunyi kustom juga diputar.
+                    </p>
+                    <label class="admin-check admin-check--blok">
+                        <input type="checkbox" name="push_aktif" value="1"<?php echo !empty($cfg['push_aktif']) ? ' checked' : ''; ?>>
+                        Kirim Web Push saat pembayaran masuk
+                    </label>
+                    <div
+                        id="admin-push-panel"
+                        class="admin-push-panel"
+                        data-vapid-url="<?php echo $vapid_url; ?>"
+                        data-subscribe-url="<?php echo $subscribe_url; ?>"
+                        data-sw-url="<?php echo $sw_url; ?>"
+                    >
+                        <p id="admin-push-status" class="admin-push-status admin-push-status--netral">Memeriksa status push…</p>
+                        <div class="admin-form-aksi admin-form-aksi--inline">
+                            <button type="button" class="admin-btn admin-btn--sekunder" id="admin-push-aktifkan">Aktifkan push di perangkat ini</button>
+                            <button type="button" class="admin-btn admin-btn--sekunder" id="admin-push-nonaktifkan" hidden>Nonaktifkan push di perangkat ini</button>
+                            <button type="submit" class="admin-btn admin-btn--sekunder" onclick="document.getElementById('notifikasi-aksi').value='tes_push';">Tes Push</button>
+                        </div>
+                    </div>
                 </section>
 
                 <section class="admin-kartu" aria-labelledby="judul-notif-telegram">
@@ -233,5 +269,6 @@ $poll_url = htmlspecialchars(aplikasi_url('api/admin_notifikasi_poll.php'), ENT_
 </div>
 
 <?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php'; ?>
+<script src="../assets/js/admin-push-subscribe.js" defer></script>
 </body>
 </html>

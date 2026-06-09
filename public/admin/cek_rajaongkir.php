@@ -76,9 +76,7 @@ if ($aksi === 'cek_ongkir') {
 
         <div class="admin-utama">
             <header class="admin-bilah">
-                <div class="admin-pengguna">
-                    <span class="admin-pengguna__nama"><?php echo $nama; ?></span>
-                </div>
+                <?php include __DIR__ . '/../../includes/komponen/admin_bilah_pengguna.php'; ?>
                 <a class="admin-tombol-keluar" href="<?php echo $urlKeluar; ?>">Keluar</a>
             </header>
 

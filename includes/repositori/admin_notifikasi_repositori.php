@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth_db/database.php';
 require_once __DIR__ . '/../integrasi/notifikasi_telegram.php';
 require_once __DIR__ . '/../integrasi/notifikasi_email_smtp.php';
+require_once __DIR__ . '/../integrasi/notifikasi_web_push.php';
 
 /** PDO pgsql mengirim false sebagai "" — PostgreSQL menolak untuk kolom BOOLEAN. */
 function admin_notifikasi_bool_db(bool $nilai): string
@@ -43,7 +44,10 @@ function admin_notifikasi_gabung_form_dengan_simpan(array $post): array
  *   smtp_from: string,
  *   smtp_to: string,
  *   email_aktif: bool,
- *   notif_browser_aktif: bool
+ *   notif_browser_aktif: bool,
+ *   push_aktif: bool,
+ *   vapid_public_key: string,
+ *   vapid_private_key: string
  * }
  */
 function admin_notifikasi_muat_pengaturan(): array
@@ -60,6 +64,9 @@ function admin_notifikasi_muat_pengaturan(): array
         'smtp_to' => trim((string) (getenv('SMTP_TO') ?: '')),
         'email_aktif' => false,
         'notif_browser_aktif' => true,
+        'push_aktif' => false,
+        'vapid_public_key' => trim((string) (getenv('VAPID_PUBLIC_KEY') ?: '')),
+        'vapid_private_key' => trim((string) (getenv('VAPID_PRIVATE_KEY') ?: '')),
     ];
 
     if ($bawaan['smtp_port'] <= 0) {
@@ -96,6 +103,15 @@ function admin_notifikasi_muat_pengaturan(): array
         }
         $bawaan['email_aktif'] = (bool) ($row['email_aktif'] ?? false);
         $bawaan['notif_browser_aktif'] = (bool) ($row['notif_browser_aktif'] ?? true);
+        $bawaan['push_aktif'] = (bool) ($row['push_aktif'] ?? false);
+        $vapid_pub = trim((string) ($row['vapid_public_key'] ?? ''));
+        if ($vapid_pub !== '') {
+            $bawaan['vapid_public_key'] = $vapid_pub;
+        }
+        $vapid_priv = trim((string) ($row['vapid_private_key'] ?? ''));
+        if ($vapid_priv !== '') {
+            $bawaan['vapid_private_key'] = $vapid_priv;
+        }
     } catch (Throwable $e) {
         // Tabel belum ada — pakai env/default
     }
@@ -125,7 +141,23 @@ function admin_notifikasi_simpan_pengaturan(array $data): bool
         'smtp_to' => trim((string) ($data['smtp_to'] ?? '')),
         'email_aktif' => !empty($data['email_aktif']),
         'notif_browser_aktif' => !empty($data['notif_browser_aktif']),
+        'push_aktif' => !empty($data['push_aktif']),
+        'vapid_public_key' => trim((string) ($data['vapid_public_key'] ?? '')),
+        'vapid_private_key' => trim((string) ($data['vapid_private_key'] ?? '')),
     ];
+
+    $simpan_lama = admin_notifikasi_muat_pengaturan();
+    if ($payload['vapid_public_key'] === '') {
+        $payload['vapid_public_key'] = (string) $simpan_lama['vapid_public_key'];
+    }
+    if ($payload['vapid_private_key'] === '') {
+        $payload['vapid_private_key'] = (string) $simpan_lama['vapid_private_key'];
+    }
+    if ($payload['push_aktif'] && ($payload['vapid_public_key'] === '' || $payload['vapid_private_key'] === '')) {
+        $vapid = admin_notifikasi_pastikan_vapid_keys($payload);
+        $payload['vapid_public_key'] = $vapid['vapid_public_key'];
+        $payload['vapid_private_key'] = $vapid['vapid_private_key'];
+    }
 
     try {
         $pdo = koneksi_database();
@@ -133,9 +165,9 @@ function admin_notifikasi_simpan_pengaturan(array $data): bool
             'INSERT INTO admin_notifikasi_pengaturan (
                 id, telegram_bot_token, telegram_chat_id, telegram_aktif,
                 smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, smtp_to,
-                email_aktif, notif_browser_aktif, updated_at
+                email_aktif, notif_browser_aktif, push_aktif, vapid_public_key, vapid_private_key, updated_at
              ) VALUES (
-                1, :tt, :tc, :ta, :sh, :sp, :su, :spw, :sf, :st, :ea, :ba, NOW()
+                1, :tt, :tc, :ta, :sh, :sp, :su, :spw, :sf, :st, :ea, :ba, :pa, :vpk, :vpv, NOW()
              )
              ON CONFLICT (id) DO UPDATE SET
                 telegram_bot_token = EXCLUDED.telegram_bot_token,
@@ -149,6 +181,9 @@ function admin_notifikasi_simpan_pengaturan(array $data): bool
                 smtp_to = EXCLUDED.smtp_to,
                 email_aktif = EXCLUDED.email_aktif,
                 notif_browser_aktif = EXCLUDED.notif_browser_aktif,
+                push_aktif = EXCLUDED.push_aktif,
+                vapid_public_key = EXCLUDED.vapid_public_key,
+                vapid_private_key = EXCLUDED.vapid_private_key,
                 updated_at = NOW()'
         );
         $stmt->execute([
@@ -163,6 +198,9 @@ function admin_notifikasi_simpan_pengaturan(array $data): bool
             'st' => $payload['smtp_to'],
             'ea' => admin_notifikasi_bool_db((bool) $payload['email_aktif']),
             'ba' => admin_notifikasi_bool_db((bool) $payload['notif_browser_aktif']),
+            'pa' => admin_notifikasi_bool_db((bool) $payload['push_aktif']),
+            'vpk' => $payload['vapid_public_key'],
+            'vpv' => $payload['vapid_private_key'],
         ]);
 
         return true;
@@ -172,7 +210,7 @@ function admin_notifikasi_simpan_pengaturan(array $data): bool
         $pesan = $rls
             ?? ($detail !== ''
                 ? 'Gagal menyimpan pengaturan notifikasi: ' . $detail
-                : 'Gagal menyimpan pengaturan notifikasi. Jalankan database/migrations/tahap10_admin_notifikasi.sql di Supabase.');
+                : 'Gagal menyimpan pengaturan notifikasi. Jalankan migrasi tahap10 & tahap11 di Supabase.');
 
         throw new RuntimeException($pesan, 0, $e);
     }
@@ -228,6 +266,10 @@ function admin_notifikasi_pembayaran_masuk(int $order_id): void
         if (!$hasil['ok']) {
             error_log('[notifikasi_email] ' . $hasil['pesan']);
         }
+    }
+
+    if ($cfg['push_aktif']) {
+        admin_push_kirim_pembayaran($event_id, $detail);
     }
 }
 
@@ -390,6 +432,69 @@ function admin_notifikasi_poll(int $since_id): array
 }
 
 /**
+ * Data panel lonceng notifikasi (daftar + jumlah belum dibaca).
+ *
+ * @return array{
+ *   recent: list<array<string, mixed>>,
+ *   unread_count: int,
+ *   max_id: int
+ * }
+ */
+function admin_notifikasi_panel(int $read_until, int $limit = 20): array
+{
+    $read_until = max(0, $read_until);
+    $limit = max(1, min(50, $limit));
+
+    try {
+        $pdo = koneksi_database();
+
+        $max_id = (int) ($pdo->query('SELECT COALESCE(MAX(id), 0) FROM admin_pembayaran_notifikasi')->fetchColumn() ?: 0);
+
+        $stmt_unread = $pdo->prepare(
+            'SELECT COUNT(*) FROM admin_pembayaran_notifikasi WHERE id > :read_until'
+        );
+        $stmt_unread->execute(['read_until' => $read_until]);
+        $unread_count = (int) ($stmt_unread->fetchColumn() ?: 0);
+
+        $stmt = $pdo->prepare(
+            'SELECT id, order_id, total_price, payment_method, customer_name, created_at
+             FROM admin_pembayaran_notifikasi
+             ORDER BY id DESC
+             LIMIT :lim'
+        );
+        $stmt->bindValue('lim', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        $recent = [];
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $id = (int) ($row['id'] ?? 0);
+            $recent[] = [
+                'id' => $id,
+                'order_id' => (int) ($row['order_id'] ?? 0),
+                'total_price' => (int) ($row['total_price'] ?? 0),
+                'payment_method' => (string) ($row['payment_method'] ?? ''),
+                'customer_name' => (string) ($row['customer_name'] ?? ''),
+                'created_at' => (string) ($row['created_at'] ?? ''),
+                'url' => aplikasi_url('admin/detail_pesanan_admin.php?id=' . (int) ($row['order_id'] ?? 0)),
+                'unread' => $id > $read_until,
+            ];
+        }
+
+        return [
+            'recent' => $recent,
+            'unread_count' => $unread_count,
+            'max_id' => $max_id,
+        ];
+    } catch (Throwable $e) {
+        return ['recent' => [], 'unread_count' => 0, 'max_id' => $read_until];
+    }
+}
+
+/**
  * @return array{ok: bool, pesan: string}
  */
 function admin_notifikasi_tes_telegram(array $cfg): array
@@ -423,4 +528,263 @@ function admin_notifikasi_tes_email(array $cfg): array
         $subjek,
         $body
     );
+}
+
+/**
+ * @param array<string, mixed> $cfg
+ * @return array{vapid_public_key: string, vapid_private_key: string}
+ */
+function admin_notifikasi_pastikan_vapid_keys(array $cfg): array
+{
+    $pub = trim((string) ($cfg['vapid_public_key'] ?? ''));
+    $priv = trim((string) ($cfg['vapid_private_key'] ?? ''));
+    if ($pub !== '' && $priv !== '') {
+        return ['vapid_public_key' => $pub, 'vapid_private_key' => $priv];
+    }
+
+    $gen = web_push_generate_vapid_keys();
+
+    return [
+        'vapid_public_key' => $gen['public_key'],
+        'vapid_private_key' => $gen['private_key_pem'],
+    ];
+}
+
+function admin_push_vapid_subject(): string
+{
+    $cfg = admin_notifikasi_muat_pengaturan();
+    $to = trim((string) ($cfg['smtp_to'] ?? ''));
+    if ($to !== '' && filter_var($to, FILTER_VALIDATE_EMAIL)) {
+        return 'mailto:' . $to;
+    }
+
+    return 'mailto:admin@easenikers.shop';
+}
+
+/**
+ * @return array{ok: bool, pesan: string, public_key?: string}
+ */
+function admin_push_info_vapid(): array
+{
+    $cfg = admin_notifikasi_muat_pengaturan();
+    if (!$cfg['push_aktif']) {
+        return ['ok' => false, 'pesan' => 'Push notifikasi tidak aktif.'];
+    }
+
+    $vapid = admin_notifikasi_pastikan_vapid_keys($cfg);
+    if (trim((string) $cfg['vapid_public_key']) === '' || trim((string) $cfg['vapid_private_key']) === '') {
+        try {
+            admin_notifikasi_simpan_pengaturan(array_merge($cfg, [
+                'push_aktif' => true,
+                'vapid_public_key' => $vapid['vapid_public_key'],
+                'vapid_private_key' => $vapid['vapid_private_key'],
+            ]));
+        } catch (Throwable $e) {
+            return ['ok' => false, 'pesan' => $e->getMessage()];
+        }
+    }
+
+    return [
+        'ok' => true,
+        'pesan' => 'VAPID siap.',
+        'public_key' => $vapid['vapid_public_key'],
+    ];
+}
+
+/**
+ * @param array<string, mixed> $subscription
+ * @return array{ok: bool, pesan: string}
+ */
+function admin_push_simpan_langganan(int $user_id, array $subscription): array
+{
+    $endpoint = trim((string) ($subscription['endpoint'] ?? ''));
+    $p256dh = trim((string) ($subscription['keys']['p256dh'] ?? $subscription['p256dh'] ?? ''));
+    $auth = trim((string) ($subscription['keys']['auth'] ?? $subscription['auth'] ?? ''));
+    if ($endpoint === '' || $p256dh === '' || $auth === '') {
+        return ['ok' => false, 'pesan' => 'Data langganan push tidak lengkap.'];
+    }
+
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare(
+            'INSERT INTO admin_push_subscription (user_id, endpoint, p256dh, auth, user_agent, updated_at)
+             VALUES (:uid, :ep, :p256, :auth, :ua, NOW())
+             ON CONFLICT (endpoint) DO UPDATE SET
+                user_id = EXCLUDED.user_id,
+                p256dh = EXCLUDED.p256dh,
+                auth = EXCLUDED.auth,
+                user_agent = EXCLUDED.user_agent,
+                updated_at = NOW()'
+        );
+        $stmt->execute([
+            'uid' => max(0, $user_id),
+            'ep' => $endpoint,
+            'p256' => $p256dh,
+            'auth' => $auth,
+            'ua' => trim((string) ($subscription['user_agent'] ?? $_SERVER['HTTP_USER_AGENT'] ?? '')),
+        ]);
+
+        return ['ok' => true, 'pesan' => 'Langganan push disimpan.'];
+    } catch (Throwable $e) {
+        return ['ok' => false, 'pesan' => 'Gagal menyimpan langganan push. Jalankan tahap11_admin_push.sql.'];
+    }
+}
+
+/**
+ * @return array{ok: bool, pesan: string}
+ */
+function admin_push_hapus_langganan(string $endpoint): array
+{
+    $endpoint = trim($endpoint);
+    if ($endpoint === '') {
+        return ['ok' => false, 'pesan' => 'Endpoint kosong.'];
+    }
+
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->prepare('DELETE FROM admin_push_subscription WHERE endpoint = :ep');
+        $stmt->execute(['ep' => $endpoint]);
+
+        return ['ok' => true, 'pesan' => 'Langganan push dihapus.'];
+    } catch (Throwable $e) {
+        return ['ok' => false, 'pesan' => 'Gagal menghapus langganan push.'];
+    }
+}
+
+/**
+ * @return list<array{endpoint: string, p256dh: string, auth: string}>
+ */
+function admin_push_muat_langganan_aktif(): array
+{
+    try {
+        $pdo = koneksi_database();
+        $rows = $pdo->query(
+            'SELECT endpoint, p256dh, auth FROM admin_push_subscription ORDER BY id ASC'
+        )->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $out = [];
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $out[] = [
+                'endpoint' => (string) ($row['endpoint'] ?? ''),
+                'p256dh' => (string) ($row['p256dh'] ?? ''),
+                'auth' => (string) ($row['auth'] ?? ''),
+            ];
+        }
+
+        return $out;
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
+/**
+ * @param array{order_id: int, total_price: int, payment_method: string, customer_name: string} $detail
+ */
+function admin_push_kirim_pembayaran(int $event_id, array $detail): void
+{
+    $cfg = admin_notifikasi_muat_pengaturan();
+    if (!$cfg['push_aktif']) {
+        return;
+    }
+
+    $vapid = admin_notifikasi_pastikan_vapid_keys($cfg);
+    $subs = admin_push_muat_langganan_aktif();
+    if ($subs === []) {
+        return;
+    }
+
+    $order_id = (int) $detail['order_id'];
+    $total = number_format((int) $detail['total_price'], 0, ',', '.');
+    $nama = trim((string) $detail['customer_name']);
+    $body = 'Pesanan #' . $order_id . ' — Rp ' . $total;
+    if ($nama !== '') {
+        $body .= ' · ' . $nama;
+    }
+
+    $payload = json_encode([
+        'title' => 'Pembayaran masuk',
+        'body' => $body,
+        'url' => aplikasi_url('admin/detail_pesanan_admin.php?id=' . $order_id),
+        'event_id' => $event_id,
+        'order_id' => $order_id,
+        'total_price' => (int) $detail['total_price'],
+        'customer_name' => $nama,
+        'tag' => 'easenikers-paid-' . $order_id,
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (!is_string($payload)) {
+        return;
+    }
+
+    $vapid_send = [
+        'public_key' => $vapid['vapid_public_key'],
+        'private_key_pem' => $vapid['vapid_private_key'],
+        'subject' => admin_push_vapid_subject(),
+    ];
+
+    foreach ($subs as $sub) {
+        $hasil = web_push_kirim_satu($sub, $payload, $vapid_send);
+        if (!$hasil['ok']) {
+            error_log('[notifikasi_push] ' . $hasil['pesan']);
+            if (!empty($hasil['hapus'])) {
+                admin_push_hapus_langganan((string) $sub['endpoint']);
+            }
+        }
+    }
+}
+
+/**
+ * @return array{ok: bool, pesan: string}
+ */
+function admin_notifikasi_tes_push(): array
+{
+    $cfg = admin_notifikasi_muat_pengaturan();
+    if (!$cfg['push_aktif']) {
+        return ['ok' => false, 'pesan' => 'Aktifkan push notifikasi terlebih dahulu.'];
+    }
+
+    $subs = admin_push_muat_langganan_aktif();
+    if ($subs === []) {
+        return ['ok' => false, 'pesan' => 'Belum ada perangkat terdaftar. Klik "Aktifkan push di perangkat ini" dan izinkan notifikasi.'];
+    }
+
+    $payload = json_encode([
+        'title' => 'Tes push EA SENIKERS',
+        'body' => 'Notifikasi push admin berhasil pada ' . gmdate('d M Y H:i') . ' UTC.',
+        'url' => aplikasi_url('admin/notifikasi_admin.php'),
+        'event_id' => 0,
+        'order_id' => 0,
+        'tag' => 'easenikers-push-test',
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (!is_string($payload)) {
+        return ['ok' => false, 'pesan' => 'Gagal membuat payload tes.'];
+    }
+
+    $vapid = admin_notifikasi_pastikan_vapid_keys($cfg);
+    $vapid_send = [
+        'public_key' => $vapid['vapid_public_key'],
+        'private_key_pem' => $vapid['vapid_private_key'],
+        'subject' => admin_push_vapid_subject(),
+    ];
+
+    $sukses = 0;
+    $gagal = 0;
+    foreach ($subs as $sub) {
+        $hasil = web_push_kirim_satu($sub, $payload, $vapid_send);
+        if ($hasil['ok']) {
+            $sukses++;
+        } else {
+            $gagal++;
+            if (!empty($hasil['hapus'])) {
+                admin_push_hapus_langganan((string) $sub['endpoint']);
+            }
+        }
+    }
+
+    if ($sukses > 0) {
+        return ['ok' => true, 'pesan' => 'Tes push terkirim ke ' . $sukses . ' perangkat.' . ($gagal > 0 ? ' (' . $gagal . ' gagal)' : '')];
+    }
+
+    return ['ok' => false, 'pesan' => 'Tes push gagal ke semua perangkat. Coba aktifkan ulang push di browser.'];
 }

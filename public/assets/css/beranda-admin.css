@@ -140,12 +140,13 @@ body.halaman-admin {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.35rem 0.75rem 0.35rem 0.4rem;
+    padding: 0.35rem 0.5rem 0.35rem 0.4rem;
     background: var(--abu-latar);
     border: 1px solid var(--abu-tepi);
     border-radius: 999px;
     font-size: 0.85rem;
     color: var(--teks-redup);
+    position: relative;
 }
 
 .admin-pengguna__ikon {
@@ -2549,46 +2550,206 @@ body.admin-menu-terbuka {
 }
 
 /* Notifikasi admin (browser + halaman pengaturan) */
-.admin-notif-toast {
-    position: fixed;
-    right: 1rem;
-    bottom: 1rem;
-    z-index: 1200;
+/* Lonceng notifikasi di bilah admin */
+.admin-notif-bilah {
+    position: relative;
+    margin-left: 0.15rem;
+}
+
+.admin-notif-bilah__tombol {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    padding: 0;
+    color: var(--teks-redup);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-notif-bilah__tombol:hover,
+.admin-notif-bilah--buka .admin-notif-bilah__tombol {
+    color: #0f766e;
+    background: rgba(15, 118, 110, 0.1);
+    border-color: rgba(15, 118, 110, 0.2);
+}
+
+.admin-notif-bilah__tombol--ada {
+    color: #0f766e;
+}
+
+.admin-notif-bilah__badge {
+    position: absolute;
+    top: -0.1rem;
+    right: -0.15rem;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding: 0 0.25rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1.1rem;
+    text-align: center;
+    color: #fff;
+    background: #dc2626;
+    border: 2px solid var(--abu-latar);
+    border-radius: 999px;
+    pointer-events: none;
+}
+
+.admin-notif-panel {
+    position: absolute;
+    top: calc(100% + 0.55rem);
+    right: 0;
+    z-index: 1300;
+    width: min(22rem, calc(100vw - 2rem));
+    max-height: min(24rem, 70vh);
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    max-width: min(22rem, calc(100vw - 2rem));
-    padding: 0.85rem 1rem;
-    color: #fff;
-    background: linear-gradient(135deg, #0f766e, #115e59);
-    border-radius: 12px;
-    box-shadow: 0 14px 40px rgba(15, 23, 42, 0.28);
-    transform: translateY(12px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    overflow: hidden;
+    background: var(--abu-kartu);
+    border: 1px solid var(--abu-tepi);
+    border-radius: 14px;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
 }
 
-.admin-notif-toast--tampil {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
+.admin-notif-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid var(--abu-tepi);
 }
 
-.admin-notif-toast strong {
-    font-size: 0.95rem;
+.admin-notif-panel__header strong {
+    font-size: 0.92rem;
+    color: var(--teks-utama);
 }
 
-.admin-notif-toast span {
-    font-size: 0.82rem;
-    opacity: 0.95;
+.admin-notif-panel__tutup {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: var(--teks-redup);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
-.admin-notif-toast a {
-    margin-top: 0.15rem;
-    font-size: 0.8rem;
+.admin-notif-panel__tutup:hover {
+    background: var(--abu-latar);
+}
+
+.admin-notif-panel__daftar {
+    margin: 0;
+    padding: 0.35rem 0;
+    list-style: none;
+    overflow-y: auto;
+}
+
+.admin-notif-panel__kosong {
+    padding: 1.25rem 0.9rem;
+    font-size: 0.84rem;
+    color: var(--teks-redup);
+    text-align: center;
+}
+
+.admin-notif-item__link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.7rem 0.9rem;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+    transition: background 0.15s ease;
+}
+
+.admin-notif-item__link:hover {
+    background: var(--abu-latar);
+}
+
+.admin-notif-item--baru .admin-notif-item__link {
+    background: rgba(15, 118, 110, 0.06);
+}
+
+.admin-notif-item--baru .admin-notif-item__judul::before {
+    content: '';
+    display: inline-block;
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-right: 0.35rem;
+    vertical-align: middle;
+    background: #0f766e;
+    border-radius: 50%;
+}
+
+.admin-notif-item__judul {
+    font-size: 0.84rem;
     font-weight: 700;
-    color: #fff;
+    color: var(--teks-utama);
+}
+
+.admin-notif-item__detail {
+    font-size: 0.8rem;
+    color: var(--teks-redup);
+}
+
+.admin-notif-item__nama {
+    margin-left: 0.25rem;
+}
+
+.admin-notif-item__waktu {
+    font-size: 0.72rem;
+    color: var(--teks-redup);
+    opacity: 0.85;
+}
+
+.admin-notif-panel__footer {
+    padding: 0.65rem 0.9rem;
+    border-top: 1px solid var(--abu-tepi);
+    text-align: center;
+}
+
+.admin-notif-panel__footer a {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #0f766e;
+    text-decoration: none;
+}
+
+.admin-notif-panel__footer a:hover {
+    text-decoration: underline;
+}
+
+.admin-push-panel {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.admin-push-status {
+    margin: 0 0 0.65rem;
+    font-size: 0.84rem;
+    line-height: 1.45;
+}
+
+.admin-push-status--sukses {
+    color: #0f766e;
+}
+
+.admin-push-status--error {
+    color: #b91c1c;
+}
+
+.admin-push-status--netral {
+    color: var(--teks-sekunder, #64748b);
 }
 
 .admin-form-stack {
@@ -2632,9 +2793,8 @@ body.admin-menu-terbuka {
         grid-template-columns: 1fr;
     }
 
-    .admin-notif-toast {
-        left: 1rem;
-        right: 1rem;
-        max-width: none;
+    .admin-notif-panel {
+        right: -0.25rem;
+        width: min(20rem, calc(100vw - 1.5rem));
     }
 }
