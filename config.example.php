@@ -86,3 +86,13 @@ define('JNE_ORIGIN_CODE', 'PDG21100');
 
 define('EMAIL_DRIVER', 'log');
 define('EMAIL_PENGIRIM', 'EA SENIKERS <noreply@example.com>');
+
+/** Notifikasi admin (opsional — alternatif: halaman Admin → Notifikasi / Supabase) */
+// define('TELEGRAM_BOT_TOKEN', 'your-telegram-bot-token');
+// define('TELEGRAM_CHAT_ID', 'your-telegram-chat-id');
+// define('SMTP_HOST', 'smtp.gmail.com');
+// define('SMTP_PORT', '587');
+// define('SMTP_USER', 'your@gmail.com');
+// define('SMTP_PASS', 'your-app-password');
+// define('SMTP_FROM', 'EA SENIKERS <noreply@easenikers.shop>');
+// define('SMTP_TO', 'admin@easenikers.com');

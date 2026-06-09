@@ -2547,3 +2547,94 @@ body.admin-menu-terbuka {
         grid-template-columns: 1fr;
     }
 }
+
+/* Notifikasi admin (browser + halaman pengaturan) */
+.admin-notif-toast {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-width: min(22rem, calc(100vw - 2rem));
+    padding: 0.85rem 1rem;
+    color: #fff;
+    background: linear-gradient(135deg, #0f766e, #115e59);
+    border-radius: 12px;
+    box-shadow: 0 14px 40px rgba(15, 23, 42, 0.28);
+    transform: translateY(12px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.admin-notif-toast--tampil {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.admin-notif-toast strong {
+    font-size: 0.95rem;
+}
+
+.admin-notif-toast span {
+    font-size: 0.82rem;
+    opacity: 0.95;
+}
+
+.admin-notif-toast a {
+    margin-top: 0.15rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.admin-form-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.admin-field-grid {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.admin-field-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--teks-utama);
+}
+
+.admin-check--blok {
+    display: flex;
+    margin-bottom: 0.65rem;
+}
+
+.admin-form-aksi--inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 720px) {
+    .admin-field-grid--2 {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-notif-toast {
+        left: 1rem;
+        right: 1rem;
+        max-width: none;
+    }
+}

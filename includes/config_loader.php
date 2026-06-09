@@ -18,7 +18,8 @@
  *   PAKASIR_PROJECT_SLUG, PAKASIR_API_KEY, PAKASIR_MODE (sandbox|production),
  *   PAKASIR_METODE_DEFAULT (optional, default qris),
  *   JNE_ORIGIN_CODE (optional, kode asal toko — contoh PDG21100),
- *   EMAIL_DRIVER, EMAIL_PENGIRIM (optional)
+ *   EMAIL_DRIVER, EMAIL_PENGIRIM (optional),
+ *   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_TO (optional)
  */
 
 if (!defined('DB_HOST')) {

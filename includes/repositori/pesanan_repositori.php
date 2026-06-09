@@ -616,6 +616,15 @@ function pesanan_perbarui_status_dan_stok(int $order_id, string $status_baru, ?c
         pesanan_refresh_terjual_untuk_order($pdo, $order_id, $status_lama, $status_baru);
         $pdo->commit();
 
+        if ($status_baru === 'paid' && $status_lama !== 'paid') {
+            try {
+                require_once __DIR__ . '/admin_notifikasi_repositori.php';
+                admin_notifikasi_pembayaran_masuk($order_id);
+            } catch (Throwable $e) {
+                error_log('[admin_notifikasi_pembayaran_masuk] ' . $e->getMessage());
+            }
+        }
+
         return true;
     } catch (Throwable $e) {
         try {
