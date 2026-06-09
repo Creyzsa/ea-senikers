@@ -738,9 +738,9 @@ function admin_push_muat_langganan_aktif(): array
                 continue;
             }
             $out[] = [
-                'endpoint' => (string) ($row['endpoint'] ?? ''),
-                'p256dh' => (string) ($row['p256dh'] ?? ''),
-                'auth' => (string) ($row['auth'] ?? ''),
+                'endpoint' => trim((string) ($row['endpoint'] ?? '')),
+                'p256dh' => trim((string) ($row['p256dh'] ?? '')),
+                'auth' => trim((string) ($row['auth'] ?? '')),
             ];
         }
 

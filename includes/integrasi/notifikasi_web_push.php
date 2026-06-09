@@ -21,6 +21,43 @@ function web_push_base64url_decode(string $data): string
     return (string) base64_decode(strtr($data, '-_', '+/'), true);
 }
 
+function web_push_decode_langganan_key(string $b64): string
+{
+    $b64 = trim($b64);
+    if ($b64 === '') {
+        return '';
+    }
+
+    $decoded = web_push_base64url_decode($b64);
+    if ($decoded !== '') {
+        return $decoded;
+    }
+
+    $standar = $b64;
+    $pad = strlen($standar) % 4;
+    if ($pad > 0) {
+        $standar .= str_repeat('=', 4 - $pad);
+    }
+    $decoded = base64_decode($standar, true);
+
+    return is_string($decoded) ? $decoded : '';
+}
+
+function web_push_normalisasi_p256dh(string $raw): string
+{
+    if ($raw === '') {
+        return '';
+    }
+    if (strlen($raw) === 64) {
+        return "\x04" . $raw;
+    }
+    if (strlen($raw) === 65 && $raw[0] === "\x04") {
+        return $raw;
+    }
+
+    return '';
+}
+
 /**
  * @return array{public_key: string, private_key_pem: string}
  */
@@ -70,16 +107,13 @@ function web_push_hkdf(string $salt, string $ikm, string $info, int $length): st
  */
 function web_push_encrypt_payload(string $payload, string $p256dh_b64, string $auth_b64): array
 {
-    $user_public = web_push_base64url_decode($p256dh_b64);
-    $auth_secret = web_push_base64url_decode($auth_b64);
-    if (strlen($user_public) === 64) {
-        $user_public = "\x04" . $user_public;
-    }
-    if (strlen($user_public) !== 65 || $user_public[0] !== "\x04") {
-        throw new RuntimeException('Kunci p256dh langganan tidak valid.');
+    $user_public = web_push_normalisasi_p256dh(web_push_decode_langganan_key($p256dh_b64));
+    $auth_secret = web_push_decode_langganan_key($auth_b64);
+    if ($user_public === '') {
+        throw new RuntimeException('Kunci p256dh langganan tidak valid. Nonaktifkan lalu aktifkan push lagi.');
     }
     if (strlen($auth_secret) < 16) {
-        throw new RuntimeException('Auth secret langganan tidak valid.');
+        throw new RuntimeException('Auth secret langganan tidak valid. Nonaktifkan lalu aktifkan push lagi.');
     }
 
     $local_key = openssl_pkey_new([
@@ -94,7 +128,9 @@ function web_push_encrypt_payload(string $payload, string $p256dh_b64, string $a
     if (!is_array($local_details) || empty($local_details['ec']['x']) || empty($local_details['ec']['y'])) {
         throw new RuntimeException('Kunci sementara push tidak valid.');
     }
-    $local_public = "\x04" . $local_details['ec']['x'] . $local_details['ec']['y'];
+    $local_x = str_pad((string) $local_details['ec']['x'], 32, "\x00", STR_PAD_LEFT);
+    $local_y = str_pad((string) $local_details['ec']['y'], 32, "\x00", STR_PAD_LEFT);
+    $local_public = "\x04" . $local_x . $local_y;
 
     $user_pem = web_push_ec_public_to_pem($user_public);
     $user_key = openssl_pkey_get_public($user_pem);
@@ -142,17 +178,21 @@ function web_push_encrypt_payload(string $payload, string $p256dh_b64, string $a
 
 function web_push_ec_public_to_pem(string $public_raw): string
 {
-    $oid = hex2bin('06082a8648ce3d030107');
-    $bit_string = "\x03" . chr(strlen($public_raw) + 1) . "\x00" . $public_raw;
-    $algo = "\x30" . chr(strlen($oid)) . $oid;
-    $spki = "\x30" . chr(strlen($algo . $bit_string)) . $algo . $bit_string;
+    $public_raw = web_push_normalisasi_p256dh($public_raw);
+    if ($public_raw === '') {
+        throw new RuntimeException('Kunci p256dh langganan tidak valid.');
+    }
+
+    // SPKI EC P-256 (id-ecPublicKey + prime256v1) — format standar Web Push
+    $prefix = hex2bin('3059301306072a8648ce3d020106082a8648ce3d030107034200');
+    $der = $prefix . $public_raw;
     $pem = "-----BEGIN PUBLIC KEY-----\n"
-        . chunk_split(base64_encode($spki), 64, "\n")
+        . chunk_split(base64_encode($der), 64, "\n")
         . "-----END PUBLIC KEY-----\n";
 
     $key = openssl_pkey_get_public($pem);
     if ($key === false) {
-        throw new RuntimeException('Gagal membaca kunci publik langganan.');
+        throw new RuntimeException('Gagal membaca kunci publik langganan. Nonaktifkan lalu aktifkan push lagi.');
     }
 
     return $pem;
