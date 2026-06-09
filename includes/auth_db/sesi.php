@@ -113,11 +113,12 @@ function sesi_hapus_cookie_ingat(): void
 }
 
 /**
- * Perbarui access_token memakai refresh_token bila "Ingat saya" aktif (token Supabase ~1 jam).
+ * Perbarui access_token memakai refresh_token (token Supabase ~1 jam).
+ * Berlaku untuk semua login — di Vercel/serverless sesi file tidak persist antar request.
  */
 function sesi_perbarui_token_jika_perlu(): void
 {
-    if (!sesi_ingat_saya_aktif() || !sudah_masuk()) {
+    if (!sudah_masuk()) {
         return;
     }
 
@@ -143,18 +144,15 @@ function sesi_perbarui_token_jika_perlu(): void
 
     $_SESSION['access_token'] = $baru['access_token'];
     $_SESSION['refresh_token'] = $baru['refresh_token'];
-    sesi_simpan_cookie_auth($baru['access_token'], $baru['refresh_token'], true);
+    sesi_simpan_cookie_auth($baru['access_token'], $baru['refresh_token'], sesi_ingat_saya_aktif());
 }
 
 /**
- * Pulihkan $_SESSION dari cookie token jika "Ingat saya" aktif (umum di Vercel/serverless).
+ * Pulihkan $_SESSION dari cookie token Supabase (wajib di Vercel/serverless — file sesi tidak persist).
+ * Berlaku untuk login biasa (cookie sesi browser) dan "Ingat saya" (cookie 30 hari).
  */
 function sesi_muat_dari_cookie_auth(): void
 {
-    if (!sesi_ingat_saya_aktif()) {
-        return;
-    }
-
     if (sudah_masuk()) {
         sesi_perbarui_token_jika_perlu();
 
@@ -184,7 +182,9 @@ function sesi_muat_dari_cookie_auth(): void
     }
 
     sesi_hapus_cookie_auth();
-    sesi_hapus_cookie_ingat();
+    if (sesi_ingat_saya_aktif()) {
+        sesi_hapus_cookie_ingat();
+    }
 }
 
 /** Kunci $_SESSION untuk token reset sandi (alur email Supabase). */
