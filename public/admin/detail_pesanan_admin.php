@@ -99,6 +99,22 @@ $kurir_pesanan = trim((string) ($pesanan['kurir'] ?? ''));
 $layanan_pesanan = trim((string) ($pesanan['layanan'] ?? ''));
 $ongkir_pesanan = (int) ($pesanan['ongkir'] ?? 0);
 $resi_pesanan = trim((string) ($pesanan['nomor_resi'] ?? ''));
+
+$dari_halaman = strtolower(trim((string) ($_GET['dari'] ?? '')));
+$filter_kembali = strtolower(trim((string) ($_GET['status'] ?? '')));
+if ($dari_halaman === 'beranda') {
+    $url_kembali = aplikasi_url('admin/beranda_admin.php');
+    $teks_kembali = 'Kembali ke dashboard';
+} else {
+    $qs_kembali = [];
+    if ($filter_kembali !== '' && array_key_exists($filter_kembali, $status_labels)) {
+        $qs_kembali['status'] = $filter_kembali;
+    }
+    $url_kembali = aplikasi_url('admin/pesanan_admin.php' . ($qs_kembali !== [] ? '?' . http_build_query($qs_kembali) : ''));
+    $teks_kembali = 'Kembali ke daftar pesanan';
+}
+$url_kembali_html = htmlspecialchars($url_kembali, ENT_QUOTES, 'UTF-8');
+$teks_kembali_html = htmlspecialchars($teks_kembali, ENT_QUOTES, 'UTF-8');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -171,6 +187,12 @@ $resi_pesanan = trim((string) ($pesanan['nomor_resi'] ?? ''));
             </header>
 
             <main class="admin-isi">
+                <a class="tautan-kembali admin-detail-kembali" href="<?php echo $url_kembali_html; ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    <?php echo $teks_kembali_html; ?>
+                </a>
                 <h1 class="admin-judul-besar">Pesanan #<?php echo htmlspecialchars((string) $pesanan['id'], ENT_QUOTES, 'UTF-8'); ?></h1>
                 <p class="admin-salam"><?php echo htmlspecialchars($pesanan['nama_pengguna'] ?? 'Pembeli', ENT_QUOTES, 'UTF-8'); ?> · <?php echo htmlspecialchars(date('d/m/Y H:i', strtotime((string) ($pesanan['created_at'] ?? 'now'))), ENT_QUOTES, 'UTF-8'); ?></p>
 
@@ -183,7 +205,6 @@ $resi_pesanan = trim((string) ($pesanan['nomor_resi'] ?? ''));
                 <section class="admin-kartu" aria-labelledby="judul-info-pesanan">
                     <div class="admin-kartu__header">
                         <h2 id="judul-info-pesanan">Informasi pesanan</h2>
-                        <a href="pesanan_admin.php" class="tautan-kembali admin-tautan-kembali">← Daftar pesanan</a>
                     </div>
                     <div class="admin-form-konten">
                         <div class="admin-form-grid">

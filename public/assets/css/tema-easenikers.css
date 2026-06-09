@@ -297,6 +297,7 @@ h1, h2, h3, .judul-merek, .hero-toko__judul, .katalog-judul-bar h1 {
 .panel-pembeli-teks .tautan-balik,
 .admin-salam a.tautan-kembali,
 .admin-tautan-kembali,
+.admin-detail-kembali,
 .chat-header a.tautan-kembali {
     color: var(--teks-redup);
     text-decoration: none;
@@ -320,6 +321,8 @@ h1, h2, h3, .judul-merek, .hero-toko__judul, .katalog-judul-bar h1 {
 .admin-salam a.tautan-kembali:focus-visible,
 .admin-tautan-kembali:hover,
 .admin-tautan-kembali:focus-visible,
+.admin-detail-kembali:hover,
+.admin-detail-kembali:focus-visible,
 .chat-header a.tautan-kembali:hover,
 .chat-header a.tautan-kembali:focus-visible {
     color: #4b5563;

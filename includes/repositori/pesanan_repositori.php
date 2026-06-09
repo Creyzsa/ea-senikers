@@ -486,7 +486,7 @@ function pesanan_admin_ambil_semua(): array
         $pdo = koneksi_database();
         $stmt = $pdo->prepare(
             'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
-                    u.nama_pengguna, u.email
+                    u.username AS nama_pengguna, u.email
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
              ORDER BY o.created_at DESC'
@@ -516,7 +516,7 @@ function pesanan_admin_ambil_terbaru_ringkas(int $batas = 5): array
         $pdo = koneksi_database();
         $stmt = $pdo->prepare(
             'SELECT o.id, o.total_price, o.status, o.created_at,
-                    u.nama_pengguna,
+                    u.username AS nama_pengguna,
                     (SELECT oi.product_name FROM order_items oi WHERE oi.order_id = o.id ORDER BY oi.id ASC LIMIT 1) AS produk_ringkas
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
@@ -548,11 +548,11 @@ function pesanan_admin_cari(string $query): array
         $searchTerm = '%' . trim($query) . '%';
         $stmt = $pdo->prepare(
             'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
-                    u.nama_pengguna, u.email
+                    u.username AS nama_pengguna, u.email
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
              WHERE o.id::text LIKE :q
-                OR u.nama_pengguna ILIKE :q
+                OR u.username ILIKE :q
                 OR u.email ILIKE :q
              ORDER BY o.created_at DESC'
         );
@@ -579,7 +579,7 @@ function pesanan_admin_detail(int $order_id): ?array
         $stmt = $pdo->prepare(
             'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
                     o.kurir, o.layanan, o.ongkir, o.destination_id, o.nomor_resi,
-                    u.nama_pengguna, u.email, u.no_hp, u.nama_penerima
+                    u.username AS nama_pengguna, u.email, u.no_hp, u.nama_penerima
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
              WHERE o.id = :id
@@ -745,11 +745,11 @@ function pesanan_admin_daftar_berfilter(?string $filter_status = null, string $q
             if ($filter_status !== null && array_key_exists($filter_status, pesanan_status_label_id())) {
                 $stmt = $pdo->prepare(
                     'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
-                            u.nama_pengguna, u.email
+                            u.username AS nama_pengguna, u.email
                      FROM orders o
                      LEFT JOIN users u ON o.user_id = u.id
                      WHERE o.status = :st
-                       AND (o.id::text LIKE :q OR u.nama_pengguna ILIKE :qi OR u.email ILIKE :qi)
+                       AND (o.id::text LIKE :q OR u.username ILIKE :qi OR u.email ILIKE :qi)
                      ORDER BY o.created_at DESC'
                 );
                 $stmt->execute(['st' => $filter_status, 'q' => $like, 'qi' => $like]);
@@ -759,10 +759,10 @@ function pesanan_admin_daftar_berfilter(?string $filter_status = null, string $q
 
             $stmt = $pdo->prepare(
                 'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
-                        u.nama_pengguna, u.email
+                        u.username AS nama_pengguna, u.email
                  FROM orders o
                  LEFT JOIN users u ON o.user_id = u.id
-                 WHERE o.id::text LIKE :q OR u.nama_pengguna ILIKE :qi OR u.email ILIKE :qi
+                 WHERE o.id::text LIKE :q OR u.username ILIKE :qi OR u.email ILIKE :qi
                  ORDER BY o.created_at DESC'
             );
 
@@ -774,7 +774,7 @@ function pesanan_admin_daftar_berfilter(?string $filter_status = null, string $q
         if ($filter_status !== null && array_key_exists($filter_status, pesanan_status_label_id())) {
             $stmt = $pdo->prepare(
                 'SELECT o.id, o.user_id, o.total_price, o.status, o.shipping_address, o.payment_method, o.created_at,
-                        u.nama_pengguna, u.email
+                        u.username AS nama_pengguna, u.email
                  FROM orders o
                  LEFT JOIN users u ON o.user_id = u.id
                  WHERE o.status = :st

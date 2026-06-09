@@ -17,8 +17,86 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config_loader.php';
 require_once __DIR__ . '/../repositori/admin_pengaturan_repositori.php';
+require_once __DIR__ . '/jne_destinasi_populer.php';
 
 const JNE_WEB_BASE_URL = 'https://jne.co.id';
+
+/** @return string path file cookie sementara untuk sesi JNE */
+function jne_web_cookie_file(): string
+{
+    static $path = null;
+    if ($path === null) {
+        $tmp = tempnam(sys_get_temp_dir(), 'jne_ck_');
+        $path = is_string($tmp) ? $tmp : '';
+    }
+
+    return $path;
+}
+
+/** Ambil cookie sesi dari halaman ongkir JNE agar API tidak menolak (403). */
+function jne_web_warmup_session(bool $paksa = false): void
+{
+    static $sudah = false;
+    if ($sudah && !$paksa) {
+        return;
+    }
+    $sudah = true;
+
+    $cookie = jne_web_cookie_file();
+    if ($cookie === '') {
+        return;
+    }
+
+    $ch = curl_init(JNE_WEB_BASE_URL . '/ongkir');
+    if ($ch === false) {
+        return;
+    }
+
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_CONNECTTIMEOUT => 12,
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_COOKIEJAR => $cookie,
+        CURLOPT_COOKIEFILE => $cookie,
+        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+        CURLOPT_HTTPHEADER => [
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language: id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        ],
+    ]);
+
+    $ca = ini_get('curl.cainfo') ?: ini_get('openssl.cafile');
+    if ($ca && is_readable($ca)) {
+        curl_setopt($ch, CURLOPT_CAINFO, $ca);
+    } else {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    }
+
+    curl_exec($ch);
+    curl_close($ch);
+}
+
+/** Pesan error JNE yang lebih mudah dipahami pembeli. */
+function jne_error_pesan_ramah(int $http, string $teknis = ''): string
+{
+    if ($http === 403) {
+        return 'Server pengiriman menolak koneksi sementara. Gunakan daftar cadangan di bawah atau coba lagi.';
+    }
+    if ($http === 429) {
+        return 'Terlalu banyak pencarian. Tunggu sebentar lalu coba lagi.';
+    }
+    if ($http >= 500) {
+        return 'Layanan ongkir sedang gangguan. Coba lagi beberapa menit.';
+    }
+    if ($teknis !== '') {
+        return $teknis;
+    }
+
+    return 'Gagal menghubungi layanan ongkir. Coba lagi.';
+}
 
 /**
  * @return array<string, string>
@@ -79,26 +157,41 @@ function rajaongkir_kota_asal_id(): int
  * @param array<string, scalar> $query
  * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
  */
-function jne_web_request(string $path, array $query = []): array
+function jne_web_request(string $path, array $query = [], bool $ulang_setelah_warmup = true): array
 {
+    jne_web_warmup_session();
+
     $url = JNE_WEB_BASE_URL . $path;
     if ($query !== []) {
         $url .= (strpos($url, '?') !== false ? '&' : '?') . http_build_query($query);
     }
 
+    $cookie = jne_web_cookie_file();
+    $headers = [
+        'Accept: application/json, text/plain, */*',
+        'Accept-Language: id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Referer: ' . JNE_WEB_BASE_URL . '/ongkir',
+        'Origin: ' . JNE_WEB_BASE_URL,
+        'X-Requested-With: XMLHttpRequest',
+        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    ];
+
     $ch = curl_init();
-    curl_setopt_array($ch, [
+    $opts = [
         CURLOPT_URL => $url,
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_CONNECTTIMEOUT => 15,
         CURLOPT_TIMEOUT => 45,
         CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-        CURLOPT_HTTPHEADER => [
-            'Accept: application/json',
-            'X-Requested-With: XMLHttpRequest',
-            'User-Agent: EA-SENIKERS-Checkout/1.0',
-        ],
-    ]);
+        CURLOPT_ENCODING => '',
+        CURLOPT_HTTPHEADER => $headers,
+    ];
+    if ($cookie !== '') {
+        $opts[CURLOPT_COOKIEJAR] = $cookie;
+        $opts[CURLOPT_COOKIEFILE] = $cookie;
+    }
+    curl_setopt_array($ch, $opts);
 
     $ca = ini_get('curl.cainfo') ?: ini_get('openssl.cafile');
     if ($ca && is_readable($ca)) {
@@ -111,6 +204,7 @@ function jne_web_request(string $path, array $query = []): array
     $raw = curl_exec($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $err_curl = (string) curl_error($ch);
+    curl_close($ch);
     $raw_str = is_string($raw) ? $raw : '';
 
     if ($raw === false) {
@@ -125,20 +219,34 @@ function jne_web_request(string $path, array $query = []): array
 
     $json = json_decode($raw_str, true);
     if (!is_array($json)) {
+        if ($ulang_setelah_warmup && ($http === 403 || $http === 401)) {
+            $ck = jne_web_cookie_file();
+            if ($ck !== '' && is_file($ck)) {
+                @unlink($ck);
+            }
+            jne_web_warmup_session(true);
+
+            return jne_web_request($path, $query, false);
+        }
+
         return [
             'ok' => false,
             'http' => $http,
-            'error' => 'Respons bukan JSON valid (HTTP ' . $http . ').',
+            'error' => jne_error_pesan_ramah($http, 'Respons bukan JSON valid (HTTP ' . $http . ').'),
             'data' => null,
             'raw' => $raw_str,
         ];
     }
 
     if ($http >= 400) {
+        if ($ulang_setelah_warmup && ($http === 403 || $http === 401)) {
+            return jne_web_request($path, $query, false);
+        }
+
         return [
             'ok' => false,
             'http' => $http,
-            'error' => trim((string) ($json['message'] ?? 'Permintaan ditolak jne.co.id.')),
+            'error' => jne_error_pesan_ramah($http, trim((string) ($json['message'] ?? 'Permintaan ditolak jne.co.id.'))),
             'data' => null,
             'raw' => $raw_str,
         ];
@@ -161,6 +269,31 @@ function jne_web_request(string $path, array $query = []): array
         'data' => $json['data'] ?? $json,
         'raw' => $raw_str,
     ];
+}
+
+/**
+ * Cari destinasi: API JNE dulu, lalu daftar populer jika gagal.
+ *
+ * @return array{ok:bool, http:int, error:string, data:mixed, raw:string, fallback?:bool}
+ */
+function jne_cari_destinasi_dengan_fallback(string $kata, int $limit = 20): array
+{
+    $live = rajaongkir_cari_destinasi_tujuan($kata, $limit);
+    if ($live['ok']) {
+        return $live;
+    }
+
+    $fb = jne_destinasi_cari_fallback($kata, $limit);
+    if ($fb['ok']) {
+        $fb['error'] = '';
+        $fb['http'] = $live['http'] > 0 ? $live['http'] : 200;
+
+        return $fb;
+    }
+
+    $live['error'] = jne_error_pesan_ramah((int) ($live['http'] ?? 0), (string) ($live['error'] ?? ''));
+
+    return $live;
 }
 
 /**
@@ -434,7 +567,7 @@ function rajaongkir_cari_untuk_profil(array $profil, int $limit = 30): array
     }
 
     foreach ($kata_cari as $term) {
-        $res = rajaongkir_cari_destinasi_tujuan($term, $limit);
+        $res = jne_cari_destinasi_dengan_fallback($term, $limit);
         $raw = $res['raw'] !== '' ? $res['raw'] : $raw;
         $http = $res['http'] ?? $http;
         if (!$res['ok']) {

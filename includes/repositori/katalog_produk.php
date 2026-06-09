@@ -933,8 +933,8 @@ function chat_ambil_untuk_user(int $user_id, ?string $id_produk = null, int $lim
     return _db_call(function () use ($user_id, $id_produk, $limit) {
         $pdo = koneksi_database();
         $sql = 'SELECT cm.*, 
-                       u1.nama_pengguna AS from_nama, 
-                       u2.nama_pengguna AS to_nama
+                       u1.username AS from_nama, 
+                       u2.username AS to_nama
                 FROM chat_messages cm
                 LEFT JOIN users u1 ON u1.id = cm.from_user_id
                 LEFT JOIN users u2 ON u2.id = cm.to_user_id

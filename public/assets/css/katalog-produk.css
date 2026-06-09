@@ -2132,6 +2132,11 @@ body.halaman-keranjang {
 }
 
 @media (max-width: 640px) {
+    .checkout-wrap {
+        padding-left: clamp(0.85rem, 4vw, 1.25rem);
+        padding-right: clamp(0.85rem, 4vw, 1.25rem);
+    }
+
     .checkout-produk-baris {
         grid-template-columns: 64px minmax(0, 1fr);
     }
@@ -2144,6 +2149,88 @@ body.halaman-keranjang {
     .checkout-produk-harga {
         grid-column: 1 / -1;
         text-align: right;
+    }
+
+    .checkout-cari-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .checkout-cari-form input[type="search"] {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .checkout-cari-form .tombol-page-utama,
+    .checkout-cari-form button[type="submit"] {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .checkout-destinasi-list {
+        max-height: none;
+    }
+
+    .checkout-destinasi-baris {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+        padding: 0.75rem 0.85rem;
+    }
+
+    .checkout-destinasi-isi {
+        width: 100%;
+    }
+
+    .checkout-destinasi-isi strong {
+        font-size: 0.92rem;
+        line-height: 1.35;
+        word-break: break-word;
+    }
+
+    .checkout-destinasi-pilih {
+        align-self: flex-end;
+        padding-top: 0.15rem;
+    }
+
+    .checkout-destinasi-aktif {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.45rem;
+    }
+
+    .checkout-destinasi-aktif .checkout-inline-form {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .checkout-destinasi-aktif .checkout-tombol-link {
+        display: inline-flex;
+        padding: 0.35rem 0;
+    }
+
+    .checkout-kurir-link {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 0.35rem;
+    }
+
+    .checkout-kurir-harga {
+        justify-self: start;
+        font-size: 1.05rem;
+    }
+
+    .checkout-kurir-nama {
+        font-size: 0.92rem;
+    }
+
+    .checkout-alamat {
+        font-size: 0.88rem;
+        word-break: break-word;
+    }
+
+    .checkout-error-baris {
+        font-size: 0.84rem;
+        line-height: 1.45;
     }
 }
 

@@ -310,7 +310,7 @@ $skor_rekomendasi_min = 45;
 if ($profil_lengkap && $asal_kode_toko !== '') {
     if ($destination_kode_pilih === '') {
         if ($cari !== '') {
-            $hasil_cari = rajaongkir_cari_destinasi_tujuan($cari, 30);
+            $hasil_cari = jne_cari_destinasi_dengan_fallback($cari, 30);
         } else {
             $hasil_cari = rajaongkir_cari_untuk_profil($profil, 30);
             $cari_dari_profil = true;
@@ -541,8 +541,13 @@ $total_final = $harga_produk + $ongkir_pilih;
 
                     <?php if ($hasil_cari !== null): ?>
                         <?php if (!$hasil_cari['ok']): ?>
-                            <p class="checkout-error-baris">Gagal cari destinasi: <?php echo htmlspecialchars((string) ($hasil_cari['error'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
+                            <p class="checkout-error-baris"><?php echo htmlspecialchars((string) ($hasil_cari['error'] ?? 'Gagal mencari wilayah.'), ENT_QUOTES, 'UTF-8'); ?></p>
                         <?php else: ?>
+                            <?php if (!empty($hasil_cari['fallback'])): ?>
+                                <p class="checkout-auto-cari checkout-auto-cari--peringatan">
+                                    Menampilkan <strong>daftar kota populer</strong> karena layanan pencarian utama sibuk. Pilih yang paling dekat alamat Anda.
+                                </p>
+                            <?php endif; ?>
                             <?php $rows = is_array($hasil_cari['data']) ? $hasil_cari['data'] : []; ?>
                             <?php if ($rows === []): ?>
                                 <p class="checkout-kosong-cari">Tidak ada hasil untuk "<?php echo htmlspecialchars($cari, ENT_QUOTES, 'UTF-8'); ?>". Coba kata kunci lain.</p>

@@ -8,6 +8,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth_db/database.php';
 require_once __DIR__ . '/pesanan_repositori.php';
 require_once __DIR__ . '/katalog_produk.php';
+require_once __DIR__ . '/laporan_repositori.php';
 
 /** Status pesanan yang dihitung sebagai pendapatan tercatat */
 function admin_dashboard_status_pendapatan(): array
@@ -205,7 +206,7 @@ function admin_dashboard_aktivitas_terbaru(int $batas = 8): array
         $stmt = $pdo->query(
             'SELECT o.id, o.status, o.created_at,
                     (SELECT oi.product_name FROM order_items oi WHERE oi.order_id = o.id ORDER BY oi.id ASC LIMIT 1) AS produk_awal,
-                    u.nama_pengguna
+                    u.username AS nama_pengguna
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
              ORDER BY o.created_at DESC NULLS LAST
@@ -233,7 +234,7 @@ function admin_dashboard_aktivitas_terbaru(int $batas = 8): array
                     'jenis' => 'order',
                     'teks' => $teks,
                     'waktu_rel' => (string) ($r['created_at'] ?? ''),
-                    'url' => aplikasi_url('admin/detail_pesanan_admin.php?id=' . $id),
+                    'url' => aplikasi_url('admin/detail_pesanan_admin.php?id=' . $id . '&dari=beranda'),
                     'warna' => $st === 'cancelled' ? 'merah' : ($st === 'completed' ? 'hijau' : 'biru'),
                 ];
             }
@@ -316,4 +317,135 @@ function admin_dashboard_delta_persen(float $baru, float $lama): ?float
     $dasar = $lama > 0.0 ? $lama : 1e-9;
 
     return (($baru - $lama) / $dasar) * 100.0;
+}
+
+/**
+ * Pesanan terbaru untuk panel ringkas di dashboard.
+ *
+ * @return list<array{id:int,total_price:float,status:string,nama_pembeli:string,waktu:string,url:string}>
+ */
+function admin_dashboard_pesanan_terbaru(int $batas = 6): array
+{
+    $batas = max(1, min(12, $batas));
+    if (!pesanan_cek_tabel_ada()) {
+        return [];
+    }
+
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->query(
+            'SELECT o.id, o.total_price, o.status, o.created_at, u.username AS nama_pengguna
+             FROM orders o
+             LEFT JOIN users u ON o.user_id = u.id
+             ORDER BY o.created_at DESC NULLS LAST
+             LIMIT ' . (string) $batas
+        );
+        if (!$stmt) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($stmt->fetchAll() as $r) {
+            $id = (int) ($r['id'] ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+            $nama = trim((string) ($r['nama_pengguna'] ?? ''));
+            if ($nama === '') {
+                $nama = 'Pembeli';
+            }
+            $iso = trim((string) ($r['created_at'] ?? ''));
+            $out[] = [
+                'id' => $id,
+                'total_price' => (float) ($r['total_price'] ?? 0),
+                'status' => (string) ($r['status'] ?? ''),
+                'nama_pembeli' => $nama,
+                'waktu' => $iso !== '' ? admin_dashboard_format_waktu_relatif($iso) : '—',
+                'url' => aplikasi_url('admin/detail_pesanan_admin.php?id=' . $id . '&dari=beranda'),
+            ];
+        }
+
+        return $out;
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
+/**
+ * Produk yang perlu perhatian owner: habis atau stok rendah.
+ *
+ * @return array{
+ *   jumlah_tidak_siap:int,
+ *   jumlah_stok_rendah:int,
+ *   tidak_siap:list<array{id:string,nama:string,stok:int}>,
+ *   stok_rendah:list<array{id:string,nama:string,stok:int}>
+ * }
+ */
+function admin_dashboard_produk_perhatian(int $batas_daftar = 5, int $ambang_stok_rendah = 5): array
+{
+    $batas_daftar = max(1, min(10, $batas_daftar));
+    $ambang_stok_rendah = max(1, $ambang_stok_rendah);
+
+    $tidak_siap = [];
+    $stok_rendah = [];
+
+    foreach (katalog_ambil_semua_produk() as $p) {
+        $nama = trim((string) ($p['nama_produk'] ?? ''));
+        $id = trim((string) ($p['id_produk'] ?? ''));
+        if ($nama === '') {
+            continue;
+        }
+        $total = max(0, (int) ($p['total_stok'] ?? 0));
+        $baris = ['id' => $id, 'nama' => $nama, 'stok' => $total];
+        if ($total <= 0) {
+            $tidak_siap[] = $baris;
+        } elseif ($total <= $ambang_stok_rendah) {
+            $stok_rendah[] = $baris;
+        }
+    }
+
+    usort($stok_rendah, static fn (array $a, array $b): int => ($a['stok'] <=> $b['stok']));
+
+    return [
+        'jumlah_tidak_siap' => count($tidak_siap),
+        'jumlah_stok_rendah' => count($stok_rendah),
+        'tidak_siap' => array_slice($tidak_siap, 0, $batas_daftar),
+        'stok_rendah' => array_slice($stok_rendah, 0, $batas_daftar),
+    ];
+}
+
+/**
+ * Ringkasan item yang biasanya perlu ditindak owner.
+ *
+ * @return array{
+ *   pending:int,
+ *   paid:int,
+ *   processed:int,
+ *   shipped:int,
+ *   laporan_baru:int,
+ *   total_pesanan_aktif:int
+ * }
+ */
+function admin_dashboard_ringkasan_owner(): array
+{
+    $hit = pesanan_admin_hitung_per_status();
+    $pending = (int) ($hit['pending'] ?? 0);
+    $paid = (int) ($hit['paid'] ?? 0);
+    $processed = (int) ($hit['processed'] ?? 0);
+    $shipped = (int) ($hit['shipped'] ?? 0);
+
+    $laporan_baru = 0;
+    if (laporan_cek_tabel_ada()) {
+        $hit_lap = laporan_admin_hitung_per_status();
+        $laporan_baru = (int) ($hit_lap['baru'] ?? 0);
+    }
+
+    return [
+        'pending' => $pending,
+        'paid' => $paid,
+        'processed' => $processed,
+        'shipped' => $shipped,
+        'laporan_baru' => $laporan_baru,
+        'total_pesanan_aktif' => $pending + $paid + $processed + $shipped,
+    ];
 }

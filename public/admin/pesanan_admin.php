@@ -245,7 +245,14 @@ $url_chip = function (string $status) use ($qs_simpan_q): string {
                                             </td>
                                             <td>
                                                 <div class="admin-aksi-sel">
-                                                    <a href="detail_pesanan_admin.php?id=<?php echo (int) $p['id']; ?>" class="admin-btn admin-btn--mini admin-btn--sekunder">Detail</a>
+                                                    <?php
+                                                    $detail_qs = ['id' => (int) $p['id']];
+                                                    if ($filter_status_kunci !== '') {
+                                                        $detail_qs['status'] = $filter_status_kunci;
+                                                    }
+                                                    $url_detail = 'detail_pesanan_admin.php?' . http_build_query($detail_qs);
+                                                    ?>
+                                                    <a href="<?php echo htmlspecialchars($url_detail, ENT_QUOTES, 'UTF-8'); ?>" class="admin-btn admin-btn--mini admin-btn--sekunder">Detail</a>
                                                     <?php if (!in_array($st, ['shipped', 'completed', 'cancelled'], true)): ?>
                                                         <form method="post" onsubmit="return confirm('Yakin ingin membatalkan pesanan ini?');">
                                                             <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
