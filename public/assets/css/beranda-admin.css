@@ -257,13 +257,13 @@ body.halaman-admin {
 }
 
 .admin-isi-dashboard .admin-grafik {
-    height: 132px;
+    height: 140px;
 }
 
 .admin-isi-dashboard .admin-dashboard-bawah__grafik .admin-grafik {
     flex: 1;
     height: auto;
-    min-height: 132px;
+    min-height: 140px;
 }
 
 .admin-isi-dashboard .admin-aktivitas li {
@@ -560,7 +560,7 @@ body.halaman-admin {
 
     .admin-isi-dashboard .admin-dashboard-bawah__grafik .admin-grafik {
         flex: none;
-        height: 132px;
+        height: 140px;
     }
 
     .admin-isi-dashboard .admin-dashboard-bawah__pesanan .admin-tabel-wrap,
@@ -903,11 +903,10 @@ body.halaman-admin {
 }
 
 .admin-grafik {
-    height: 180px;
     display: flex;
-    align-items: stretch;
-    gap: 6px;
-    padding-top: 0.35rem;
+    flex-direction: column;
+    height: 180px;
+    min-height: 0;
 }
 
 .admin-grafik__sub {
@@ -918,17 +917,27 @@ body.halaman-admin {
     line-height: 1.4;
 }
 
-.admin-grafik__batang-wrap {
+.admin-grafik__plot {
     flex: 1;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
     align-items: stretch;
+    gap: 6px;
+    min-height: 0;
+    padding-top: 0.15rem;
+    border-bottom: 1px solid var(--abu-tepi);
+}
+
+.admin-grafik__batang-wrap {
+    flex: 1;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    align-items: end;
     min-width: 0;
-    height: 100%;
+    min-height: 0;
 }
 
 .admin-grafik__nilai-mini {
+    grid-row: 1;
     min-height: 1.05em;
     margin-bottom: 2px;
     font-size: 0.61rem;
@@ -942,12 +951,13 @@ body.halaman-admin {
 }
 
 .admin-grafik__batang {
-    flex: 0 0 auto;
+    grid-row: 2;
+    align-self: end;
     width: 100%;
-    max-width: 100%;
-    border-radius: 6px 6px 0 0;
+    height: var(--tinggi-batang, 6%);
+    border-radius: 4px 4px 0 0;
     background: linear-gradient(180deg, var(--biru-tombol), rgba(214, 40, 40, 0.35));
-    min-height: 6px;
+    min-height: 4px;
     transition: opacity 0.2s;
 }
 
@@ -957,10 +967,16 @@ body.halaman-admin {
 
 .admin-grafik__kaki {
     display: flex;
-    justify-content: space-between;
-    margin-top: 0.65rem;
+    gap: 6px;
+    margin-top: 0.5rem;
     font-size: 0.7rem;
     color: var(--teks-redup);
+}
+
+.admin-grafik__kaki span {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
 }
 
 .admin-aktivitas {

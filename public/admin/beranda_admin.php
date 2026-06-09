@@ -311,15 +311,17 @@ if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
                         <h2 id="judul-grafik" class="admin-panel__judul">Pendapatan 7 hari</h2>
                         <p class="admin-grafik__sub">Pendapatan tercatat per hari (maksimum minggu ini: Rp <?php echo htmlspecialchars(number_format((int) $grafik_nilai_terbesar, 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?>).</p>
                         <div class="admin-grafik" role="img" aria-label="Pendapatan tujuh hari terakhir, maksimum <?php echo htmlspecialchars($grafik_aria_nilai, ENT_QUOTES, 'UTF-8'); ?>">
-                            <?php foreach ($grafik_minggu as $batang): ?>
-                                <?php $h_pct = round((float) ($batang['height_pct'] ?? 0), 2); ?>
-                                <?php $nil_rp = number_format((int) round($batang['nilai'] ?? 0), 0, ',', '.'); ?>
-                                <div class="admin-grafik__batang-wrap" tabindex="0" role="presentation" title="Rp <?php echo htmlspecialchars($nil_rp, ENT_QUOTES, 'UTF-8'); ?>">
-                                    <?php $h_show_pct = max(14, min(100, (int) round((float) $h_pct))); ?>
-                                    <span class="admin-grafik__nilai-mini" aria-hidden="true"><?php echo $h_pct <= 12 ? '' : htmlspecialchars($nil_rp, ENT_QUOTES, 'UTF-8'); ?></span>
-                                    <div class="admin-grafik__batang" style="height: <?php echo (string) $h_show_pct; ?>%;"></div>
-                                </div>
-                            <?php endforeach; ?>
+                            <div class="admin-grafik__plot">
+                                <?php foreach ($grafik_minggu as $batang): ?>
+                                    <?php $h_pct = round((float) ($batang['height_pct'] ?? 0), 2); ?>
+                                    <?php $nil_rp = number_format((int) round($batang['nilai'] ?? 0), 0, ',', '.'); ?>
+                                    <?php $h_show_pct = max(6, min(100, (int) round((float) $h_pct))); ?>
+                                    <div class="admin-grafik__batang-wrap" tabindex="0" role="presentation" title="Rp <?php echo htmlspecialchars($nil_rp, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <span class="admin-grafik__nilai-mini" aria-hidden="true"><?php echo $h_pct <= 10 ? '' : htmlspecialchars($nil_rp, ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <div class="admin-grafik__batang" style="--tinggi-batang: <?php echo (string) $h_show_pct; ?>%;"></div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
                         <div class="admin-grafik__kaki">
                             <?php foreach ($grafik_minggu as $batang): ?>
