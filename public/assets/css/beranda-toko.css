@@ -1051,8 +1051,12 @@ body.halaman-toko {
         font-size: 0.68rem;
     }
 
+    .blok-terlaris .kartu-premium__meta {
+        font-size: 0.58rem;
+    }
+
     .blok-terlaris .kartu-premium__harga {
-        font-size: 0.74rem;
+        font-size: 0.72rem;
     }
 }
 
