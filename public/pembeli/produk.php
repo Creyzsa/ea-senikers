@@ -120,11 +120,11 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('produk'), $pg_params, 'hal');
             <ul class="katalog-hero-premium__trust" aria-label="Keunggulan toko">
                 <li>
                     <span class="katalog-trust__ikon" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-9 0H5.25A2.25 2.25 0 013 18.75V9.75m15 0V18.75A2.25 2.25 0 0118.75 21h-1.5m-15 0h15m-15 0v-3.375c0-.621.504-1.125 1.125-1.125h13.5c.621 0 1.125.504 1.125 1.125V21M3 9.75V6.75A2.25 2.25 0 015.25 4.5h13.5A2.25 2.25 0 0121 6.75v3M12 4.5v15"/></svg>
                     </span>
                     <span class="katalog-trust__teks">
-                        <strong>100% Original</strong>
-                        <span>Kami hanya menjual sneaker original.</span>
+                        <strong>Seller Terpercaya</strong>
+                        <span>Menyediakan sneaker berkualitas dengan layanan terbaik.</span>
                     </span>
                 </li>
                 <li>
