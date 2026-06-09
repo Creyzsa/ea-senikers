@@ -105,7 +105,7 @@ function supabase_storage_upload_file(
         return ['http' => $http, 'raw' => $raw, 'err' => $err];
     };
 
-    $hasil = $upload_once(true);
+    $hasil = $upload_once();
     $http = $hasil['http'];
     $raw = $hasil['raw'];
     $err = $hasil['err'];
