@@ -119,6 +119,25 @@
                 if (svg) {
                     svg.setAttribute('fill', sekarang ? 'currentColor' : 'none');
                 }
+
+                if (document.body.getAttribute('data-wishlist-halaman') === '1' && !sekarang) {
+                    var kartu = btn.closest('.kartu-premium');
+                    var grid = document.querySelector('[data-wishlist-grid]');
+                    if (kartu) {
+                        kartu.remove();
+                    }
+                    var sisa = grid ? grid.querySelectorAll('.kartu-premium').length : 0;
+                    document.querySelectorAll('[data-wishlist-jumlah]').forEach(function (el) {
+                        if (el.classList.contains('wishlist-hero__badge-angka')) {
+                            el.textContent = String(sisa);
+                        } else {
+                            el.textContent = sisa + ' produk';
+                        }
+                    });
+                    if (sisa === 0) {
+                        window.location.reload();
+                    }
+                }
             })
             .finally(function () {
                 btn.disabled = false;

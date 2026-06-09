@@ -2158,3 +2158,344 @@ body.halaman-keranjang {
         text-align: right;
     }
 }
+
+/* --- Halaman wishlist --- */
+.wishlist-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: clamp(1rem, 3vw, 2rem) clamp(1rem, 3vw, 2.5rem) 3rem;
+}
+
+.wishlist-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin: 0.5rem 0 1.5rem;
+    padding: clamp(1.35rem, 4vw, 2rem);
+    background: var(--brand-black);
+    border-radius: 16px;
+    color: #fff;
+    box-shadow: 0 20px 50px rgba(15, 15, 16, 0.16);
+}
+
+.wishlist-hero__eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brand-red);
+}
+
+.wishlist-hero__judul {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 4vw, 2.1rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+}
+
+.wishlist-hero__deskripsi {
+    margin: 0.65rem 0 0;
+    max-width: 30rem;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.wishlist-hero__badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 5.5rem;
+    padding: 0.85rem 1rem;
+    background: rgba(214, 40, 40, 0.18);
+    border: 1px solid rgba(214, 40, 40, 0.35);
+    border-radius: 14px;
+}
+
+.wishlist-hero__badge-angka {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+}
+
+.wishlist-hero__badge-label {
+    margin-top: 0.2rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.wishlist-alert {
+    margin: 0 0 1rem;
+    padding: 0.85rem 1.05rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.45;
+    border: 1px solid transparent;
+}
+
+.wishlist-alert--ok {
+    color: #166534;
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+}
+
+.wishlist-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.wishlist-daftar__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.wishlist-daftar__judul {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.wishlist-daftar__tambah {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--brand-red);
+    text-decoration: none;
+}
+
+.wishlist-daftar__tambah:hover {
+    color: var(--brand-red-hover);
+    text-decoration: underline;
+}
+
+.wishlist-produk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.wishlist-produk-grid .kartu-premium {
+    min-height: 0;
+}
+
+.wishlist-ringkas__kartu {
+    position: sticky;
+    top: 5.5rem;
+    padding: clamp(1.1rem, 2.5vw, 1.35rem);
+    background: #fff;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 12px;
+    box-shadow: var(--bayangan-kartu);
+}
+
+.wishlist-ringkas__judul {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.wishlist-ringkas__baris {
+    margin: 0 0 1rem;
+    padding: 0;
+}
+
+.wishlist-ringkas__satu {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.45rem 0;
+    font-size: 0.88rem;
+}
+
+.wishlist-ringkas__satu dt {
+    margin: 0;
+    font-weight: 500;
+    color: var(--teks-redup);
+}
+
+.wishlist-ringkas__satu dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--teks-utama);
+}
+
+.wishlist-ringkas__satu--muted dd {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--teks-redup);
+}
+
+.wishlist-ringkas__catatan {
+    margin: 0 0 1rem;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--teks-redup);
+}
+
+.wishlist-tombol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.65rem 1.35rem;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.wishlist-tombol--blok {
+    width: 100%;
+    margin-bottom: 0.55rem;
+}
+
+.wishlist-tombol--utama {
+    color: #fff;
+    background: var(--oranye-cta);
+    box-shadow: 0 6px 20px rgba(214, 40, 40, 0.28);
+}
+
+.wishlist-tombol--utama:hover {
+    color: #fff;
+    background: var(--oranye-cta-hover);
+}
+
+.wishlist-tombol--utama:active {
+    transform: scale(0.98);
+}
+
+.wishlist-tombol--sekunder {
+    color: var(--teks-utama);
+    background: #fff;
+    border: 1px solid var(--abu-tepi);
+    box-shadow: none;
+}
+
+.wishlist-tombol--sekunder:hover {
+    border-color: var(--brand-black);
+    background: var(--brand-gray-light);
+}
+
+.wishlist-trust {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0.85rem 0 0;
+    border-top: 1px solid var(--abu-tepi);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.wishlist-trust li {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--teks-redup);
+}
+
+.wishlist-trust svg {
+    flex-shrink: 0;
+    color: var(--brand-red);
+}
+
+.wishlist-kosong {
+    text-align: center;
+    padding: clamp(2.5rem, 6vw, 4rem) clamp(1.25rem, 4vw, 2rem);
+    background: #fff;
+    border: 1px dashed var(--abu-tepi);
+    border-radius: 16px;
+    box-shadow: var(--bayangan-kartu);
+}
+
+.wishlist-kosong__ikon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 5.5rem;
+    height: 5.5rem;
+    margin-bottom: 1.25rem;
+    color: var(--brand-red);
+    background: rgba(214, 40, 40, 0.08);
+    border-radius: 50%;
+}
+
+.wishlist-kosong__judul {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-heading);
+    font-size: clamp(1.35rem, 3vw, 1.75rem);
+    font-weight: 700;
+    color: var(--teks-utama);
+}
+
+.wishlist-kosong__teks {
+    margin: 0 auto 1.5rem;
+    max-width: 24rem;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--teks-redup);
+}
+
+.wishlist-kosong__aksi {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.65rem;
+}
+
+@media (max-width: 900px) {
+    .wishlist-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .wishlist-ringkas__kartu {
+        position: static;
+    }
+}
+
+@media (max-width: 640px) {
+    .wishlist-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .wishlist-hero__badge {
+        flex-direction: row;
+        gap: 0.5rem;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .wishlist-hero__badge-angka {
+        font-size: 1.5rem;
+    }
+
+    .wishlist-produk-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+}
