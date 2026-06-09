@@ -521,6 +521,37 @@
     border-radius: 10px;
 }
 
+/* Layout detail — kolom kiri setinggi sidebar (hingga tombol WA) */
+.halaman-detail-pesanan .pesanan-detail-layout {
+    align-items: stretch;
+}
+
+.halaman-detail-pesanan .pesanan-detail-utama {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 100%;
+}
+
+.halaman-detail-pesanan .pesanan-detail-utama .pd-card + .pd-card {
+    margin-top: 0;
+}
+
+.halaman-detail-pesanan .pd-card--timeline {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.halaman-detail-pesanan .pd-card--timeline .pd-timeline {
+    flex: 1 1 auto;
+}
+
+.halaman-detail-pesanan .pd-card--timeline .pd-timeline__hint {
+    margin-top: auto;
+}
+
 /* Sidebar sticky */
 .halaman-detail-pesanan .pesanan-detail-samping {
     gap: 1rem;
@@ -634,6 +665,19 @@
 
 /* Responsive */
 @media (max-width: 900px) {
+    .halaman-detail-pesanan .pesanan-detail-utama {
+        min-height: 0;
+    }
+
+    .halaman-detail-pesanan .pd-card--timeline {
+        flex: none;
+        display: block;
+    }
+
+    .halaman-detail-pesanan .pd-card--timeline .pd-timeline__hint {
+        margin-top: 0.85rem;
+    }
+
     .pd-sidebar-sticky {
         position: static;
     }
