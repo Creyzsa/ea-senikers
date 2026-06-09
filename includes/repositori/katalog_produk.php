@@ -1207,6 +1207,10 @@ function katalog_render_kartu_produk(
             <ul class="kartu-premium__meta">
                 <li><span class="kartu-premium__meta-label">Ukuran</span> <?php echo htmlspecialchars(katalog_ukuran_ringkas_kartu($p), ENT_QUOTES, 'UTF-8'); ?></li>
                 <li><span class="kartu-premium__meta-label">Kondisi</span> <?php echo htmlspecialchars(katalog_persen_kondisi_kartu($p), ENT_QUOTES, 'UTF-8'); ?></li>
+                <li>
+                    <span class="kartu-premium__meta-label">Terjual</span>
+                    <span class="kartu-premium__terjual"><?php echo htmlspecialchars(katalog_teks_terjual_kartu($p), ENT_QUOTES, 'UTF-8'); ?></span>
+                </li>
                 <li><?php katalog_render_rating_kartu($p, 'kartu-premium__rating'); ?></li>
             </ul>
             <p class="kartu-premium__harga"><?php echo htmlspecialchars(katalog_format_rupiah($harga), ENT_QUOTES, 'UTF-8'); ?></p>
