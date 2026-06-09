@@ -360,31 +360,280 @@ function pesanan_perbarui_metode_bayar(int $order_id, string $metode): bool
     }
 }
 
-function pesanan_set_status_oleh_id(int $order_id, string $status_baru): bool
+/**
+ * Status pesanan yang mengunci stok (sudah dibayar / sedang diproses).
+ */
+function pesanan_status_stok_terkunci(string $status): bool
+{
+    return in_array($status, ['paid', 'processed', 'shipped', 'completed'], true);
+}
+
+/**
+ * Pastikan kolom orders.stok_dipotong ada (auto-migrasi ringan di runtime).
+ */
+function pesanan_pastikan_skema_stok_otomatis(PDO $pdo): void
+{
+    static $sudah = false;
+    if ($sudah) {
+        return;
+    }
+    $sudah = true;
+
+    try {
+        $stmt = $pdo->query(
+            "SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'stok_dipotong'
+             LIMIT 1"
+        );
+        if ($stmt && $stmt->fetchColumn()) {
+            return;
+        }
+        $pdo->exec('ALTER TABLE orders ADD COLUMN stok_dipotong BOOLEAN NOT NULL DEFAULT FALSE');
+    } catch (Throwable $e) {
+        error_log('[pesanan_pastikan_skema_stok_otomatis] ' . $e->getMessage());
+    }
+}
+
+/**
+ * @return list<array{id_produk: string, ukuran: string, qty: int}>
+ */
+function pesanan_stok_item_untuk_order(PDO $pdo, int $order_id): array
+{
+    $stmt = $pdo->prepare(
+        'SELECT id_produk, product_name, size, quantity
+         FROM order_items
+         WHERE order_id = :oid
+         ORDER BY id'
+    );
+    $stmt->execute(['oid' => $order_id]);
+    $hasil = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $baris) {
+        $id_produk = trim((string) ($baris['id_produk'] ?? ''));
+        if ($id_produk === '') {
+            $id_produk = pesanan_stok_cari_id_produk_dari_nama($pdo, (string) ($baris['product_name'] ?? ''));
+        }
+        if ($id_produk === '') {
+            continue;
+        }
+        $ukuran = trim((string) ($baris['size'] ?? ''));
+        if ($ukuran === '') {
+            continue;
+        }
+        $hasil[] = [
+            'id_produk' => $id_produk,
+            'ukuran' => $ukuran,
+            'qty' => max(1, (int) ($baris['quantity'] ?? 1)),
+        ];
+    }
+
+    return $hasil;
+}
+
+function pesanan_stok_cari_id_produk_dari_nama(PDO $pdo, string $nama_produk): string
+{
+    $nama_produk = trim($nama_produk);
+    if ($nama_produk === '') {
+        return '';
+    }
+    $stmt = $pdo->prepare(
+        'SELECT id_produk::text AS id_produk
+         FROM produk
+         WHERE LOWER(TRIM(nama_produk)) = LOWER(TRIM(:nama))
+         LIMIT 1'
+    );
+    $stmt->execute(['nama' => $nama_produk]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return is_array($row) ? trim((string) ($row['id_produk'] ?? '')) : '';
+}
+
+/**
+ * Kurangi atau kembalikan stok ukuran untuk semua item pesanan.
+ *
+ * @param 'kurangi'|'kembalikan' $mode
+ */
+function pesanan_stok_terapkan_untuk_order(PDO $pdo, int $order_id, string $mode): void
+{
+    if (!in_array($mode, ['kurangi', 'kembalikan'], true)) {
+        return;
+    }
+
+    $items = pesanan_stok_item_untuk_order($pdo, $order_id);
+    if ($items === []) {
+        return;
+    }
+
+    $stmt_kurangi = $pdo->prepare(
+        'UPDATE produk_ukuran
+         SET stok = GREATEST(0, stok - :qty)
+         WHERE id_produk = :id AND ukuran = :uk'
+    );
+    $stmt_kembalikan = $pdo->prepare(
+        'UPDATE produk_ukuran
+         SET stok = stok + :qty
+         WHERE id_produk = :id AND ukuran = :uk'
+    );
+    $stmt_kembalikan_baru = $pdo->prepare(
+        'INSERT INTO produk_ukuran (id_produk, ukuran, stok)
+         VALUES (:id, :uk, :qty)'
+    );
+
+    foreach ($items as $it) {
+        $params = [
+            'id' => $it['id_produk'],
+            'uk' => $it['ukuran'],
+            'qty' => $it['qty'],
+        ];
+        if ($mode === 'kurangi') {
+            $stmt_kurangi->execute($params);
+            continue;
+        }
+        $stmt_kembalikan->execute($params);
+        if ($stmt_kembalikan->rowCount() < 1) {
+            $stmt_kembalikan_baru->execute($params);
+        }
+    }
+}
+
+/**
+ * Sinkronkan flag stok_dipotong sesuai transisi status.
+ */
+function pesanan_stok_sinkron_status(
+    PDO $pdo,
+    int $order_id,
+    string $status_lama,
+    string $status_baru,
+    bool $stok_dipotong
+): bool {
+    $masuk_terkunci = pesanan_status_stok_terkunci($status_baru);
+    $batal = $status_baru === 'cancelled';
+
+    if ($masuk_terkunci && !$stok_dipotong) {
+        pesanan_stok_terapkan_untuk_order($pdo, $order_id, 'kurangi');
+
+        return true;
+    }
+    if ($batal && $stok_dipotong) {
+        pesanan_stok_terapkan_untuk_order($pdo, $order_id, 'kembalikan');
+
+        return false;
+    }
+
+    return $stok_dipotong;
+}
+
+/**
+ * Refresh counter terjual bila status masuk/keluar dari paid+ atau dibatalkan.
+ */
+function pesanan_refresh_terjual_untuk_order(PDO $pdo, int $order_id, string $status_lama, string $status_baru): void
+{
+    $perlu = pesanan_status_stok_terkunci($status_baru)
+        || pesanan_status_stok_terkunci($status_lama)
+        || $status_baru === 'cancelled';
+    if (!$perlu) {
+        return;
+    }
+
+    $sudah = [];
+    foreach (pesanan_stok_item_untuk_order($pdo, $order_id) as $it) {
+        $idp = trim((string) ($it['id_produk'] ?? ''));
+        if ($idp === '' || isset($sudah[$idp])) {
+            continue;
+        }
+        $sudah[$idp] = true;
+        update_produk_terjual($idp);
+    }
+}
+
+/**
+ * @param null|callable(string,string):bool $validasi_transisi
+ */
+function pesanan_perbarui_status_dan_stok(int $order_id, string $status_baru, ?callable $validasi_transisi = null): bool
 {
     $allowed = ['pending', 'paid', 'processed', 'shipped', 'completed', 'cancelled'];
-    if (!in_array($status_baru, $allowed, true)) {
+    if ($order_id <= 0 || !in_array($status_baru, $allowed, true)) {
         return false;
     }
+
     try {
         $pdo = koneksi_database();
-        $stmt = $pdo->prepare('UPDATE orders SET status = :s WHERE id = :id');
+        pesanan_pastikan_skema_stok_otomatis($pdo);
+        pesanan_pastikan_skema_destination_jne($pdo);
+        $pdo->beginTransaction();
 
-        $ok = $stmt->execute(['s' => $status_baru, 'id' => $order_id]);
-        if ($ok && in_array($status_baru, ['paid', 'processed', 'shipped', 'completed'], true)) {
-            // update sold count for products in this order
-            $stmtI = $pdo->prepare('SELECT DISTINCT id_produk FROM order_items WHERE order_id = :oid AND id_produk IS NOT NULL');
-            $stmtI->execute(['oid' => $order_id]);
-            foreach ($stmtI->fetchAll() as $it) {
-                if (!empty($it['id_produk'])) {
-                    update_produk_terjual((string) $it['id_produk']);
-                }
-            }
+        $stmt = $pdo->prepare(
+            'SELECT status, COALESCE(stok_dipotong, false) AS stok_dipotong
+             FROM orders
+             WHERE id = :id
+             LIMIT 1
+             FOR UPDATE'
+        );
+        $stmt->execute(['id' => $order_id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            $pdo->rollBack();
+
+            return false;
         }
-        return $ok;
+
+        $status_lama = (string) ($row['status'] ?? '');
+        $stok_dipotong = (bool) ($row['stok_dipotong'] ?? false);
+
+        if ($status_lama === $status_baru) {
+            $pdo->commit();
+
+            return true;
+        }
+
+        if ($validasi_transisi !== null && !$validasi_transisi($status_lama, $status_baru)) {
+            $pdo->rollBack();
+
+            return false;
+        }
+
+        $stok_dipotong_baru = pesanan_stok_sinkron_status(
+            $pdo,
+            $order_id,
+            $status_lama,
+            $status_baru,
+            $stok_dipotong
+        );
+
+        $stmt_u = $pdo->prepare(
+            'UPDATE orders SET status = :s, stok_dipotong = :sd WHERE id = :id'
+        );
+        $ok = $stmt_u->execute([
+            's' => $status_baru,
+            'sd' => $stok_dipotong_baru,
+            'id' => $order_id,
+        ]);
+        if (!$ok) {
+            $pdo->rollBack();
+
+            return false;
+        }
+
+        pesanan_refresh_terjual_untuk_order($pdo, $order_id, $status_lama, $status_baru);
+        $pdo->commit();
+
+        return true;
     } catch (Throwable $e) {
+        try {
+            if (isset($pdo) && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+        } catch (Throwable $e2) {
+            // abaikan
+        }
+        error_log('[pesanan_perbarui_status_dan_stok] ' . $e->getMessage());
+
         return false;
     }
+}
+
+function pesanan_set_status_oleh_id(int $order_id, string $status_baru): bool
+{
+    return pesanan_perbarui_status_dan_stok($order_id, $status_baru);
 }
 
 function pesanan_cek_tabel_ada(): bool
@@ -657,40 +906,11 @@ function pesanan_admin_status_transisi_diizinkan(string $dari, string $ke): bool
  */
 function pesanan_admin_ubah_status(int $order_id, string $status_baru): bool
 {
-    $allowed_enum = ['pending', 'paid', 'processed', 'shipped', 'completed', 'cancelled'];
-    if ($order_id <= 0 || !in_array($status_baru, $allowed_enum, true)) {
-        return false;
-    }
-
-    try {
-        $pdo = koneksi_database();
-        $stmt = $pdo->prepare('SELECT status FROM orders WHERE id = :id LIMIT 1');
-        $stmt->execute(['id' => $order_id]);
-        $current = $stmt->fetch();
-        if (!$current) {
-            return false;
-        }
-        $dari = (string) ($current['status'] ?? '');
-
-        if (!pesanan_admin_status_transisi_diizinkan($dari, $status_baru)) {
-            return false;
-        }
-
-        $stmt_u = $pdo->prepare('UPDATE orders SET status = :s WHERE id = :id');
-        $ok = $stmt_u->execute(['s' => $status_baru, 'id' => $order_id]);
-        if ($ok && in_array($status_baru, ['paid', 'processed', 'shipped', 'completed'], true)) {
-            $stmtI = $pdo->prepare('SELECT DISTINCT id_produk FROM order_items WHERE order_id = :oid AND id_produk IS NOT NULL');
-            $stmtI->execute(['oid' => $order_id]);
-            foreach ($stmtI->fetchAll() as $it) {
-                if (!empty($it['id_produk'])) {
-                    update_produk_terjual((string) $it['id_produk']);
-                }
-            }
-        }
-        return $ok;
-    } catch (Throwable $e) {
-        return false;
-    }
+    return pesanan_perbarui_status_dan_stok(
+        $order_id,
+        $status_baru,
+        static fn (string $dari, string $ke): bool => pesanan_admin_status_transisi_diizinkan($dari, $ke)
+    );
 }
 
 /**
