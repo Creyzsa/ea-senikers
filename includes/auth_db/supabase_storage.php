@@ -8,6 +8,22 @@ declare(strict_types=1);
 require_once __DIR__ . '/supabase_auth.php';
 
 /**
+ * @return array<int, int|string>
+ */
+function supabase_storage_curl_ssl_opsi(): array
+{
+    $ca = ini_get('curl.cainfo') ?: ini_get('openssl.cafile');
+    if (is_string($ca) && $ca !== '' && is_readable($ca)) {
+        return [CURLOPT_CAINFO => $ca];
+    }
+
+    return [
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => 0,
+    ];
+}
+
+/**
  * Kunci API untuk operasi storage server-side (service_role disarankan).
  */
 function supabase_storage_api_key(): string
@@ -65,12 +81,7 @@ function supabase_storage_upload_file(
             'x-upsert: true',
         ],
     ];
-    $ca = ini_get('curl.cainfo') ?: ini_get('openssl.cafile');
-    if ($ca && is_readable($ca)) {
-        $opsi[CURLOPT_CAINFO] = $ca;
-    }
-
-    curl_setopt_array($ch, $opsi);
+    curl_setopt_array($ch, $opsi + supabase_storage_curl_ssl_opsi());
     $raw = (string) curl_exec($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $err = (string) curl_error($ch);
@@ -123,7 +134,7 @@ function supabase_storage_hapus_file(string $bucket, string $object_path): array
             'apikey: ' . $key,
             'Authorization: Bearer ' . $key,
         ],
-    ]);
+    ] + supabase_storage_curl_ssl_opsi());
 
     $raw = (string) curl_exec($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -133,6 +144,65 @@ function supabase_storage_hapus_file(string $bucket, string $object_path): array
     }
 
     return ['ok' => false, 'http' => $http, 'pesan' => 'Gagal menghapus file di Supabase Storage (HTTP ' . $http . ').'];
+}
+
+/**
+ * Buat bucket bila belum ada (butuh service_role atau policy admin).
+ *
+ * @return array{ok: bool, http: int, pesan: string}
+ */
+function supabase_storage_pastikan_bucket(string $bucket, bool $publik = true): array
+{
+    $base = supabase_url_dasar();
+    $key = supabase_storage_api_key();
+    if ($base === '' || $key === '') {
+        return ['ok' => false, 'http' => 0, 'pesan' => 'Supabase Storage belum dikonfigurasi.'];
+    }
+
+    $url = $base . '/storage/v1/bucket';
+    $body = json_encode([
+        'id' => $bucket,
+        'name' => $bucket,
+        'public' => $publik,
+        'file_size_limit' => 3145728,
+        'allowed_mime_types' => ['image/jpeg', 'image/png', 'image/webp'],
+    ]);
+    if ($body === false) {
+        return ['ok' => false, 'http' => 0, 'pesan' => 'Gagal menyiapkan data bucket.'];
+    }
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $body,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 15,
+        CURLOPT_TIMEOUT => 45,
+        CURLOPT_HTTPHEADER => [
+            'apikey: ' . $key,
+            'Authorization: Bearer ' . $key,
+            'Content-Type: application/json',
+        ],
+    ] + supabase_storage_curl_ssl_opsi());
+
+    $raw = (string) curl_exec($ch);
+    $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    if ($http >= 200 && $http < 300 || $http === 409) {
+        return ['ok' => true, 'http' => $http, 'pesan' => ''];
+    }
+
+    $pesan = 'Gagal membuat bucket (HTTP ' . $http . ').';
+    $decoded = json_decode($raw, true);
+    if (is_array($decoded) && isset($decoded['message'])) {
+        $pesan = (string) $decoded['message'];
+    }
+    if ($http === 401 || $http === 403) {
+        $pesan .= ' Jalankan database/migrations/tahap5_supabase_storage_produk.sql di Supabase SQL Editor,'
+            . ' atau set SUPABASE_SERVICE_ROLE_KEY di config.php.';
+    }
+
+    return ['ok' => false, 'http' => $http, 'pesan' => $pesan];
 }
 
 function supabase_storage_url_publik(string $bucket, string $object_path): string
