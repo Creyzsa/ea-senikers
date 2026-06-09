@@ -6,6 +6,12 @@ require_once __DIR__ . '/../auth_db/database.php';
 require_once __DIR__ . '/../integrasi/notifikasi_telegram.php';
 require_once __DIR__ . '/../integrasi/notifikasi_email_smtp.php';
 
+/** PDO pgsql mengirim false sebagai "" — PostgreSQL menolak untuk kolom BOOLEAN. */
+function admin_notifikasi_bool_db(bool $nilai): string
+{
+    return $nilai ? 'true' : 'false';
+}
+
 /**
  * @return array{
  *   telegram_bot_token: string,
@@ -129,26 +135,27 @@ function admin_notifikasi_simpan_pengaturan(array $data): bool
         $stmt->execute([
             'tt' => $payload['telegram_bot_token'],
             'tc' => $payload['telegram_chat_id'],
-            'ta' => $payload['telegram_aktif'],
+            'ta' => admin_notifikasi_bool_db((bool) $payload['telegram_aktif']),
             'sh' => $payload['smtp_host'],
             'sp' => $payload['smtp_port'],
             'su' => $payload['smtp_user'],
             'spw' => $payload['smtp_pass'],
             'sf' => $payload['smtp_from'],
             'st' => $payload['smtp_to'],
-            'ea' => $payload['email_aktif'],
-            'ba' => $payload['notif_browser_aktif'],
+            'ea' => admin_notifikasi_bool_db((bool) $payload['email_aktif']),
+            'ba' => admin_notifikasi_bool_db((bool) $payload['notif_browser_aktif']),
         ]);
 
         return true;
     } catch (Throwable $e) {
         $rls = database_pesan_error_rls($e);
+        $detail = trim($e->getMessage());
+        $pesan = $rls
+            ?? ($detail !== ''
+                ? 'Gagal menyimpan pengaturan notifikasi: ' . $detail
+                : 'Gagal menyimpan pengaturan notifikasi. Jalankan database/migrations/tahap10_admin_notifikasi.sql di Supabase.');
 
-        throw new RuntimeException(
-            $rls ?? 'Gagal menyimpan pengaturan notifikasi. Jalankan database/migrations/tahap10_admin_notifikasi.sql di Supabase.',
-            0,
-            $e
-        );
+        throw new RuntimeException($pesan, 0, $e);
     }
 }
 
