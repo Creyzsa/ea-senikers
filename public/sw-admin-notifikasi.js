@@ -4,8 +4,17 @@
  */
 'use strict';
 
+var SW_VERSI = '2026-06-10-sound2';
 var VIBRATE_POLA = [180, 90, 180, 90, 220];
 var NOTIF_SOUND_URL = '/assets/sounds/admin-notif.mp3';
+
+self.addEventListener('install', function (event) {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', function (event) {
+    event.waitUntil(self.clients.claim());
+});
 
 function parsePayload(event) {
     if (!event.data) {

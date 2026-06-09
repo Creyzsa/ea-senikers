@@ -17,6 +17,7 @@
     }
 
     var audioNotif = null;
+    var audioSiap = false;
 
     var alertSince = 0;
     var readUntil = 0;
@@ -103,8 +104,27 @@
         if (!audioNotif) {
             audioNotif = new Audio(soundUrl);
             audioNotif.preload = 'auto';
+            audioNotif.volume = 1;
         }
         return audioNotif;
+    }
+
+    function siapkanAudioNotifikasi() {
+        var audio = ambilAudioNotif();
+        if (!audio || audioSiap) {
+            return;
+        }
+        audioSiap = true;
+        audio.load();
+        var p = audio.play();
+        if (p && typeof p.then === 'function') {
+            p.then(function () {
+                audio.pause();
+                audio.currentTime = 0;
+            }).catch(function () {
+                audioSiap = false;
+            });
+        }
     }
 
     function bunyiNotifikasi() {
@@ -114,6 +134,7 @@
             return;
         }
         try {
+            audio.pause();
             audio.currentTime = 0;
             var playPromise = audio.play();
             if (playPromise && typeof playPromise.catch === 'function') {
@@ -456,6 +477,11 @@
             if (!msg || msg.type !== 'easenikers-admin-push' || !msg.payload) {
                 return;
             }
+            if (msg.sound_url) {
+                soundUrl = msg.sound_url;
+                audioNotif = null;
+                audioSiap = false;
+            }
             var p = msg.payload;
             prosesEvent({
                 event_id: p.event_id || 0,
@@ -507,6 +533,9 @@
         jadwalkan();
         dengarkanPushSw();
         muatPanel();
+        document.addEventListener('click', function () {
+            siapkanAudioNotifikasi();
+        }, { once: true, capture: true });
         document.addEventListener('visibilitychange', function () {
             if (!document.hidden) {
                 poll();

@@ -783,7 +783,7 @@ function admin_push_kirim_pembayaran(int $event_id, array $detail): void
         'total_price' => (int) $detail['total_price'],
         'customer_name' => $nama,
         'tag' => 'easenikers-paid-' . $order_id,
-        'sound_url' => aplikasi_url_aset('sounds/admin-notif.mp3'),
+        'sound_url' => aplikasi_url_aset('assets/sounds/admin-notif.mp3'),
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (!is_string($payload)) {
         return;
@@ -828,7 +828,7 @@ function admin_notifikasi_tes_push(): array
         'event_id' => 0,
         'order_id' => 0,
         'tag' => 'easenikers-push-test',
-        'sound_url' => aplikasi_url_aset('sounds/admin-notif.mp3'),
+        'sound_url' => aplikasi_url_aset('assets/sounds/admin-notif.mp3'),
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (!is_string($payload)) {
         return ['ok' => false, 'pesan' => 'Gagal membuat payload tes.'];
