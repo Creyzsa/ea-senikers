@@ -306,9 +306,8 @@ if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
                     <?php endforeach; ?>
                 </div>
 
-                <div class="admin-baris-tiga">
-                    <div class="admin-baris-tiga__utama">
-                    <section class="admin-panel" aria-labelledby="judul-grafik">
+                <div class="admin-dashboard-bawah">
+                    <section class="admin-panel admin-dashboard-bawah__grafik" aria-labelledby="judul-grafik">
                         <h2 id="judul-grafik" class="admin-panel__judul">Pendapatan 7 hari</h2>
                         <p class="admin-grafik__sub">Pendapatan tercatat per hari (maksimum minggu ini: Rp <?php echo htmlspecialchars(number_format((int) $grafik_nilai_terbesar, 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?>).</p>
                         <div class="admin-grafik" role="img" aria-label="Pendapatan tujuh hari terakhir, maksimum <?php echo htmlspecialchars($grafik_aria_nilai, ENT_QUOTES, 'UTF-8'); ?>">
@@ -328,9 +327,8 @@ if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
                             <?php endforeach; ?>
                         </div>
                     </section>
-                    </div>
 
-                    <aside class="admin-baris-tiga__samping" aria-label="Aksi cepat dan perhatian">
+                    <div class="admin-dashboard-bawah__samping-atas" aria-label="Aksi cepat dan perhatian stok">
                         <section class="admin-panel admin-panel--ringkas" aria-labelledby="judul-aksi-cepat">
                             <h2 id="judul-aksi-cepat" class="admin-panel__judul">Aksi cepat</h2>
                             <nav class="admin-aksi-grid">
@@ -389,11 +387,9 @@ if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
                                 <?php endif; ?>
                             </section>
                         <?php endif; ?>
-                    </aside>
-                </div>
+                    </div>
 
-                <div class="admin-baris-dua">
-                    <section class="admin-panel" aria-labelledby="judul-pesanan-terbaru">
+                    <section class="admin-panel admin-dashboard-bawah__pesanan" aria-labelledby="judul-pesanan-terbaru">
                         <div class="admin-panel__kop">
                             <h2 id="judul-pesanan-terbaru" class="admin-panel__judul">Pesanan terbaru</h2>
                             <a class="admin-panel__tautan" href="<?php echo $url_pesanan; ?>">Semua pesanan</a>
@@ -434,7 +430,7 @@ if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
                         <?php endif; ?>
                     </section>
 
-                    <section class="admin-panel" aria-labelledby="judul-aktivitas">
+                    <section class="admin-panel admin-dashboard-bawah__aktivitas" aria-labelledby="judul-aktivitas">
                         <h2 id="judul-aktivitas" class="admin-panel__judul">Aktivitas terbaru</h2>
                         <ul class="admin-aktivitas">
                             <?php if ($aktivitas === []): ?>
