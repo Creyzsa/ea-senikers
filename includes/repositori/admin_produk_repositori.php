@@ -43,6 +43,66 @@ function admin_kategori_produk_opsi_form(string $kategori_saat_ini = ''): array
 }
 
 /**
+ * Daftar brand unik dari tabel produk (untuk dropdown admin).
+ *
+ * @return list<string>
+ */
+function admin_daftar_brand_produk(): array
+{
+    try {
+        $pdo = koneksi_database();
+        $stmt = $pdo->query(
+            "SELECT DISTINCT TRIM(brand) AS brand
+             FROM produk
+             WHERE brand IS NOT NULL AND TRIM(brand) <> ''
+             ORDER BY brand ASC"
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $hasil = [];
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $brand = trim((string) ($row['brand'] ?? ''));
+            if ($brand !== '') {
+                $hasil[] = $brand;
+            }
+        }
+
+        return $hasil;
+    } catch (Throwable $e) {
+        $brand_set = [];
+        foreach (admin_produk_ambil_semua('') as $produk) {
+            $brand = trim((string) ($produk['brand'] ?? ''));
+            if ($brand !== '') {
+                $brand_set[$brand] = true;
+            }
+        }
+        $hasil = array_keys($brand_set);
+        sort($hasil, SORT_NATURAL | SORT_FLAG_CASE);
+
+        return $hasil;
+    }
+}
+
+/** Gabungkan pilihan dropdown brand dengan input brand baru. */
+function admin_produk_resolve_brand_form(string $brand_pilih, string $brand_baru): string
+{
+    $brand_pilih = trim($brand_pilih);
+    $brand_baru = trim($brand_baru);
+
+    if ($brand_pilih === '__baru__') {
+        return $brand_baru;
+    }
+
+    if ($brand_pilih !== '') {
+        return $brand_pilih;
+    }
+
+    return $brand_baru;
+}
+
+/**
  * Ubah input angka (mis. "1.500.000") menjadi integer non-negatif.
  */
 function admin_produk_parse_angka(string $raw): ?int

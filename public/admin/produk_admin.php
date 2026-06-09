@@ -79,7 +79,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($aksi === 'simpan') {
         $form = [
             'nama_produk' => trim((string) ($_POST['nama_produk'] ?? '')),
-            'brand' => trim((string) ($_POST['brand'] ?? '')),
+            'brand' => admin_produk_resolve_brand_form(
+                (string) ($_POST['brand_pilih'] ?? ''),
+                (string) ($_POST['brand_baru'] ?? '')
+            ),
             'kategori' => trim((string) ($_POST['kategori'] ?? '')),
             'kondisi' => trim((string) ($_POST['kondisi'] ?? '')),
             'harga' => trim((string) ($_POST['harga'] ?? '')),
@@ -91,8 +94,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($form['nama_produk'] === '') {
             $errors[] = 'Nama produk wajib diisi.';
         }
+        $brand_pilih_post = trim((string) ($_POST['brand_pilih'] ?? ''));
         if ($form['brand'] === '') {
             $errors[] = 'Brand wajib diisi.';
+        } elseif (
+            $brand_pilih_post !== ''
+            && $brand_pilih_post !== '__baru__'
+            && !in_array($brand_pilih_post, admin_daftar_brand_produk(), true)
+        ) {
+            $errors[] = 'Brand tidak valid.';
+        } elseif (strlen($form['brand']) > 120) {
+            $errors[] = 'Brand maksimal 120 karakter.';
         }
         if ($form['kategori'] === '') {
             $errors[] = 'Kategori wajib diisi.';
@@ -181,6 +193,18 @@ $siap_hit = 0;
 foreach ($daftar_utuh as $__sku) {
     if (!empty($__sku['siap_jual'])) {
         ++$siap_hit;
+    }
+}
+
+$brand_daftar = admin_daftar_brand_produk();
+$brand_pilih = '';
+$brand_baru = '';
+if ($form['brand'] !== '') {
+    if (in_array($form['brand'], $brand_daftar, true)) {
+        $brand_pilih = $form['brand'];
+    } else {
+        $brand_pilih = '__baru__';
+        $brand_baru = $form['brand'];
     }
 }
 
@@ -319,9 +343,35 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                             <span>Nama produk</span>
                             <input type="text" name="nama_produk" value="<?php echo htmlspecialchars($form['nama_produk'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="180">
                         </label>
-                        <label class="admin-field">
+                        <label class="admin-field admin-field--brand">
                             <span>Brand</span>
-                            <input type="text" name="brand" value="<?php echo htmlspecialchars($form['brand'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="120">
+                            <?php if ($brand_daftar === []): ?>
+                                <input type="text" name="brand_baru" value="<?php echo htmlspecialchars($brand_baru !== '' ? $brand_baru : $form['brand'], ENT_QUOTES, 'UTF-8'); ?>" required maxlength="120" placeholder="Nama brand">
+                                <input type="hidden" name="brand_pilih" value="__baru__">
+                                <small>Brand pertama — setelah disimpan akan muncul di daftar pilihan.</small>
+                            <?php else: ?>
+                                <select name="brand_pilih" id="admin-brand-pilih" required>
+                                    <option value="" disabled<?php echo $brand_pilih === '' ? ' selected' : ''; ?>>Pilih brand</option>
+                                    <?php foreach ($brand_daftar as $opsi_brand): ?>
+                                        <option value="<?php echo htmlspecialchars($opsi_brand, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $brand_pilih === $opsi_brand ? ' selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($opsi_brand, ENT_QUOTES, 'UTF-8'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                    <option value="__baru__"<?php echo $brand_pilih === '__baru__' ? ' selected' : ''; ?>>+ Brand baru...</option>
+                                </select>
+                                <input
+                                    type="text"
+                                    name="brand_baru"
+                                    id="admin-brand-baru"
+                                    class="admin-field__brand-baru"
+                                    value="<?php echo htmlspecialchars($brand_baru, ENT_QUOTES, 'UTF-8'); ?>"
+                                    maxlength="120"
+                                    placeholder="Ketik nama brand baru"
+                                    <?php echo $brand_pilih === '__baru__' ? '' : 'hidden'; ?>
+                                    <?php echo $brand_pilih === '__baru__' ? 'required' : ''; ?>
+                                >
+                                <small>Pilih brand yang pernah dipakai, atau tambah brand baru.</small>
+                            <?php endif; ?>
                         </label>
                         <label class="admin-field">
                             <span>Kategori</span>
@@ -479,6 +529,25 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
     </div>
 </div>
 <script src="../assets/js/pencarian-langsung.js" defer></script>
+<script>
+(function () {
+    var pilih = document.getElementById('admin-brand-pilih');
+    var baru = document.getElementById('admin-brand-baru');
+    if (!pilih || !baru) {
+        return;
+    }
+    function sinkronBrandBaru() {
+        var tambahBaru = pilih.value === '__baru__';
+        baru.hidden = !tambahBaru;
+        baru.required = tambahBaru;
+        if (!tambahBaru) {
+            baru.value = '';
+        }
+    }
+    pilih.addEventListener('change', sinkronBrandBaru);
+    sinkronBrandBaru();
+})();
+</script>
 <?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php'; ?>
 </body>
 </html>
