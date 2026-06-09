@@ -2851,6 +2851,62 @@ body.halaman-toko {
     color: var(--teks-redup);
     line-height: 1.45;
 }
+
+.ulasan-lihat-semua {
+    margin: 0.5rem 0 0;
+    text-align: center;
+}
+
+.ulasan-lihat-semua a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--brand-red);
+    text-decoration: none;
+}
+
+.ulasan-lihat-semua a:hover {
+    text-decoration: underline;
+}
+
+.ulasan-halaman-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.ulasan-halaman-produk {
+    margin: 0.2rem 0 0;
+    font-size: 0.92rem;
+    color: var(--teks-redup);
+}
+
+.ulasan-halaman-kembali {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--brand-black);
+    text-decoration: none;
+}
+
+.ulasan-halaman-kembali:hover {
+    color: var(--brand-red);
+}
+
+.ulasan-halaman-info {
+    margin: 0.75rem 0 0.35rem;
+    font-size: 0.82rem;
+    color: var(--teks-redup);
+    text-align: center;
+}
+
+.detail-ulasan--halaman-penuh {
+    margin-top: 0.5rem;
+}
 .ulasan-list {
     display: grid;
     gap: 0.75rem;

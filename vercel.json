@@ -23,6 +23,7 @@
     { "src": "/pembeli/bantuan_pembeli.php", "dest": "/bantuan", "status": 301 },
     { "src": "/pembeli/cara_membersihkan_sepatu.php", "dest": "/cara-membersihkan", "status": 301 },
     { "src": "/pembeli/detail_produk.php", "dest": "/detail-produk", "status": 301 },
+    { "src": "/pembeli/ulasan_produk.php", "dest": "/ulasan-produk", "status": 301 },
     { "src": "/pembeli/keranjang_pembeli.php", "dest": "/keranjang", "status": 301 },
     { "src": "/pembeli/akun_pembeli.php", "dest": "/akun", "status": 301 },
     { "src": "/pembeli/pesanan_pembeli.php", "dest": "/pesanan", "status": 301 },
