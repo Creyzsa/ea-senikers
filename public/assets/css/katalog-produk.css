@@ -411,6 +411,11 @@ body.halaman-katalog {
     color: var(--katalog-primary);
 }
 
+.kartu-premium__terjual {
+    font-weight: 700;
+    color: var(--katalog-primary);
+}
+
 .kartu-premium__rating {
     margin: 0;
     display: inline-flex;

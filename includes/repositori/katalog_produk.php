@@ -1074,6 +1074,17 @@ function katalog_persen_kondisi_kartu(array $produk): string
     return '90%';
 }
 
+/** Teks jumlah terjual untuk kartu katalog (format sama dengan halaman detail). */
+function katalog_teks_terjual_kartu(array $produk): string
+{
+    $jml = max(0, (int) ($produk['terjual'] ?? 0));
+    if ($jml <= 0) {
+        return '0';
+    }
+
+    return $jml . '+';
+}
+
 /**
  * Baris rating bintang konsisten di kartu produk / rekomendasi.
  */
