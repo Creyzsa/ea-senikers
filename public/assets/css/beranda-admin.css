@@ -2764,6 +2764,32 @@ body.admin-menu-terbuka {
     color: var(--teks-sekunder, #64748b);
 }
 
+.admin-push-bantuan {
+    margin: 0 0 0.75rem;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: #7f1d1d;
+    background: rgba(254, 226, 226, 0.55);
+    border: 1px solid rgba(248, 113, 113, 0.45);
+    border-radius: 10px;
+}
+
+.admin-push-bantuan ol {
+    margin: 0.35rem 0 0;
+    padding-left: 1.2rem;
+}
+
+.admin-push-bantuan li + li {
+    margin-top: 0.25rem;
+}
+
+.admin-push-bantuan__catatan {
+    margin: 0.5rem 0 0;
+    font-size: 0.76rem;
+    opacity: 0.9;
+}
+
 .admin-form-stack {
     display: flex;
     flex-direction: column;

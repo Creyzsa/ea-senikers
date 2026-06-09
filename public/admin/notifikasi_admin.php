@@ -188,6 +188,7 @@ $push_db_siap = admin_notifikasi_kolom_push_tersedia();
                         data-sw-url="<?php echo $sw_url; ?>"
                     >
                         <p id="admin-push-status" class="admin-push-status admin-push-status--netral">Memeriksa status push…</p>
+                        <div id="admin-push-bantuan" class="admin-push-bantuan" hidden></div>
                         <div class="admin-form-aksi admin-form-aksi--inline">
                             <button type="button" class="admin-btn admin-btn--sekunder" id="admin-push-aktifkan">Aktifkan push di perangkat ini</button>
                             <button type="button" class="admin-btn admin-btn--sekunder" id="admin-push-nonaktifkan" hidden>Nonaktifkan push di perangkat ini</button>
