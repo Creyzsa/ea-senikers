@@ -209,6 +209,14 @@ body.halaman-admin {
     font-weight: 600;
 }
 
+.admin-tautan-kembali {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
 /* ——— Stat cards (kartu putih seperti produk toko) ——— */
 .admin-grid-stat {
     display: grid;

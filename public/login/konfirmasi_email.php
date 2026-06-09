@@ -31,6 +31,8 @@ $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
     <style>
         body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 2rem auto; padding: 1rem; text-align: center; color: #222; }
         a { color: #D62828; }
+        a.tautan-kembali { color: #6B7280; text-decoration: none; font-weight: 600; }
+        a.tautan-kembali:hover { color: #4b5563; text-decoration: underline; }
         .kotak { text-align: left; background: #f8f9fa; border-radius: 8px; padding: 1rem 1.1rem; margin-top: 1rem; font-size: 0.95rem; line-height: 1.45; }
         .tombol {
             display: inline-block; margin-top: 1rem; padding: 0.65rem 1.2rem;
@@ -50,7 +52,7 @@ $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
         <input type="hidden" name="type" value="<?php echo htmlspecialchars($type_q, ENT_QUOTES, 'UTF-8'); ?>">
         <button class="tombol" type="submit" id="tombol-hash"<?php echo $auto_kirim_token_hash ? ' style="display:none;"' : ''; ?>><?php echo $type_q === 'recovery' ? 'Lanjutkan reset sandi' : 'Verifikasi &amp; lanjutkan'; ?></button>
     </form>
-    <p style="margin-top:1.25rem;font-size:0.9rem;"><a href="<?php echo htmlspecialchars($masuk, ENT_QUOTES, 'UTF-8'); ?>">Kembali ke masuk</a></p>
+    <p style="margin-top:1.25rem;font-size:0.9rem;"><a class="tautan-kembali" href="<?php echo htmlspecialchars($masuk, ENT_QUOTES, 'UTF-8'); ?>">Kembali ke masuk</a></p>
     <?php if ($auto_kirim_token_hash): ?>
     <script>
     (function () {
@@ -71,7 +73,7 @@ $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
 <?php else: ?>
     <p id="status">Memverifikasi tautan… mohon tunggu.</p>
     <div id="otp-err" style="display:none;text-align:left;"></div>
-    <p id="gagal" style="display:none;">Tautan tidak valid atau sudah kedaluwarsa. <a href="<?php echo htmlspecialchars($masuk, ENT_QUOTES, 'UTF-8'); ?>">Kembali ke masuk</a> · <a href="<?php echo htmlspecialchars($lupa, ENT_QUOTES, 'UTF-8'); ?>">Lupa sandi</a></p>
+    <p id="gagal" style="display:none;">Tautan tidak valid atau sudah kedaluwarsa. <a class="tautan-kembali" href="<?php echo htmlspecialchars($masuk, ENT_QUOTES, 'UTF-8'); ?>">Kembali ke masuk</a> · <a href="<?php echo htmlspecialchars($lupa, ENT_QUOTES, 'UTF-8'); ?>">Lupa sandi</a></p>
 
     <form id="form-token" method="post" action="<?php echo htmlspecialchars($aksi_konfirmasi, ENT_QUOTES, 'UTF-8'); ?>" style="display:none;">
         <input type="hidden" name="access_token" id="inp-at" value="">

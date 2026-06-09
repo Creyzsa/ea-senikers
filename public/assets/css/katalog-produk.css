@@ -544,13 +544,7 @@ body.halaman-katalog {
 }
 
 .katalog-kembali a {
-    color: var(--katalog-muted);
     font-weight: 700;
-    text-decoration: none;
-}
-
-.katalog-kembali a:hover {
-    color: var(--katalog-accent);
 }
 
 @media (max-width: 1024px) {
@@ -607,13 +601,7 @@ body.halaman-detail-produk {
 }
 
 .detail-breadcrumb a {
-    color: var(--brand-black);
-    text-decoration: none;
     font-weight: 600;
-}
-
-.detail-breadcrumb a:hover {
-    text-decoration: underline;
 }
 
 .detail-kartu {

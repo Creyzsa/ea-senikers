@@ -183,7 +183,7 @@ $resi_pesanan = trim((string) ($pesanan['nomor_resi'] ?? ''));
                 <section class="admin-kartu" aria-labelledby="judul-info-pesanan">
                     <div class="admin-kartu__header">
                         <h2 id="judul-info-pesanan">Informasi pesanan</h2>
-                        <a href="pesanan_admin.php" class="admin-btn admin-btn--sekunder">← Daftar pesanan</a>
+                        <a href="pesanan_admin.php" class="tautan-kembali admin-tautan-kembali">← Daftar pesanan</a>
                     </div>
                     <div class="admin-form-konten">
                         <div class="admin-form-grid">

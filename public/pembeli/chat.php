@@ -65,7 +65,7 @@ $nama_produk = $produk ? (string)($produk['nama_produk'] ?? 'Produk') : 'Penjual
     <div class="chat-container">
         <div class="chat-header">
             <div>
-                <a href="<?php echo htmlspecialchars($u_detail, ENT_QUOTES, 'UTF-8'); ?>">← Kembali</a>
+                <a class="tautan-kembali" href="<?php echo htmlspecialchars($u_detail, ENT_QUOTES, 'UTF-8'); ?>">← Kembali</a>
                 <h1 style="margin:0.2rem 0 0; font-size:1.1rem;">Chat dengan Penjual</h1>
                 <?php if ($produk): ?>
                     <small style="color:var(--color-text-muted);"><?= htmlspecialchars($nama_produk) ?></small>

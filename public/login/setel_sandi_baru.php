@@ -129,7 +129,7 @@ $kelas_error = 'pesan-error' . ($pesan_kesalahan !== '' ? ' pesan-error--goyang'
                 <button class="tombol-masuk" type="submit">Simpan kata sandi</button>
             </form>
             <footer class="kaki-halaman">
-                <a class="tautan-daftar" href="masuk.php">Kembali ke masuk</a>
+                <a class="tautan-kembali" href="masuk.php">Kembali ke masuk</a>
             </footer>
             <script src="../assets/js/toggle-sandi.js" defer></script>
         <?php endif; ?>

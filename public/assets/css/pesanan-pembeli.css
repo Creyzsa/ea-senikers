@@ -220,12 +220,6 @@
     margin-bottom: 1rem;
     font-size: 0.88rem;
     font-weight: 600;
-    color: var(--teks-aksen-hover);
-    text-decoration: none;
-}
-
-.pesanan-detail-kembali:hover {
-    text-decoration: underline;
 }
 
 .pesanan-detail-layout {

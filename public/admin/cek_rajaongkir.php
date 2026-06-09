@@ -84,7 +84,7 @@ if ($aksi === 'cek_ongkir') {
                 <div class="admin-kop-halaman">
                     <div>
                         <h1 class="admin-judul-besar">Cek Ongkir JNE</h1>
-                        <p class="admin-salam"><a href="<?php echo htmlspecialchars($urlPengaturan, ENT_QUOTES, 'UTF-8'); ?>">← Pengaturan</a></p>
+                        <p class="admin-salam"><a class="tautan-kembali" href="<?php echo htmlspecialchars($urlPengaturan, ENT_QUOTES, 'UTF-8'); ?>">← Pengaturan</a></p>
                     </div>
                     <?php if ($api_key_ada): ?>
                         <a class="admin-btn admin-btn--sekunder" href="?aksi=test_koneksi">Tes koneksi</a>

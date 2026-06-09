@@ -71,7 +71,7 @@ $kelas_error = 'pesan-error' . ($pesan_kesalahan !== '' ? ' pesan-error--goyang'
         <?php endif; ?>
 
         <footer class="kaki-halaman">
-            <a class="tautan-daftar" href="masuk.php">← Kembali ke masuk</a>
+            <a class="tautan-kembali" href="masuk.php">← Kembali ke masuk</a>
         </footer>
         </main>
     </div>

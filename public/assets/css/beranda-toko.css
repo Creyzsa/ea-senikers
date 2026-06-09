@@ -1120,12 +1120,6 @@ body.halaman-toko {
     display: inline-block;
     margin-top: 1rem;
     font-weight: 600;
-    color: var(--teks-aksen);
-    text-decoration: none;
-}
-
-.panel-pembeli-teks .tautan-balik:hover {
-    text-decoration: underline;
 }
 
 /* --- Footer beranda toko (kontak) --- */
@@ -2171,8 +2165,6 @@ body.halaman-toko {
 }
 
 .akun-kembali a {
-    color: var(--teks-aksen-hover);
-    text-decoration: none;
     font-weight: 800;
 }
 
@@ -2523,13 +2515,7 @@ body.halaman-toko {
 }
 
 .artikel-kembali a {
-    color: var(--teks-aksen-hover);
-    text-decoration: none;
     font-weight: 700;
-}
-
-.artikel-kembali a:hover {
-    text-decoration: underline;
 }
 
 @media (max-width: 600px) {

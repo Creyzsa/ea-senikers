@@ -22,7 +22,7 @@ $produk = $id !== '' ? katalog_ambil_produk_ber_id($id) : null;
 $urls_gambar = [];
 
 // Handle POST ulasan & wishlist (hanya jika login & produk ada)
-// Ulasan hanya untuk yang pernah beli (verified purchase)
+// Ulasan hanya setelah pesanan selesai (produk sudah diterima pembeli)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $produk !== null && $sudah_login) {
     $aksi = (string)($_POST['aksi'] ?? '');
     if ($aksi === 'tambah_ulasan') {
@@ -88,7 +88,7 @@ $u_checkout = aplikasi_url('checkout');
         <div class="detail-404">
             <h1 style="margin:0 0 0.5rem;font-size:1.1rem;">Produk tidak ditemukan</h1>
             <p style="margin:0 0 1rem;color:#6b7280;font-size:0.9rem;">Periksa tautan atau kembali ke katalog.</p>
-            <a href="<?php echo htmlspecialchars($u_katalog, ENT_QUOTES, 'UTF-8'); ?>">← Katalog produk</a>
+            <a class="tautan-kembali" href="<?php echo htmlspecialchars($u_katalog, ENT_QUOTES, 'UTF-8'); ?>">← Katalog produk</a>
         </div>
     <?php else:
         $gambar = $produk['produk_gambar'] ?? [];
@@ -293,10 +293,6 @@ $u_checkout = aplikasi_url('checkout');
             <textarea name="komentar" placeholder="Bagaimana kondisi & pengalaman Anda dengan produk ini?" required rows="3"></textarea>
             <button type="submit" name="aksi" value="tambah_ulasan" class="btn-ulasan">Kirim Ulasan</button>
         </form>
-        <?php elseif ($sudah_login): ?>
-            <p class="no-review">Ulasan hanya bisa diberikan setelah Anda membeli dan menyelesaikan pesanan untuk produk ini.</p>
-        <?php else: ?>
-            <p><a href="<?php echo htmlspecialchars(aplikasi_url('login/masuk.php'), ENT_QUOTES, 'UTF-8'); ?>">Login</a> untuk memberikan ulasan (setelah pembelian).</p>
         <?php endif; ?>
         <?php if (isset($_GET['ulasan_ok'])): ?>
             <p class="flash-success">Terima kasih! Ulasan Anda telah dikirim.</p>

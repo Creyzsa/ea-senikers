@@ -641,6 +641,19 @@ body.halaman-daftar::before {
     border-radius: 4px;
 }
 
+.tautan-kembali {
+    display: inline-block;
+    margin-top: 0.15rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.tautan-kembali:focus-visible {
+    outline: 2px solid var(--oranye-cta);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
 /* Tablet: panel fitur 3 kolom tetap; sedikit longgar */
 @media (min-width: 480px) {
     .panel-tentang__fitur {

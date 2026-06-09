@@ -285,3 +285,42 @@ h1, h2, h3, .judul-merek, .hero-toko__judul, .katalog-judul-bar h1 {
 .logo-teks-merek--terang .logo-teks-merek__ea {
     color: var(--brand-black);
 }
+
+/* Tautan kembali ke halaman sebelumnya — teks abu-abu seragam */
+.tautan-kembali,
+.pesanan-detail-kembali,
+.akun-kembali a,
+.artikel-kembali a,
+.katalog-kembali a,
+.detail-breadcrumb a,
+.panel-pembeli-teks .tautan-balik,
+.admin-salam a.tautan-kembali,
+.admin-tautan-kembali,
+.chat-header a.tautan-kembali {
+    color: var(--teks-redup);
+    text-decoration: none;
+}
+
+.tautan-kembali:hover,
+.tautan-kembali:focus-visible,
+.pesanan-detail-kembali:hover,
+.pesanan-detail-kembali:focus-visible,
+.akun-kembali a:hover,
+.akun-kembali a:focus-visible,
+.artikel-kembali a:hover,
+.artikel-kembali a:focus-visible,
+.katalog-kembali a:hover,
+.katalog-kembali a:focus-visible,
+.detail-breadcrumb a:hover,
+.detail-breadcrumb a:focus-visible,
+.panel-pembeli-teks .tautan-balik:hover,
+.panel-pembeli-teks .tautan-balik:focus-visible,
+.admin-salam a.tautan-kembali:hover,
+.admin-salam a.tautan-kembali:focus-visible,
+.admin-tautan-kembali:hover,
+.admin-tautan-kembali:focus-visible,
+.chat-header a.tautan-kembali:hover,
+.chat-header a.tautan-kembali:focus-visible {
+    color: #4b5563;
+    text-decoration: underline;
+}

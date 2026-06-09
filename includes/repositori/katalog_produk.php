@@ -507,7 +507,7 @@ function _db_call(callable $fn, $default = null)
     }
 }
 
-/** Cek apakah user pernah beli produk (status paid+). */
+/** Cek apakah user boleh memberi ulasan: pesanan produk ini sudah selesai (completed). */
 function user_pernah_beli_produk(int $user_id, string $id_produk): bool
 {
     if ($user_id <= 0 || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id_produk)) {
@@ -519,7 +519,7 @@ function user_pernah_beli_produk(int $user_id, string $id_produk): bool
             'SELECT 1 FROM orders o
              INNER JOIN order_items oi ON oi.order_id = o.id
              WHERE o.user_id = :uid AND oi.id_produk = :pid
-               AND o.status IN (\'paid\', \'processed\', \'shipped\', \'completed\')
+               AND o.status = \'completed\'
              LIMIT 1'
         );
         $stmt->execute(['uid' => $user_id, 'pid' => $id_produk]);
@@ -553,15 +553,18 @@ function ulasan_tambah(int $user_id, string $id_produk, int $rating, string $kom
         return false;
     }
 
+    if (!user_pernah_beli_produk($user_id, $id_produk)) {
+        return false;
+    }
+
     return _db_call(function () use ($user_id, $id_produk, $rating, $komentar) {
         $pdo = koneksi_database();
 
-        // cari order terbaru untuk verified (opsional)
         $stmtO = $pdo->prepare(
             'SELECT o.id FROM orders o
              INNER JOIN order_items oi ON oi.order_id = o.id
              WHERE o.user_id = :u AND oi.id_produk = :p
-               AND o.status IN (\'paid\', \'processed\', \'shipped\', \'completed\')
+               AND o.status = \'completed\'
              ORDER BY o.created_at DESC LIMIT 1'
         );
         $stmtO->execute(['u' => $user_id, 'p' => $id_produk]);
