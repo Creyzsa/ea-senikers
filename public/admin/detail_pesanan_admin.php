@@ -119,6 +119,7 @@ $teks_kembali_html = htmlspecialchars($teks_kembali, ENT_QUOTES, 'UTF-8');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Detail Pesanan #<?php echo htmlspecialchars((string) $pesanan['id'], ENT_QUOTES, 'UTF-8'); ?> — EA SENIKERS Admin</title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
     <link rel="stylesheet" href="../assets/css/beranda-admin.css">
 </head>
 <body class="halaman-admin">

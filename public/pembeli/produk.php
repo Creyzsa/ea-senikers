@@ -112,6 +112,8 @@ $brand_pilihan_kategori = $kategori_filter !== ''
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Katalog produk — EA SENIKERS</title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
+
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
     <link rel="stylesheet" href="../assets/css/katalog-produk.css">
 </head>

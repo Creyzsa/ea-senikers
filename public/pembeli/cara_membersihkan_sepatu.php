@@ -14,6 +14,8 @@ $u_produk = aplikasi_url('produk');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Cara Membersihkan Sepatu Biar Awet - EA SENIKERS</title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
+
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
 </head>
 <body class="halaman-toko">

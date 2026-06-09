@@ -78,6 +78,7 @@ $u_checkout = aplikasi_url('checkout');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo $produk ? htmlspecialchars((string) $produk['nama_produk'], ENT_QUOTES, 'UTF-8') . ' — EA SENIKERS' : 'Produk — EA SENIKERS'; ?></title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
     <link rel="stylesheet" href="../assets/css/katalog-produk.css">
 </head>

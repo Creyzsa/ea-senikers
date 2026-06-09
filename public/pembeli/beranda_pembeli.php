@@ -47,6 +47,8 @@ $u_tt = 'https://www.tiktok.com/@' . rawurlencode((string) ($kontak_toko['sosial
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Beranda - EA SENIKERS</title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
+
     <link rel="stylesheet" href="<?php echo htmlspecialchars(aplikasi_url_aset('assets/css/beranda-toko.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(aplikasi_url_aset('assets/css/katalog-produk.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <script>

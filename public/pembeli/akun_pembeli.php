@@ -131,6 +131,8 @@ $menu_akun = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Akun saya — EA SENIKERS</title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
+
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
     <link rel="stylesheet" href="../assets/css/katalog-produk.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">

@@ -30,6 +30,8 @@ $pg_url = paginasi_pembuat_url(aplikasi_url('admin/pengguna_admin.php'), $q_nila
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pengguna — EA SENIKERS Admin</title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
+
     <link rel="stylesheet" href="../assets/css/beranda-admin.css">
 </head>
 <body class="halaman-admin">

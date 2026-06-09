@@ -67,7 +67,8 @@ $admin_nav_aktif = 'brand';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Logo Brand — EA SENIKERS Admin</title>
-    <link rel="icon" href="<?php echo htmlspecialchars(aplikasi_url('assets/images/easenikers.png'), ENT_QUOTES, 'UTF-8'); ?>" type="image/png">
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
+
     <link rel="stylesheet" href="../assets/css/beranda-admin.css">
 </head>
 <body class="halaman-admin">

@@ -148,6 +148,8 @@ $pesan_konfirmasi_gagal = isset($_GET['konfirmasi']) && $_GET['konfirmasi'] === 
 <head>
     <meta charset="UTF-8">
     <title>Masuk - EA SENIKERS</title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../assets/css/login.css">
     <link rel="prefetch" href="daftar.php" as="document">

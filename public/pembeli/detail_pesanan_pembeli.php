@@ -249,6 +249,7 @@ foreach ((array) ($kontak_toko['wa'] ?? []) as $wa) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Detail pesanan #<?php echo (int) $order_id; ?> — EA SENIKERS</title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
     <link rel="stylesheet" href="../assets/css/pesanan-pembeli.css">
     <link rel="stylesheet" href="../assets/css/detail-pesanan.css">

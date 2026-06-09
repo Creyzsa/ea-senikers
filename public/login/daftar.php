@@ -122,6 +122,8 @@ $kelas_error = 'pesan-error' . ($pesan_kesalahan !== '' ? ' pesan-error--goyang'
 <head>
     <meta charset="UTF-8">
     <title>Daftar - EA SENIKERS</title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../assets/css/login.css">
     <link rel="prefetch" href="masuk.php" as="document">

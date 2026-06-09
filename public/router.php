@@ -33,6 +33,17 @@ if (in_array($ext, $aset_statis, true)) {
     return true;
 }
 
+if ($uri === '/favicon.ico') {
+    $logo = __DIR__ . '/assets/images/easenikers.png';
+    if (is_file($logo)) {
+        header('Content-Type: image/png');
+        header('Cache-Control: public, max-age=86400');
+        readfile($logo);
+
+        return true;
+    }
+}
+
 if ($uri === '/' || $uri === '') {
     require __DIR__ . '/index.php';
 

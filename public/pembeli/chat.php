@@ -41,6 +41,8 @@ $nama_produk = $produk ? (string)($produk['nama_produk'] ?? 'Produk') : 'Penjual
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chat dengan Penjual — EA SENIKERS</title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
+
     <link rel="stylesheet" href="../assets/css/beranda-toko.css">
     <link rel="stylesheet" href="../assets/css/katalog-produk.css">
     <style>

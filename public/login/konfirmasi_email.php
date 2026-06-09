@@ -28,6 +28,8 @@ $alasan_verify = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mengonfirmasi akun — EA SENIKERS</title>
+    <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
+
     <style>
         body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 2rem auto; padding: 1rem; text-align: center; color: #222; }
         a { color: #D62828; }
