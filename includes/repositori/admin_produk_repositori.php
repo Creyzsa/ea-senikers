@@ -369,6 +369,13 @@ function admin_produk_upload_gambar(string $id_produk, array $files, ?PDO $pdo =
     $errors = (array) ($gambar_files['error'] ?? []);
     $sizes = (array) ($gambar_files['size'] ?? []);
 
+    if (produk_gambar_pakai_cloud()) {
+        $siap = supabase_storage_pastikan_bucket(produk_gambar_bucket(), true);
+        if (!$siap['ok']) {
+            throw new RuntimeException($siap['pesan'] !== '' ? $siap['pesan'] : 'Bucket Supabase Storage belum siap.');
+        }
+    }
+
     $pdo = $pdo ?? koneksi_database();
     $stmtUrutan = $pdo->prepare('SELECT COALESCE(MAX(urutan), -1) AS maks FROM produk_gambar WHERE id_produk = :id');
     $stmtUrutan->execute(['id' => $id_produk]);
@@ -408,8 +415,8 @@ function admin_produk_upload_gambar(string $id_produk, array $files, ?PDO $pdo =
             throw new RuntimeException('Format gambar harus JPG, PNG, atau WEBP.');
         }
 
-        $nama_file = uniqid('produk_', true) . '.' . $ext;
-        produk_gambar_simpan_tmp($tmp, $nama_file, produk_gambar_mime_dari_ekstensi($ext), true);
+        $nama_file = 'produk_' . bin2hex(random_bytes(12)) . '.' . $ext;
+        produk_gambar_simpan_tmp($tmp, $nama_file, produk_gambar_mime_dari_ekstensi($ext), true, false);
 
         ++$urutan;
         $stmtInsert->execute([

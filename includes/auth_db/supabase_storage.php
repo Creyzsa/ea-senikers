@@ -38,6 +38,19 @@ function supabase_storage_api_key(): string
 /**
  * @return array{ok: bool, http: int, pesan: string, raw: string}
  */
+/** Respons bucket sudah ada / siap dipakai. */
+function supabase_storage_pesan_sudah_ada(string $pesan, int $http): bool
+{
+    if ($http === 409) {
+        return true;
+    }
+    $pesan = strtolower($pesan);
+
+    return str_contains($pesan, 'already exists')
+        || str_contains($pesan, 'resource already exists')
+        || str_contains($pesan, 'duplicate');
+}
+
 function supabase_storage_upload_file(
     string $bucket,
     string $object_path,
@@ -65,26 +78,37 @@ function supabase_storage_upload_file(
         return ['ok' => false, 'http' => 0, 'pesan' => 'Tidak dapat membaca file upload.', 'raw' => ''];
     }
 
-    $url = $base . '/storage/v1/object/' . rawurlencode($bucket) . '/' . str_replace('%2F', '/', rawurlencode($object_path));
+    $segments = array_map('rawurlencode', explode('/', $object_path));
+    $url = $base . '/storage/v1/object/' . rawurlencode($bucket) . '/' . implode('/', $segments);
 
-    $ch = curl_init($url);
-    $opsi = [
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => $body,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CONNECTTIMEOUT => 15,
-        CURLOPT_TIMEOUT => 90,
-        CURLOPT_HTTPHEADER => [
-            'apikey: ' . $key,
-            'Authorization: Bearer ' . $key,
-            'Content-Type: ' . $content_type,
-            'x-upsert: true',
-        ],
+    $headers = [
+        'apikey: ' . $key,
+        'Authorization: Bearer ' . $key,
+        'Content-Type: ' . $content_type,
+        'x-upsert: true',
     ];
-    curl_setopt_array($ch, $opsi + supabase_storage_curl_ssl_opsi());
-    $raw = (string) curl_exec($ch);
-    $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $err = (string) curl_error($ch);
+
+    $upload_once = static function () use ($url, $body, $headers): array {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 15,
+            CURLOPT_TIMEOUT => 90,
+            CURLOPT_HTTPHEADER => $headers,
+        ] + supabase_storage_curl_ssl_opsi());
+        $raw = (string) curl_exec($ch);
+        $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err = (string) curl_error($ch);
+
+        return ['http' => $http, 'raw' => $raw, 'err' => $err];
+    };
+
+    $hasil = $upload_once(true);
+    $http = $hasil['http'];
+    $raw = $hasil['raw'];
+    $err = $hasil['err'];
 
     if ($http >= 200 && $http < 300) {
         return ['ok' => true, 'http' => $http, 'pesan' => '', 'raw' => $raw];
@@ -99,6 +123,24 @@ function supabase_storage_upload_file(
             $pesan = (string) $decoded['message'];
         }
     }
+
+    // Cadangan: hapus objek lama lalu unggah ulang sekali.
+    if (supabase_storage_pesan_sudah_ada($pesan, $http)) {
+        supabase_storage_hapus_file($bucket, $object_path);
+        $hasil = $upload_once();
+        $http = $hasil['http'];
+        $raw = $hasil['raw'];
+        if ($http >= 200 && $http < 300) {
+            return ['ok' => true, 'http' => $http, 'pesan' => '', 'raw' => $raw];
+        }
+        if ($hasil['raw'] !== '') {
+            $decoded = json_decode($hasil['raw'], true);
+            if (is_array($decoded) && isset($decoded['message'])) {
+                $pesan = (string) $decoded['message'];
+            }
+        }
+    }
+
     if ($http === 401 || $http === 403 || stripos($pesan, 'row-level security') !== false) {
         $pesan .= ' Jalankan database/migrations/tahap6_perbaiki_rls_backend.sql di Supabase SQL Editor'
             . ' dan set SUPABASE_SERVICE_ROLE_KEY di Vercel Environment Variables.';
@@ -154,6 +196,11 @@ function supabase_storage_hapus_file(string $bucket, string $object_path): array
  */
 function supabase_storage_pastikan_bucket(string $bucket, bool $publik = true): array
 {
+    static $siap = [];
+    if (isset($siap[$bucket])) {
+        return ['ok' => true, 'http' => 200, 'pesan' => ''];
+    }
+
     $base = supabase_url_dasar();
     $key = supabase_storage_api_key();
     if ($base === '' || $key === '') {
@@ -189,15 +236,18 @@ function supabase_storage_pastikan_bucket(string $bucket, bool $publik = true): 
     $raw = (string) curl_exec($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-    if ($http >= 200 && $http < 300 || $http === 409) {
-        return ['ok' => true, 'http' => $http, 'pesan' => ''];
-    }
-
     $pesan = 'Gagal membuat bucket (HTTP ' . $http . ').';
     $decoded = json_decode($raw, true);
     if (is_array($decoded) && isset($decoded['message'])) {
         $pesan = (string) $decoded['message'];
     }
+
+    if ($http >= 200 && $http < 300 || supabase_storage_pesan_sudah_ada($pesan, $http)) {
+        $siap[$bucket] = true;
+
+        return ['ok' => true, 'http' => $http, 'pesan' => ''];
+    }
+
     if ($http === 401 || $http === 403) {
         $pesan .= ' Jalankan database/migrations/tahap5_supabase_storage_produk.sql di Supabase SQL Editor,'
             . ' atau set SUPABASE_SERVICE_ROLE_KEY di config.php.';
