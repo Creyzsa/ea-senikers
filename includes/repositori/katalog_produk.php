@@ -354,6 +354,46 @@ function katalog_daftar_ukuran_default(): array
     return ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
 }
 
+/**
+ * URL logo brand untuk thumbnail UI (fallback ke gambar produk bila belum diunggah).
+ */
+function katalog_brand_logo_url(string $brand, string $fallback = ''): string
+{
+    static $map = null;
+    if ($map === null) {
+        $path = __DIR__ . '/../brand_logo_admin.json';
+        $map = [];
+        if (is_file($path)) {
+            try {
+                $raw = json_decode(file_get_contents($path) ?: '{}', true, 512, JSON_THROW_ON_ERROR);
+                if (is_array($raw)) {
+                    foreach ($raw as $nama_brand => $nama_file) {
+                        $nama_brand = trim((string) $nama_brand);
+                        $nama_file = trim((string) $nama_file);
+                        if ($nama_brand !== '' && $nama_file !== '') {
+                            $map[$nama_brand] = $nama_file;
+                        }
+                    }
+                }
+            } catch (Throwable $e) {
+                $map = [];
+            }
+        }
+    }
+
+    $brand = trim($brand);
+    $nama_file = (string) ($map[$brand] ?? '');
+    if ($nama_file !== '') {
+        require_once __DIR__ . '/../integrasi/brand_logo_storage.php';
+        $url = brand_logo_url_untuk_tampil($nama_file);
+        if ($url !== '') {
+            return $url;
+        }
+    }
+
+    return $fallback;
+}
+
 /** Kategori produk utama (admin & beranda). */
 function katalog_daftar_kategori_produk(): array
 {
@@ -429,10 +469,11 @@ function katalog_ringkasan_brand(array $daftar_produk, string $kategori_filter =
             if ($kategori_filter !== '') {
                 $params['kategori'] = $kategori_filter;
             }
+            $gambar_produk = katalog_url_gambar_utama($produk);
             $map[$brand] = [
                 'nama' => $brand,
                 'jumlah' => 0,
-                'gambar' => katalog_url_gambar_utama($produk),
+                'gambar' => katalog_brand_logo_url($brand, $gambar_produk),
                 'url' => aplikasi_url('produk?' . http_build_query($params)),
             ];
         }

@@ -15,7 +15,11 @@ foreach ($daftar_produk as $produk) {
     $kondisi = trim((string) ($produk['kondisi'] ?? ''));
     if ($brand !== '') {
         if (!isset($brand_map[$brand])) {
-            $brand_map[$brand] = ['jumlah' => 0, 'gambar' => katalog_url_gambar_utama($produk)];
+            $gambar_produk = katalog_url_gambar_utama($produk);
+            $brand_map[$brand] = [
+                'jumlah' => 0,
+                'gambar' => katalog_brand_logo_url($brand, $gambar_produk),
+            ];
         }
         $brand_map[$brand]['jumlah']++;
     }
