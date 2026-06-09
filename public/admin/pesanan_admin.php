@@ -13,16 +13,13 @@ if (ambil_peran() !== 'admin') {
     exit;
 }
 
-if (!isset($_SESSION['csrf_admin_pesanan']) || !is_string($_SESSION['csrf_admin_pesanan'])) {
-    $_SESSION['csrf_admin_pesanan'] = bin2hex(random_bytes(24));
-}
-$csrf = $_SESSION['csrf_admin_pesanan'];
+$csrf = admin_csrf_token('pesanan');
 
 $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['aksi'] === 'batalkan') {
     $token = (string) ($_POST['csrf'] ?? '');
-    if (!hash_equals($csrf, $token)) {
+    if (!admin_csrf_valid('pesanan', $token)) {
         $_SESSION['flash_pesanan_error'] = 'Mohon muat ulang halaman.';
     } else {
         $order_id = (int) ($_POST['order_id'] ?? 0);

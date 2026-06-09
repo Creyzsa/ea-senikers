@@ -36,6 +36,7 @@
     { "src": "/pembeli/detail_pesanan_pembeli.php", "dest": "/detail-pesanan", "status": 301 },
     { "src": "/pembeli/keranjang_tambah.php", "dest": "/keranjang-tambah", "status": 301 },
     { "src": "/pembeli/chat.php", "dest": "/chat", "status": 301 },
+    { "src": "/favicon.ico", "dest": "/public/assets/images/easenikers.png" },
     {
       "src": "/(.*)",
       "dest": "/api/index.php"

@@ -12,10 +12,8 @@ if (ambil_peran() !== 'admin') {
     exit;
 }
 
-if (!isset($_SESSION['csrf_admin_produk']) || !is_string($_SESSION['csrf_admin_produk'])) {
-    $_SESSION['csrf_admin_produk'] = bin2hex(random_bytes(24));
-}
-$csrf = $_SESSION['csrf_admin_produk'];
+$csrf = admin_csrf_token('produk');
+$storage_siap = produk_gambar_siap_unggah();
 
 $errors = [];
 $flash = $_SESSION['flash_admin_produk'] ?? null;
@@ -39,8 +37,8 @@ foreach (admin_daftar_ukuran_default() as $uk) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $token = (string) ($_POST['csrf'] ?? '');
-    if (!hash_equals($csrf, $token)) {
-        $errors[] = 'Mohon muat ulang halaman.';
+    if (!admin_csrf_valid('produk', $token)) {
+        $errors[] = 'Sesi form kedaluwarsa. Muat ulang halaman lalu coba lagi.';
     }
 
     $aksi = (string) ($_POST['aksi'] ?? '');
@@ -52,6 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 admin_produk_hapus($idProdukPost);
                 $_SESSION['flash_admin_produk'] = ['jenis' => 'sukses', 'teks' => 'Produk berhasil dihapus.'];
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    session_write_close();
+                }
                 header('Location: ' . aplikasi_url('admin/produk_admin.php'));
                 exit;
             } catch (Throwable $e) {
@@ -66,6 +67,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 admin_produk_hapus_gambar($idProdukPost, $idGambar);
                 $_SESSION['flash_admin_produk'] = ['jenis' => 'sukses', 'teks' => 'Gambar produk berhasil dihapus.'];
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    session_write_close();
+                }
                 header('Location: ' . aplikasi_url('admin/produk_admin.php?edit=' . rawurlencode($idProdukPost)));
                 exit;
             } catch (Throwable $e) {
@@ -114,12 +118,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($idProdukPost !== '') {
                     admin_produk_update($idProdukPost, $payload, $stokForm, $_FILES);
                     $_SESSION['flash_admin_produk'] = ['jenis' => 'sukses', 'teks' => 'Produk berhasil diperbarui.'];
+                    if (session_status() === PHP_SESSION_ACTIVE) {
+                        session_write_close();
+                    }
                     header('Location: ' . aplikasi_url('admin/produk_admin.php?edit=' . rawurlencode($idProdukPost)));
                     exit;
                 }
 
                 $idBaru = admin_produk_tambah($payload, $stokForm, $_FILES);
                 $_SESSION['flash_admin_produk'] = ['jenis' => 'sukses', 'teks' => 'Produk baru berhasil ditambahkan.'];
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    session_write_close();
+                }
                 header('Location: ' . aplikasi_url('admin/produk_admin.php?edit=' . rawurlencode($idBaru)));
                 exit;
             } catch (Throwable $e) {
@@ -182,6 +192,7 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Manajemen Produk — EA SENIKERS</title>
+    <link rel="icon" href="<?php echo htmlspecialchars(aplikasi_url('assets/images/easenikers.png'), ENT_QUOTES, 'UTF-8'); ?>" type="image/png">
     <link rel="stylesheet" href="../assets/css/beranda-admin.css">
 </head>
 <body class="halaman-admin">
@@ -264,6 +275,12 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
             <?php if (is_array($flash)): ?>
                 <div class="admin-alert admin-alert--<?php echo htmlspecialchars((string) ($flash['jenis'] ?? 'info'), ENT_QUOTES, 'UTF-8'); ?>">
                     <?php echo htmlspecialchars((string) ($flash['teks'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!$storage_siap && produk_gambar_pakai_cloud()): ?>
+                <div class="admin-alert admin-alert--error">
+                    Upload foto di Vercel membutuhkan <strong>SUPABASE_URL</strong>, <strong>SUPABASE_ANON_KEY</strong>, dan disarankan <strong>SUPABASE_SERVICE_ROLE_KEY</strong> di Environment Variables Vercel. Jalankan juga <code>database/migrations/tahap5_supabase_storage_produk.sql</code> di Supabase. Produk tanpa foto tetap bisa disimpan.
                 </div>
             <?php endif; ?>
 

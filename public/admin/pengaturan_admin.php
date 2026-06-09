@@ -12,14 +12,11 @@ if (ambil_peran() !== 'admin') {
     exit;
 }
 
-if (!isset($_SESSION['csrf_admin_pengaturan']) || !is_string($_SESSION['csrf_admin_pengaturan'])) {
-    $_SESSION['csrf_admin_pengaturan'] = bin2hex(random_bytes(24));
-}
-$csrf = $_SESSION['csrf_admin_pengaturan'];
+$csrf = admin_csrf_token('pengaturan');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $token = (string) ($_POST['csrf'] ?? '');
-    if (!hash_equals($csrf, $token)) {
+    if (!admin_csrf_valid('pengaturan', $token)) {
         $_SESSION['flash_admin_pengaturan'] = ['jenis' => 'error', 'teks' => 'Mohon muat ulang halaman.'];
     } else {
         $ok = admin_pengaturan_simpan_terapan([

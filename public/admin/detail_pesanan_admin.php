@@ -12,10 +12,7 @@ if (ambil_peran() !== 'admin') {
     exit;
 }
 
-if (!isset($_SESSION['csrf_admin_pesanan']) || !is_string($_SESSION['csrf_admin_pesanan'])) {
-    $_SESSION['csrf_admin_pesanan'] = bin2hex(random_bytes(24));
-}
-$csrf = $_SESSION['csrf_admin_pesanan'];
+$csrf = admin_csrf_token('pesanan');
 
 $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
 $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF-8');
@@ -32,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_post = (int) ($_POST['order_id'] ?? 0);
     $redirUrl = aplikasi_url('admin/detail_pesanan_admin.php?id=' . rawurlencode((string) $order_id));
 
-    if ($id_post !== $order_id || !hash_equals($csrf, $token)) {
+    if ($id_post !== $order_id || !admin_csrf_valid('pesanan', $token)) {
         $_SESSION['flash_detail_order'] = 'Mohon muat ulang halaman.';
         $_SESSION['flash_detail_order_warna'] = 'error';
     } elseif ($aksi === 'ubah_status') {

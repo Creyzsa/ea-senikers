@@ -151,7 +151,12 @@ function produk_gambar_simpan_tmp(string $tmp_path, string $nama_file, string $m
     }
 
     if (produk_gambar_pakai_cloud()) {
-        $hasil = supabase_storage_upload_file(produk_gambar_bucket(), $nama_file, $tmp_path, $mime);
+        $bucket = produk_gambar_bucket();
+        $siap = supabase_storage_pastikan_bucket($bucket, true);
+        if (!$siap['ok']) {
+            throw new RuntimeException($siap['pesan'] !== '' ? $siap['pesan'] : 'Bucket Supabase Storage belum siap.');
+        }
+        $hasil = supabase_storage_upload_file($bucket, $nama_file, $tmp_path, $mime);
         if (!$hasil['ok']) {
             throw new RuntimeException($hasil['pesan'] !== '' ? $hasil['pesan'] : 'Gagal mengunggah gambar ke Supabase Storage.');
         }

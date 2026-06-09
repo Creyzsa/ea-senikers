@@ -623,3 +623,47 @@ function csrf_wishlist_token(): string
 
     return $_SESSION['csrf_wishlist'];
 }
+
+/**
+ * CSRF admin via cookie — sesi file PHP tidak persist di Vercel/serverless.
+ */
+function admin_csrf_token(string $scope): string
+{
+    $scope = preg_replace('/[^a-z_]/', '', strtolower($scope));
+    if ($scope === '') {
+        $scope = 'admin';
+    }
+    $nama_cookie = 'easenikers_csrf_' . $scope;
+    $token = trim((string) ($_COOKIE[$nama_cookie] ?? ''));
+    if ($token === '' || !preg_match('/^[a-f0-9]{48}$/', $token)) {
+        $token = bin2hex(random_bytes(24));
+        $opsi = sesi_opsi_cookie();
+        setcookie($nama_cookie, $token, [
+            'path' => $opsi['path'],
+            'domain' => $opsi['domain'],
+            'secure' => $opsi['secure'],
+            'httponly' => true,
+            'samesite' => $opsi['samesite'],
+            'expires' => time() + 86400,
+        ]);
+        $_COOKIE[$nama_cookie] = $token;
+    }
+
+    return $token;
+}
+
+function admin_csrf_valid(string $scope, string $token): bool
+{
+    $scope = preg_replace('/[^a-z_]/', '', strtolower($scope));
+    if ($scope === '') {
+        $scope = 'admin';
+    }
+    $nama_cookie = 'easenikers_csrf_' . $scope;
+    $stored = trim((string) ($_COOKIE[$nama_cookie] ?? ''));
+    $token = trim($token);
+
+    return $stored !== ''
+        && $token !== ''
+        && preg_match('/^[a-f0-9]{48}$/', $stored) === 1
+        && hash_equals($stored, $token);
+}
