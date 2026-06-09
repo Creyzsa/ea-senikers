@@ -10,9 +10,6 @@ require_once __DIR__ . '/../url_bantu.php';
 require_once __DIR__ . '/../auth_db/database.php';
 require_once __DIR__ . '/../integrasi/produk_gambar_storage.php';
 
-/** Path relatif folder gambar produk di bawah URL_APLIKASI (public). */
-const KATALOG_FOLDER_GAMBAR = 'assets/images/produk';
-
 function katalog_url_gambar_produk(string $nama_file): string
 {
     $nama_file = str_replace(['/', '\\'], '', $nama_file);
