@@ -521,16 +521,21 @@
     border-radius: 10px;
 }
 
-/* Layout detail — kolom kiri setinggi sidebar (hingga tombol WA) */
+/* Layout detail — kolom kiri setinggi sidebar (hingga tepi bawah tombol WA) */
 .halaman-detail-pesanan .pesanan-detail-layout {
     align-items: stretch;
 }
 
 .halaman-detail-pesanan .pesanan-detail-utama {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
     gap: 1rem;
+    align-self: stretch;
     min-height: 100%;
+}
+
+.halaman-detail-pesanan .pesanan-detail-utama:not(:has(.pd-card--timeline)) {
+    display: block;
 }
 
 .halaman-detail-pesanan .pesanan-detail-utama .pd-card + .pd-card {
@@ -538,23 +543,27 @@
 }
 
 .halaman-detail-pesanan .pd-card--timeline {
-    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+    margin-bottom: 0;
     display: flex;
     flex-direction: column;
-    min-height: 0;
 }
 
 .halaman-detail-pesanan .pd-card--timeline .pd-timeline {
     flex: 1 1 auto;
+    min-height: 0;
 }
 
 .halaman-detail-pesanan .pd-card--timeline .pd-timeline__hint {
     margin-top: auto;
+    margin-bottom: 0;
 }
 
 /* Sidebar sticky */
 .halaman-detail-pesanan .pesanan-detail-samping {
     gap: 1rem;
+    align-self: stretch;
 }
 
 .halaman-detail-pesanan .pd-sidebar-sticky {
@@ -563,6 +572,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    min-height: 100%;
 }
 
 /* Pembayaran card */
@@ -665,17 +675,23 @@
 
 /* Responsive */
 @media (max-width: 900px) {
-    .halaman-detail-pesanan .pesanan-detail-utama {
+    .halaman-detail-pesanan .pesanan-detail-utama,
+    .halaman-detail-pesanan .pesanan-detail-utama:not(:has(.pd-card--timeline)) {
+        display: block;
         min-height: 0;
     }
 
     .halaman-detail-pesanan .pd-card--timeline {
-        flex: none;
+        height: auto;
         display: block;
     }
 
     .halaman-detail-pesanan .pd-card--timeline .pd-timeline__hint {
         margin-top: 0.85rem;
+    }
+
+    .halaman-detail-pesanan .pd-sidebar-sticky {
+        min-height: 0;
     }
 
     .pd-sidebar-sticky {
