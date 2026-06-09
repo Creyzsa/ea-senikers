@@ -185,7 +185,6 @@ function admin_produk_tambah(array $payload, array $stok_ukuran, array $files): 
         }
 
         admin_produk_simpan_stok_ukuran($pdo, $id_produk, $stok_ukuran);
-        admin_produk_upload_gambar($id_produk, $files, $pdo);
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
@@ -194,7 +193,19 @@ function admin_produk_tambah(array $payload, array $stok_ukuran, array $files): 
         if ($e instanceof RuntimeException) {
             throw $e;
         }
-        throw new RuntimeException('Gagal menambah produk ke database.', 0, $e);
+        $rls = database_pesan_error_rls($e);
+        throw new RuntimeException($rls ?? 'Gagal menambah produk ke database.', 0, $e);
+    }
+
+    try {
+        admin_produk_upload_gambar($id_produk, $files, $pdo);
+    } catch (Throwable $e) {
+        $rls = database_pesan_error_rls($e);
+        throw new RuntimeException(
+            ($rls ?? $e->getMessage()) . ' Data produk sudah tersimpan; perbaiki upload lalu tambah foto dari mode edit.',
+            0,
+            $e
+        );
     }
 
     return $id_produk;
@@ -238,7 +249,6 @@ function admin_produk_update(string $id_produk, array $payload, array $stok_ukur
         }
 
         admin_produk_simpan_stok_ukuran($pdo, $id_produk, $stok_ukuran);
-        admin_produk_upload_gambar($id_produk, $files, $pdo);
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
@@ -247,7 +257,19 @@ function admin_produk_update(string $id_produk, array $payload, array $stok_ukur
         if ($e instanceof RuntimeException) {
             throw $e;
         }
-        throw new RuntimeException('Gagal memperbarui produk.', 0, $e);
+        $rls = database_pesan_error_rls($e);
+        throw new RuntimeException($rls ?? 'Gagal memperbarui produk.', 0, $e);
+    }
+
+    try {
+        admin_produk_upload_gambar($id_produk, $files, $pdo);
+    } catch (Throwable $e) {
+        $rls = database_pesan_error_rls($e);
+        throw new RuntimeException(
+            ($rls ?? $e->getMessage()) . ' Data produk sudah diperbarui; unggah foto lagi bila perlu.',
+            0,
+            $e
+        );
     }
 }
 

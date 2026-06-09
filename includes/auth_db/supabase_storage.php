@@ -99,8 +99,9 @@ function supabase_storage_upload_file(
             $pesan = (string) $decoded['message'];
         }
     }
-    if ($http === 401 || $http === 403) {
-        $pesan .= ' Pastikan SUPABASE_SERVICE_ROLE_KEY sudah di-set di Vercel dan bucket storage sudah dibuat.';
+    if ($http === 401 || $http === 403 || stripos($pesan, 'row-level security') !== false) {
+        $pesan .= ' Jalankan database/migrations/tahap6_perbaiki_rls_backend.sql di Supabase SQL Editor'
+            . ' dan set SUPABASE_SERVICE_ROLE_KEY di Vercel Environment Variables.';
     }
 
     return ['ok' => false, 'http' => $http, 'pesan' => $pesan, 'raw' => $raw];

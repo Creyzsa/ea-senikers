@@ -26,7 +26,28 @@ function koneksi_database(): PDO
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
 
+    // Supabase pooler/RLS: pastikan koneksi backend bisa tulis (butuh user postgres / superuser).
+    try {
+        $pdo->exec('SET row_security = off');
+    } catch (PDOException $e) {
+        error_log('[DB] SET row_security = off gagal: ' . $e->getMessage());
+    }
+
     return $pdo;
+}
+
+/** Pesan ramah bila PostgreSQL/Supabase menolak karena RLS. */
+function database_pesan_error_rls(Throwable $e): ?string
+{
+    $msg = $e->getMessage();
+    if (stripos($msg, 'row-level security') === false && stripos($msg, '42501') === false) {
+        return null;
+    }
+
+    return 'Akses database ditolak kebijakan RLS Supabase. '
+        . 'Jalankan database/migrations/tahap6_perbaiki_rls_backend.sql di Supabase SQL Editor, '
+        . 'pastikan DB_USER di Vercel adalah postgres (bukan anon), '
+        . 'dan untuk upload foto set SUPABASE_SERVICE_ROLE_KEY.';
 }
 
 /**
