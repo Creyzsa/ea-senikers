@@ -237,6 +237,7 @@ $detailEdit = $mode === 'edit' ? admin_produk_ambil_detail($editId) : null;
                 </svg>
                 Keluar
             </a>
+            </div>
         </header>
 
         <main class="admin-isi admin-isi-produk">
