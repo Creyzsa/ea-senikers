@@ -62,6 +62,9 @@ function produk_gambar_pakai_cloud(): bool
 function produk_gambar_folder_lokal(): string
 {
     $folder = easenikers_folder_public() . '/' . KATALOG_FOLDER_GAMBAR;
+    if (!is_dir($folder) && produk_gambar_pakai_cloud()) {
+        return $folder;
+    }
     if (!is_dir($folder) && !mkdir($folder, 0755, true) && !is_dir($folder)) {
         throw new RuntimeException('Folder upload gambar produk tidak dapat dibuat.');
     }
@@ -79,14 +82,48 @@ function produk_gambar_mime_dari_ekstensi(string $ext): string
     };
 }
 
+function produk_gambar_nama_aman(string $nama_file): string
+{
+    return basename(str_replace(['/', '\\'], '', $nama_file));
+}
+
+function produk_gambar_path_lokal(string $nama_file): string
+{
+    return easenikers_folder_public() . '/' . KATALOG_FOLDER_GAMBAR . '/' . produk_gambar_nama_aman($nama_file);
+}
+
+function produk_gambar_ada_lokal(string $nama_file): bool
+{
+    $nama_file = produk_gambar_nama_aman($nama_file);
+
+    return $nama_file !== '' && is_file(produk_gambar_path_lokal($nama_file));
+}
+
 function produk_gambar_url_publik(string $nama_file): string
 {
-    $nama_file = basename(str_replace(['/', '\\'], '', $nama_file));
+    $nama_file = produk_gambar_nama_aman($nama_file);
     if ($nama_file === '') {
         return '';
     }
 
     return supabase_storage_url_publik(produk_gambar_bucket(), $nama_file);
+}
+
+/**
+ * URL tampilan: file statis di deploy → Supabase Storage → kosong (placeholder di katalog).
+ */
+function produk_gambar_url_untuk_tampil(string $nama_file): string
+{
+    $nama_file = produk_gambar_nama_aman($nama_file);
+    if ($nama_file === '') {
+        return '';
+    }
+
+    if (produk_gambar_ada_lokal($nama_file)) {
+        return aplikasi_url_aset(KATALOG_FOLDER_GAMBAR . '/' . rawurlencode($nama_file));
+    }
+
+    return produk_gambar_url_publik($nama_file);
 }
 
 /**

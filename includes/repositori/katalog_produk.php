@@ -12,25 +12,9 @@ require_once __DIR__ . '/../integrasi/produk_gambar_storage.php';
 
 function katalog_url_gambar_produk(string $nama_file): string
 {
-    $nama_file = str_replace(['/', '\\'], '', $nama_file);
-    if ($nama_file === '') {
-        return katalog_url_gambar_placeholder();
-    }
+    $url = produk_gambar_url_untuk_tampil($nama_file);
 
-    if (produk_gambar_pakai_cloud()) {
-        $cloud = produk_gambar_url_publik($nama_file);
-
-        return $cloud !== '' ? $cloud : katalog_url_gambar_placeholder();
-    }
-
-    $lokal = easenikers_folder_public() . '/' . KATALOG_FOLDER_GAMBAR . '/' . $nama_file;
-    if (is_file($lokal)) {
-        return aplikasi_url_aset(KATALOG_FOLDER_GAMBAR . '/' . rawurlencode($nama_file));
-    }
-
-    $cloud = produk_gambar_url_publik($nama_file);
-
-    return $cloud !== '' ? $cloud : katalog_url_gambar_placeholder();
+    return $url !== '' ? $url : katalog_url_gambar_placeholder();
 }
 
 /** Gambar pengganti bila belum ada upload (tanpa file statis). */
