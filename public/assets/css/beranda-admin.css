@@ -260,6 +260,12 @@ body.halaman-admin {
     height: 132px;
 }
 
+.admin-isi-dashboard .admin-dashboard-bawah__grafik .admin-grafik {
+    flex: 1;
+    height: auto;
+    min-height: 132px;
+}
+
 .admin-isi-dashboard .admin-aktivitas li {
     padding: 0.5rem 0;
 }
@@ -464,7 +470,7 @@ body.halaman-admin {
 
 .admin-dashboard-bawah {
     display: grid;
-    grid-template-columns: minmax(0, 1.65fr) minmax(260px, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: auto 1fr;
     gap: 0.75rem;
     margin-bottom: 1.5rem;
@@ -475,6 +481,9 @@ body.halaman-admin {
     grid-column: 1;
     grid-row: 1;
     min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .admin-dashboard-bawah__samping-atas {
@@ -484,6 +493,7 @@ body.halaman-admin {
     flex-direction: column;
     gap: 0.75rem;
     min-width: 0;
+    height: 100%;
 }
 
 .admin-dashboard-bawah__pesanan {
@@ -496,6 +506,18 @@ body.halaman-admin {
     grid-row: 2;
 }
 
+.admin-isi-dashboard .admin-dashboard-bawah .admin-panel,
+.admin-isi-dashboard .admin-dashboard-bawah .admin-panel--ringkas {
+    padding: 0.95rem 1.05rem;
+}
+
+.admin-isi-dashboard .admin-dashboard-bawah__samping-atas > .admin-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
 .admin-isi-dashboard .admin-dashboard-bawah__pesanan,
 .admin-isi-dashboard .admin-dashboard-bawah__aktivitas {
     display: flex;
@@ -505,7 +527,8 @@ body.halaman-admin {
 }
 
 .admin-isi-dashboard .admin-dashboard-bawah__pesanan .admin-tabel-wrap,
-.admin-isi-dashboard .admin-dashboard-bawah__pesanan .admin-kosong {
+.admin-isi-dashboard .admin-dashboard-bawah__pesanan .admin-kosong,
+.admin-isi-dashboard .admin-dashboard-bawah__aktivitas .admin-aktivitas {
     flex: 1;
 }
 
@@ -521,6 +544,13 @@ body.halaman-admin {
     .admin-dashboard-bawah__aktivitas {
         grid-column: 1;
         grid-row: auto;
+        height: auto;
+        display: block;
+    }
+
+    .admin-isi-dashboard .admin-dashboard-bawah__samping-atas > .admin-panel {
+        display: block;
+        flex: none;
     }
 
     .admin-isi-dashboard .admin-dashboard-bawah__pesanan,
@@ -528,8 +558,14 @@ body.halaman-admin {
         display: block;
     }
 
+    .admin-isi-dashboard .admin-dashboard-bawah__grafik .admin-grafik {
+        flex: none;
+        height: 132px;
+    }
+
     .admin-isi-dashboard .admin-dashboard-bawah__pesanan .admin-tabel-wrap,
-    .admin-isi-dashboard .admin-dashboard-bawah__pesanan .admin-kosong {
+    .admin-isi-dashboard .admin-dashboard-bawah__pesanan .admin-kosong,
+    .admin-isi-dashboard .admin-dashboard-bawah__aktivitas .admin-aktivitas {
         flex: none;
     }
 
