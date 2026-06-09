@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Sesi form kedaluwarsa. Muat ulang halaman lalu coba lagi.';
     } else {
         $aksi = (string) ($_POST['aksi'] ?? 'simpan');
-        $cfg_post = [
+        $cfg_post = admin_notifikasi_gabung_form_dengan_simpan([
             'telegram_bot_token' => (string) ($_POST['telegram_bot_token'] ?? ''),
             'telegram_chat_id' => (string) ($_POST['telegram_chat_id'] ?? ''),
             'telegram_aktif' => !empty($_POST['telegram_aktif']),
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'smtp_to' => (string) ($_POST['smtp_to'] ?? ''),
             'email_aktif' => !empty($_POST['email_aktif']),
             'notif_browser_aktif' => !empty($_POST['notif_browser_aktif']),
-        ];
+        ]);
 
         try {
             if ($aksi === 'ambil_chat_id') {
@@ -182,7 +182,12 @@ $poll_url = htmlspecialchars(aplikasi_url('api/admin_notifikasi_poll.php'), ENT_
                     <header class="admin-kartu__header">
                         <h2 id="judul-notif-email">Email SMTP</h2>
                     </header>
-                    <p class="admin-meta">Notifikasi email dikirim ke alamat admin saat pembayaran berhasil. Gunakan SMTP provider Anda (Gmail App Password, Zoho, dll.).</p>
+                    <p class="admin-meta">
+                        Notifikasi email dikirim ke alamat admin saat pembayaran berhasil.<br>
+                        <strong>Gmail:</strong> host <code>smtp.gmail.com</code>, port <code>587</code>, user = email lengkap,
+                        password = <strong>App Password</strong> (16 karakter dari Google Account → Security → App passwords), bukan password login Gmail.<br>
+                        <strong>From</strong> harus sama dengan akun Gmail yang dipakai login SMTP.
+                    </p>
                     <label class="admin-check admin-check--blok">
                         <input type="checkbox" name="email_aktif" value="1"<?php echo !empty($cfg['email_aktif']) ? ' checked' : ''; ?>>
                         Kirim email saat pembayaran masuk
@@ -202,7 +207,8 @@ $poll_url = htmlspecialchars(aplikasi_url('api/admin_notifikasi_poll.php'), ENT_
                         </div>
                         <div class="admin-field">
                             <label for="smtp-pass">Password SMTP</label>
-                            <input type="password" id="smtp-pass" name="smtp_pass" value="<?php echo htmlspecialchars((string) $cfg['smtp_pass'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
+                            <input type="password" id="smtp-pass" name="smtp_pass" value="<?php echo htmlspecialchars((string) $cfg['smtp_pass'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="new-password" placeholder="App Password / password mailbox">
+                            <small class="admin-meta">Kosongkan hanya jika tidak ingin mengubah password yang sudah tersimpan.</small>
                         </div>
                         <div class="admin-field">
                             <label for="smtp-from">Dari (From)</label>

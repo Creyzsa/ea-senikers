@@ -13,6 +13,25 @@ function admin_notifikasi_bool_db(bool $nilai): string
 }
 
 /**
+ * Isi ulang token/password dari DB bila field password dikosongkan browser saat submit.
+ *
+ * @param array<string, mixed> $post
+ * @return array<string, mixed>
+ */
+function admin_notifikasi_gabung_form_dengan_simpan(array $post): array
+{
+    $simpan = admin_notifikasi_muat_pengaturan();
+    if (trim((string) ($post['telegram_bot_token'] ?? '')) === '') {
+        $post['telegram_bot_token'] = $simpan['telegram_bot_token'];
+    }
+    if (trim((string) ($post['smtp_pass'] ?? '')) === '') {
+        $post['smtp_pass'] = $simpan['smtp_pass'];
+    }
+
+    return $post;
+}
+
+/**
  * @return array{
  *   telegram_bot_token: string,
  *   telegram_chat_id: string,

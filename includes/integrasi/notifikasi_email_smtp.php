@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Kirim email sederhana via SMTP (STARTTLS port 587).
+ * Kirim email via SMTP (STARTTLS 587 / SSL 465).
  *
  * @return array{ok: bool, pesan: string}
  */
@@ -19,37 +19,54 @@ function notifikasi_email_smtp_kirim(
 ): array {
     $host = trim($host);
     $user = trim($user);
+    $pass = (string) $pass;
     $from = trim($from);
     $to = trim($to);
     $subject = trim($subject);
 
     if ($host === '' || $to === '' || $from === '') {
-        return ['ok' => false, 'pesan' => 'Host SMTP, pengirim, atau penerima kosong.'];
+        return ['ok' => false, 'pesan' => 'Host SMTP, pengirim (From), atau penerima (To) masih kosong.'];
     }
     if ($port <= 0 || $port > 65535) {
         $port = 587;
     }
+    if ($user !== '' && $pass === '') {
+        return ['ok' => false, 'pesan' => 'Password SMTP kosong. Isi ulang password lalu tes lagi.'];
+    }
 
-    $transport = $port === 465 ? 'ssl://' . $host : $host;
+    $ssl_langsung = $port === 465;
+    $transport = $ssl_langsung ? 'ssl://' . $host : $host;
     $errno = 0;
     $errstr = '';
     $fp = @stream_socket_client(
         $transport . ':' . $port,
         $errno,
         $errstr,
-        20,
-        STREAM_CLIENT_CONNECT
+        25,
+        STREAM_CLIENT_CONNECT,
+        stream_context_create([
+            'ssl' => [
+                'verify_peer' => true,
+                'verify_peer_name' => true,
+                'allow_self_signed' => false,
+            ],
+        ])
     );
     if (!is_resource($fp)) {
-        return ['ok' => false, 'pesan' => 'SMTP koneksi gagal: ' . ($errstr !== '' ? $errstr : (string) $errno)];
+        return [
+            'ok' => false,
+            'pesan' => 'SMTP koneksi ke ' . $host . ':' . $port . ' gagal: '
+                . ($errstr !== '' ? $errstr : 'errno ' . $errno)
+                . '. Coba port 587 (TLS) atau 465 (SSL).',
+        ];
     }
 
-    stream_set_timeout($fp, 20);
+    stream_set_timeout($fp, 25);
 
     $baca = static function ($fp): string {
         $out = '';
         while (!feof($fp)) {
-            $line = fgets($fp, 515);
+            $line = fgets($fp, 8192);
             if ($line === false) {
                 break;
             }
@@ -62,96 +79,100 @@ function notifikasi_email_smtp_kirim(
         return $out;
     };
 
-    $kirim = static function ($fp, string $cmd) use ($baca): bool {
+    $kirim_cek = static function ($fp, string $cmd) use ($baca): array {
         fwrite($fp, $cmd . "\r\n");
         $resp = $baca($fp);
+        $ok = isset($resp[0]) && $resp[0] === '2';
 
-        return isset($resp[0]) && $resp[0] === '2';
-    };
-
-    $expect = static function (string $resp, string $prefix): bool {
-        return strncmp($resp, $prefix, strlen($prefix)) === 0;
+        return ['ok' => $ok, 'resp' => $resp];
     };
 
     $greet = $baca($fp);
-    if (!$expect($greet, '220')) {
+    if (!notifikasi_email_smtp_resp_ok($greet, '220')) {
         fclose($fp);
 
-        return ['ok' => false, 'pesan' => 'SMTP greeting gagal.'];
+        return ['ok' => false, 'pesan' => 'SMTP greeting gagal: ' . notifikasi_email_smtp_resp_ringkas($greet)];
     }
 
     $ehlo_host = 'easenikers.shop';
     fwrite($fp, 'EHLO ' . $ehlo_host . "\r\n");
     $ehlo = $baca($fp);
-    if (!$expect($ehlo, '250')) {
+    if (!notifikasi_email_smtp_resp_ok($ehlo, '250')) {
         fclose($fp);
 
-        return ['ok' => false, 'pesan' => 'SMTP EHLO gagal.'];
+        return ['ok' => false, 'pesan' => 'SMTP EHLO gagal: ' . notifikasi_email_smtp_resp_ringkas($ehlo)];
     }
 
-    if ($port !== 465 && stripos($ehlo, 'STARTTLS') !== false) {
+    if (!$ssl_langsung && stripos($ehlo, 'STARTTLS') !== false) {
         fwrite($fp, "STARTTLS\r\n");
         $tls = $baca($fp);
-        if (!$expect($tls, '220')) {
+        if (!notifikasi_email_smtp_resp_ok($tls, '220')) {
             fclose($fp);
 
-            return ['ok' => false, 'pesan' => 'SMTP STARTTLS ditolak.'];
+            return ['ok' => false, 'pesan' => 'SMTP STARTTLS ditolak: ' . notifikasi_email_smtp_resp_ringkas($tls)];
         }
-        if (!stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+        $crypto = STREAM_CRYPTO_METHOD_TLS_CLIENT;
+        if (defined('STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT')) {
+            $crypto |= STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT;
+        }
+        if (defined('STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT')) {
+            $crypto |= STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
+        }
+        if (!@stream_socket_enable_crypto($fp, true, $crypto)) {
             fclose($fp);
 
-            return ['ok' => false, 'pesan' => 'SMTP TLS handshake gagal.'];
+            return ['ok' => false, 'pesan' => 'SMTP TLS handshake gagal. Coba port 465 (SSL) jika 587 bermasalah.'];
         }
         fwrite($fp, 'EHLO ' . $ehlo_host . "\r\n");
         $ehlo2 = $baca($fp);
-        if (!$expect($ehlo2, '250')) {
+        if (!notifikasi_email_smtp_resp_ok($ehlo2, '250')) {
             fclose($fp);
 
-            return ['ok' => false, 'pesan' => 'SMTP EHLO setelah TLS gagal.'];
+            return ['ok' => false, 'pesan' => 'SMTP EHLO setelah TLS gagal: ' . notifikasi_email_smtp_resp_ringkas($ehlo2)];
         }
+        $ehlo = $ehlo2;
     }
 
     if ($user !== '') {
-        fwrite($fp, "AUTH LOGIN\r\n");
-        $auth = $baca($fp);
-        if (!$expect($auth, '334')) {
+        $login = notifikasi_email_smtp_auth($fp, $baca, $user, $pass, $ehlo, $host);
+        if (!$login['ok']) {
             fclose($fp);
 
-            return ['ok' => false, 'pesan' => 'SMTP AUTH tidak didukung.'];
-        }
-        fwrite($fp, base64_encode($user) . "\r\n");
-        $user_resp = $baca($fp);
-        if (!$expect($user_resp, '334')) {
-            fclose($fp);
-
-            return ['ok' => false, 'pesan' => 'SMTP username ditolak.'];
-        }
-        fwrite($fp, base64_encode($pass) . "\r\n");
-        $pass_resp = $baca($fp);
-        if (!$expect($pass_resp, '235')) {
-            fclose($fp);
-
-            return ['ok' => false, 'pesan' => 'SMTP login gagal — periksa user/password.'];
+            return ['ok' => false, 'pesan' => $login['pesan']];
         }
     }
 
     $from_addr = notifikasi_email_smtp_ekstrak_alamat($from);
-    if (!$kirim($fp, 'MAIL FROM:<' . $from_addr . '>')) {
+    $mail = $kirim_cek($fp, 'MAIL FROM:<' . $from_addr . '>');
+    if (!$mail['ok']) {
         fclose($fp);
 
-        return ['ok' => false, 'pesan' => 'SMTP MAIL FROM gagal.'];
+        return [
+            'ok' => false,
+            'pesan' => 'SMTP MAIL FROM ditolak untuk <' . $from_addr . '>: '
+                . notifikasi_email_smtp_resp_ringkas((string) $mail['resp'])
+                . ' — From harus sama/izin dengan akun SMTP login.',
+        ];
     }
-    if (!$kirim($fp, 'RCPT TO:<' . notifikasi_email_smtp_ekstrak_alamat($to) . '>')) {
+
+    $to_addr = notifikasi_email_smtp_ekstrak_alamat($to);
+    $rcpt = $kirim_cek($fp, 'RCPT TO:<' . $to_addr . '>');
+    if (!$rcpt['ok']) {
         fclose($fp);
 
-        return ['ok' => false, 'pesan' => 'SMTP RCPT TO gagal.'];
+        return [
+            'ok' => false,
+            'pesan' => 'SMTP RCPT TO ditolak untuk <' . $to_addr . '>: '
+                . notifikasi_email_smtp_resp_ringkas((string) $rcpt['resp']),
+        ];
     }
+
     fwrite($fp, "DATA\r\n");
     $data_resp = $baca($fp);
-    if (!$expect($data_resp, '354')) {
+    if (!notifikasi_email_smtp_resp_ok($data_resp, '354')) {
         fclose($fp);
 
-        return ['ok' => false, 'pesan' => 'SMTP DATA ditolak.'];
+        return ['ok' => false, 'pesan' => 'SMTP DATA ditolak: ' . notifikasi_email_smtp_resp_ringkas($data_resp)];
     }
 
     $headers = [
@@ -170,11 +191,123 @@ function notifikasi_email_smtp_kirim(
     fwrite($fp, "QUIT\r\n");
     fclose($fp);
 
-    if (!$expect($send_resp, '250')) {
-        return ['ok' => false, 'pesan' => 'SMTP pengiriman ditolak server.'];
+    if (!notifikasi_email_smtp_resp_ok($send_resp, '250')) {
+        return ['ok' => false, 'pesan' => 'SMTP kirim ditolak: ' . notifikasi_email_smtp_resp_ringkas($send_resp)];
     }
 
     return ['ok' => true, 'pesan' => 'Email terkirim ke ' . $to . '.'];
+}
+
+/**
+ * @param callable $baca fn($fp): string
+ * @return array{ok: bool, pesan: string}
+ */
+function notifikasi_email_smtp_auth($fp, callable $baca, string $user, string $pass, string $ehlo, string $host): array
+{
+    $metode = [];
+    if (stripos($ehlo, 'AUTH') !== false) {
+        if (stripos($ehlo, 'PLAIN') !== false) {
+            $metode[] = 'PLAIN';
+        }
+        if (stripos($ehlo, 'LOGIN') !== false) {
+            $metode[] = 'LOGIN';
+        }
+    }
+    if ($metode === []) {
+        $metode = ['LOGIN', 'PLAIN'];
+    }
+
+    $error_terakhir = 'Autentikasi SMTP gagal.';
+    foreach ($metode as $m) {
+        if ($m === 'PLAIN') {
+            $hasil = notifikasi_email_smtp_auth_plain($fp, $baca, $user, $pass);
+        } else {
+            $hasil = notifikasi_email_smtp_auth_login($fp, $baca, $user, $pass);
+        }
+        if ($hasil['ok']) {
+            return $hasil;
+        }
+        $error_terakhir = $hasil['pesan'];
+    }
+
+    $saran = notifikasi_email_smtp_saran_gagal_login($host);
+    if (stripos($host, 'gmail') !== false || stripos($user, '@gmail.') !== false) {
+        $saran = 'Gmail wajib pakai App Password (bukan password login). Buat di Google Account → Security → App passwords.';
+    } elseif (str_contains(strtolower($error_terakhir), '535') || str_contains(strtolower($error_terakhir), 'authentication')) {
+        $saran = 'Username/password ditolak server. Untuk Gmail pakai App Password 16 digit. Pastikan From sama dengan akun SMTP.';
+    }
+
+    return ['ok' => false, 'pesan' => $error_terakhir . ' ' . $saran];
+}
+
+/**
+ * @param callable $baca fn($fp): string
+ * @return array{ok: bool, pesan: string}
+ */
+function notifikasi_email_smtp_auth_login($fp, callable $baca, string $user, string $pass): array
+{
+    fwrite($fp, "AUTH LOGIN\r\n");
+    $auth = $baca($fp);
+    if (!notifikasi_email_smtp_resp_ok($auth, '334')) {
+        return ['ok' => false, 'pesan' => 'AUTH LOGIN tidak didukung: ' . notifikasi_email_smtp_resp_ringkas($auth)];
+    }
+    fwrite($fp, base64_encode($user) . "\r\n");
+    $user_resp = $baca($fp);
+    if (!notifikasi_email_smtp_resp_ok($user_resp, '334')) {
+        return ['ok' => false, 'pesan' => 'Username SMTP ditolak: ' . notifikasi_email_smtp_resp_ringkas($user_resp)];
+    }
+    fwrite($fp, base64_encode($pass) . "\r\n");
+    $pass_resp = $baca($fp);
+    if (!notifikasi_email_smtp_resp_ok($pass_resp, '235')) {
+        return [
+            'ok' => false,
+            'pesan' => 'Login SMTP gagal (AUTH LOGIN): ' . notifikasi_email_smtp_resp_ringkas($pass_resp),
+        ];
+    }
+
+    return ['ok' => true, 'pesan' => 'OK'];
+}
+
+/**
+ * @param callable $baca fn($fp): string
+ * @return array{ok: bool, pesan: string}
+ */
+function notifikasi_email_smtp_auth_plain($fp, callable $baca, string $user, string $pass): array
+{
+    $plain = base64_encode("\0" . $user . "\0" . $pass);
+    fwrite($fp, 'AUTH PLAIN ' . $plain . "\r\n");
+    $resp = $baca($fp);
+    if (!notifikasi_email_smtp_resp_ok($resp, '235')) {
+        return [
+            'ok' => false,
+            'pesan' => 'Login SMTP gagal (AUTH PLAIN): ' . notifikasi_email_smtp_resp_ringkas($resp),
+        ];
+    }
+
+    return ['ok' => true, 'pesan' => 'OK'];
+}
+
+function notifikasi_email_smtp_resp_ok(string $resp, string $prefix): bool
+{
+    return strncmp(trim($resp), $prefix, strlen($prefix)) === 0;
+}
+
+function notifikasi_email_smtp_resp_ringkas(string $resp): string
+{
+    $resp = trim(preg_replace('/\s+/', ' ', $resp) ?? '');
+    if ($resp === '') {
+        return '(tanpa respons server)';
+    }
+    if (strlen($resp) > 220) {
+        return substr($resp, 0, 220) . '…';
+    }
+
+    return $resp;
+}
+
+function notifikasi_email_smtp_saran_gagal_login(string $host_hint): string
+{
+    return 'Periksa user/password, port (587/465), dan From yang cocok dengan akun SMTP.';
 }
 
 function notifikasi_email_smtp_ekstrak_alamat(string $masukan): string
