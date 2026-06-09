@@ -240,9 +240,11 @@
         }
         panelBuka = true;
         panel.hidden = false;
+        panel.classList.add('admin-notif-panel--buka');
         btnToggle.setAttribute('aria-expanded', 'true');
         bilah && bilah.classList.add('admin-notif-bilah--buka');
         muatPanel().then(function () {
+            renderDaftar(daftarCache);
             tandaiSemuaDibaca();
         });
     }
@@ -252,6 +254,7 @@
             return;
         }
         panelBuka = false;
+        panel.classList.remove('admin-notif-panel--buka');
         panel.hidden = true;
         btnToggle.setAttribute('aria-expanded', 'false');
         bilah && bilah.classList.remove('admin-notif-bilah--buka');
@@ -436,12 +439,16 @@
         if (!btnToggle || !panel) {
             return;
         }
+        tutupPanel();
+
         btnToggle.addEventListener('click', function (e) {
+            e.preventDefault();
             e.stopPropagation();
             togglePanel();
         });
         if (btnTutup) {
             btnTutup.addEventListener('click', function (e) {
+                e.preventDefault();
                 e.stopPropagation();
                 tutupPanel();
             });

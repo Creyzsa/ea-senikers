@@ -128,7 +128,7 @@ body.halaman-admin {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
     gap: 0.75rem;
     padding: 0.75rem clamp(1rem, 3vw, 1.75rem);
     background: var(--abu-kartu);
@@ -136,17 +136,25 @@ body.halaman-admin {
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
 }
 
+.admin-bilah__kanan {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
 .admin-pengguna {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.35rem 0.5rem 0.35rem 0.4rem;
+    padding: 0.35rem 0.75rem 0.35rem 0.4rem;
     background: var(--abu-latar);
     border: 1px solid var(--abu-tepi);
     border-radius: 999px;
     font-size: 0.85rem;
     color: var(--teks-redup);
-    position: relative;
 }
 
 .admin-pengguna__ikon {
@@ -2550,10 +2558,10 @@ body.admin-menu-terbuka {
 }
 
 /* Notifikasi admin (browser + halaman pengaturan) */
-/* Lonceng notifikasi di bilah admin */
+/* Lonceng notifikasi — kiri bilah admin (terpisah dari pill pengguna) */
 .admin-notif-bilah {
     position: relative;
-    margin-left: 0.15rem;
+    flex-shrink: 0;
 }
 
 .admin-notif-bilah__tombol {
@@ -2561,12 +2569,12 @@ body.admin-menu-terbuka {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.1rem;
-    height: 2.1rem;
+    width: 2.35rem;
+    height: 2.35rem;
     padding: 0;
     color: var(--teks-redup);
-    background: transparent;
-    border: 1px solid transparent;
+    background: var(--abu-latar);
+    border: 1px solid var(--abu-tepi);
     border-radius: 50%;
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
@@ -2604,17 +2612,21 @@ body.admin-menu-terbuka {
 .admin-notif-panel {
     position: absolute;
     top: calc(100% + 0.55rem);
-    right: 0;
+    left: 0;
     z-index: 1300;
     width: min(22rem, calc(100vw - 2rem));
     max-height: min(24rem, 70vh);
-    display: flex;
+    display: none;
     flex-direction: column;
     overflow: hidden;
     background: var(--abu-kartu);
     border: 1px solid var(--abu-tepi);
     border-radius: 14px;
     box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+}
+
+.admin-notif-panel.admin-notif-panel--buka {
+    display: flex;
 }
 
 .admin-notif-panel__header {
@@ -2794,7 +2806,7 @@ body.admin-menu-terbuka {
     }
 
     .admin-notif-panel {
-        right: -0.25rem;
+        left: 0;
         width: min(20rem, calc(100vw - 1.5rem));
     }
 }

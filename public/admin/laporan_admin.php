@@ -100,6 +100,8 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
 
         <div class="admin-utama">
             <header class="admin-bilah">
+                <?php include __DIR__ . '/../../includes/komponen/admin_notifikasi_bilah.php'; ?>
+                <div class="admin-bilah__kanan">
                 <?php include __DIR__ . '/../../includes/komponen/admin_bilah_pengguna.php'; ?>
                 <a class="admin-tombol-keluar" href="<?php echo $urlKeluar; ?>">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -107,6 +109,7 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                     </svg>
                     Keluar
                 </a>
+                </div>
             </header>
 
             <main class="admin-isi">
@@ -226,5 +229,3 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
     </div>
 <script src="../assets/js/pencarian-langsung.js" defer></script>
 <?php include __DIR__ . '/../../includes/komponen/admin_skrip_responsif.php'; ?>
-</body>
-</html>
