@@ -232,8 +232,7 @@ body.halaman-admin {
     gap: 0.4rem;
 }
 
-.admin-isi-dashboard .admin-dashboard-bawah__kiri,
-.admin-isi-dashboard .admin-dashboard-bawah__kanan {
+.admin-isi-dashboard .admin-dashboard-bawah__samping-atas {
     gap: 0.75rem;
 }
 
@@ -466,21 +465,73 @@ body.halaman-admin {
 .admin-dashboard-bawah {
     display: grid;
     grid-template-columns: minmax(0, 1.65fr) minmax(260px, 1fr);
+    grid-template-rows: auto 1fr;
     gap: 0.75rem;
-    align-items: start;
+    align-items: stretch;
 }
 
-.admin-dashboard-bawah__kiri,
-.admin-dashboard-bawah__kanan {
+.admin-dashboard-bawah__grafik {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+}
+
+.admin-dashboard-bawah__samping-atas {
+    grid-column: 2;
+    grid-row: 1;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     min-width: 0;
 }
 
+.admin-dashboard-bawah__pesanan,
+.admin-dashboard-bawah__aktivitas {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.admin-dashboard-bawah__pesanan {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.admin-dashboard-bawah__aktivitas {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.admin-isi-dashboard .admin-panel--pesanan-terbaru .admin-tabel-wrap,
+.admin-isi-dashboard .admin-panel--pesanan-terbaru .admin-kosong,
+.admin-isi-dashboard .admin-panel--aktivitas-terbaru .admin-aktivitas {
+    flex: 1;
+}
+
 @media (max-width: 960px) {
     .admin-dashboard-bawah {
         grid-template-columns: 1fr;
+        grid-template-rows: none;
+    }
+
+    .admin-dashboard-bawah__grafik,
+    .admin-dashboard-bawah__samping-atas,
+    .admin-dashboard-bawah__pesanan,
+    .admin-dashboard-bawah__aktivitas {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .admin-dashboard-bawah__pesanan,
+    .admin-dashboard-bawah__aktivitas {
+        display: block;
+    }
+
+    .admin-isi-dashboard .admin-panel--pesanan-terbaru .admin-tabel-wrap,
+    .admin-isi-dashboard .admin-panel--pesanan-terbaru .admin-kosong,
+    .admin-isi-dashboard .admin-panel--aktivitas-terbaru .admin-aktivitas {
+        flex: none;
     }
 
     .admin-hero-owner__aksi {

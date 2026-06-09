@@ -307,71 +307,28 @@ if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
                 </div>
 
                 <div class="admin-dashboard-bawah">
-                    <div class="admin-dashboard-bawah__kiri">
-                        <section class="admin-panel" aria-labelledby="judul-grafik">
-                            <h2 id="judul-grafik" class="admin-panel__judul">Pendapatan 7 hari</h2>
-                            <p class="admin-grafik__sub">Pendapatan tercatat per hari (maksimum minggu ini: Rp <?php echo htmlspecialchars(number_format((int) $grafik_nilai_terbesar, 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?>).</p>
-                            <div class="admin-grafik" role="img" aria-label="Pendapatan tujuh hari terakhir, maksimum <?php echo htmlspecialchars($grafik_aria_nilai, ENT_QUOTES, 'UTF-8'); ?>">
-                                <?php foreach ($grafik_minggu as $batang): ?>
-                                    <?php $h_pct = round((float) ($batang['height_pct'] ?? 0), 2); ?>
-                                    <?php $nil_rp = number_format((int) round($batang['nilai'] ?? 0), 0, ',', '.'); ?>
-                                    <?php $h_show_pct = max(8, min(100, (int) round((float) $h_pct))); ?>
-                                    <div class="admin-grafik__batang-wrap" tabindex="0" role="presentation" title="Rp <?php echo htmlspecialchars($nil_rp, ENT_QUOTES, 'UTF-8'); ?>">
-                                        <span class="admin-grafik__nilai-mini" aria-hidden="true"><?php echo $h_pct <= 12 ? '' : htmlspecialchars($nil_rp, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <div class="admin-grafik__batang" style="--tinggi-batang: <?php echo (string) $h_show_pct; ?>%;"></div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                            <div class="admin-grafik__kaki">
-                                <?php foreach ($grafik_minggu as $batang): ?>
-                                    <span><?php echo htmlspecialchars((string) ($batang['label'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
-                                <?php endforeach; ?>
-                            </div>
-                        </section>
-
-                        <section class="admin-panel" aria-labelledby="judul-pesanan-terbaru">
-                        <div class="admin-panel__kop">
-                            <h2 id="judul-pesanan-terbaru" class="admin-panel__judul">Pesanan terbaru</h2>
-                            <a class="admin-panel__tautan" href="<?php echo $url_pesanan; ?>">Semua pesanan</a>
+                    <section class="admin-panel admin-dashboard-bawah__grafik" aria-labelledby="judul-grafik">
+                        <h2 id="judul-grafik" class="admin-panel__judul">Pendapatan 7 hari</h2>
+                        <p class="admin-grafik__sub">Pendapatan tercatat per hari (maksimum minggu ini: Rp <?php echo htmlspecialchars(number_format((int) $grafik_nilai_terbesar, 0, ',', '.'), ENT_QUOTES, 'UTF-8'); ?>).</p>
+                        <div class="admin-grafik" role="img" aria-label="Pendapatan tujuh hari terakhir, maksimum <?php echo htmlspecialchars($grafik_aria_nilai, ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php foreach ($grafik_minggu as $batang): ?>
+                                <?php $h_pct = round((float) ($batang['height_pct'] ?? 0), 2); ?>
+                                <?php $nil_rp = number_format((int) round($batang['nilai'] ?? 0), 0, ',', '.'); ?>
+                                <?php $h_show_pct = max(8, min(100, (int) round((float) $h_pct))); ?>
+                                <div class="admin-grafik__batang-wrap" tabindex="0" role="presentation" title="Rp <?php echo htmlspecialchars($nil_rp, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <span class="admin-grafik__nilai-mini" aria-hidden="true"><?php echo $h_pct <= 12 ? '' : htmlspecialchars($nil_rp, ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <div class="admin-grafik__batang" style="--tinggi-batang: <?php echo (string) $h_show_pct; ?>%;"></div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                        <?php if ($pesanan_terbaru === []): ?>
-                            <p class="admin-kosong">Belum ada pesanan masuk.</p>
-                        <?php else: ?>
-                            <div class="admin-tabel-wrap">
-                                <table class="admin-tabel admin-tabel--padat">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">ID</th>
-                                            <th scope="col">Pembeli</th>
-                                            <th scope="col">Total</th>
-                                            <th scope="col">Status</th>
-                                            <th scope="col">Waktu</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($pesanan_terbaru as $ps): ?>
-                                            <?php
-                                            $st_ps = (string) ($ps['status'] ?? '');
-                                            $kelas_badge = $badge_kelas[$st_ps] ?? 'pesanan-badge';
-                                            $lab_ps = $status_labels[$st_ps] ?? $st_ps;
-                                            $rp_ps = number_format((int) round((float) ($ps['total_price'] ?? 0)), 0, ',', '.');
-                                            ?>
-                                            <tr>
-                                                <td><a href="<?php echo htmlspecialchars((string) $ps['url'], ENT_QUOTES, 'UTF-8'); ?>"><strong>#<?php echo (int) $ps['id']; ?></strong></a></td>
-                                                <td><?php echo htmlspecialchars((string) $ps['nama_pembeli'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                                <td>Rp <?php echo htmlspecialchars($rp_ps, ENT_QUOTES, 'UTF-8'); ?></td>
-                                                <td><span class="<?php echo htmlspecialchars($kelas_badge, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($lab_ps, ENT_QUOTES, 'UTF-8'); ?></span></td>
-                                                <td class="admin-meta"><?php echo htmlspecialchars((string) $ps['waktu'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php endif; ?>
-                        </section>
-                    </div>
+                        <div class="admin-grafik__kaki">
+                            <?php foreach ($grafik_minggu as $batang): ?>
+                                <span><?php echo htmlspecialchars((string) ($batang['label'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
 
-                    <aside class="admin-dashboard-bawah__kanan" aria-label="Aksi cepat, stok, dan aktivitas">
+                    <div class="admin-dashboard-bawah__samping-atas" aria-label="Aksi cepat dan perhatian stok">
                         <section class="admin-panel admin-panel--ringkas" aria-labelledby="judul-aksi-cepat">
                             <h2 id="judul-aksi-cepat" class="admin-panel__judul">Aksi cepat</h2>
                             <nav class="admin-aksi-grid">
@@ -430,8 +387,50 @@ if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
                                 <?php endif; ?>
                             </section>
                         <?php endif; ?>
+                    </div>
 
-                        <section class="admin-panel" aria-labelledby="judul-aktivitas">
+                    <section class="admin-panel admin-panel--pesanan-terbaru admin-dashboard-bawah__pesanan" aria-labelledby="judul-pesanan-terbaru">
+                        <div class="admin-panel__kop">
+                            <h2 id="judul-pesanan-terbaru" class="admin-panel__judul">Pesanan terbaru</h2>
+                            <a class="admin-panel__tautan" href="<?php echo $url_pesanan; ?>">Semua pesanan</a>
+                        </div>
+                        <?php if ($pesanan_terbaru === []): ?>
+                            <p class="admin-kosong">Belum ada pesanan masuk.</p>
+                        <?php else: ?>
+                            <div class="admin-tabel-wrap">
+                                <table class="admin-tabel admin-tabel--padat">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">ID</th>
+                                            <th scope="col">Pembeli</th>
+                                            <th scope="col">Total</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Waktu</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($pesanan_terbaru as $ps): ?>
+                                            <?php
+                                            $st_ps = (string) ($ps['status'] ?? '');
+                                            $kelas_badge = $badge_kelas[$st_ps] ?? 'pesanan-badge';
+                                            $lab_ps = $status_labels[$st_ps] ?? $st_ps;
+                                            $rp_ps = number_format((int) round((float) ($ps['total_price'] ?? 0)), 0, ',', '.');
+                                            ?>
+                                            <tr>
+                                                <td><a href="<?php echo htmlspecialchars((string) $ps['url'], ENT_QUOTES, 'UTF-8'); ?>"><strong>#<?php echo (int) $ps['id']; ?></strong></a></td>
+                                                <td><?php echo htmlspecialchars((string) $ps['nama_pembeli'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                                <td>Rp <?php echo htmlspecialchars($rp_ps, ENT_QUOTES, 'UTF-8'); ?></td>
+                                                <td><span class="<?php echo htmlspecialchars($kelas_badge, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($lab_ps, ENT_QUOTES, 'UTF-8'); ?></span></td>
+                                                <td class="admin-meta"><?php echo htmlspecialchars((string) $ps['waktu'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endif; ?>
+                    </section>
+
+                    <section class="admin-panel admin-panel--aktivitas-terbaru admin-dashboard-bawah__aktivitas" aria-labelledby="judul-aktivitas">
                         <h2 id="judul-aktivitas" class="admin-panel__judul">Aktivitas terbaru</h2>
                         <ul class="admin-aktivitas">
                             <?php if ($aktivitas === []): ?>
@@ -468,8 +467,7 @@ if ($delta_pendapatan === null || abs((float) $delta_pendapatan) < 0.5) {
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </ul>
-                        </section>
-                    </aside>
+                    </section>
                 </div>
 
             </main>
