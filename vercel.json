@@ -14,7 +14,7 @@
       "dest": "/public/$1"
     },
     {
-      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot))",
+      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot|mp3|wav|ogg))",
       "dest": "/public/$1"
     },
     { "src": "/pembeli/produk.php", "dest": "/produk", "status": 301 },

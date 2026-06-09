@@ -1,10 +1,11 @@
 /**
  * Service Worker — Web Push notifikasi admin EA SENIKERS.
- * Getar via pola vibrate; bunyi lewat notifikasi sistem OS.
+ * Getar + bunyi kustom (via tab terbuka) / bunyi OS (tab tertutup).
  */
 'use strict';
 
 var VIBRATE_POLA = [180, 90, 180, 90, 220];
+var NOTIF_SOUND_URL = '/assets/sounds/admin-notif.mp3';
 
 function parsePayload(event) {
     if (!event.data) {
@@ -35,22 +36,31 @@ self.addEventListener('push', function (event) {
     var url = data.url || '/admin/notifikasi_admin.php';
     var tag = data.tag || ('easenikers-event-' + (data.event_id || data.order_id || Date.now()));
 
-    var promise = self.registration.showNotification(title, {
+    var soundUrl = data.sound_url || NOTIF_SOUND_URL;
+    var notifOpts = {
         body: body,
         tag: tag,
         renotify: true,
         vibrate: VIBRATE_POLA,
         icon: '/assets/images/easenikers.png',
         badge: '/assets/images/easenikers.png',
-        data: { url: url, event_id: data.event_id || 0, order_id: data.order_id || 0 },
-        requireInteraction: false
-    }).then(function () {
+        data: { url: url, event_id: data.event_id || 0, order_id: data.order_id || 0, sound_url: soundUrl },
+        requireInteraction: false,
+        silent: false
+    };
+    if (soundUrl) {
+        notifOpts.sound = soundUrl;
+    }
+
+    var promise = self.registration.showNotification(title, notifOpts).then(function () {
         return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     }).then(function (clients) {
         clients.forEach(function (client) {
             client.postMessage({
                 type: 'easenikers-admin-push',
-                payload: data
+                payload: data,
+                sound_url: soundUrl,
+                play_sound: true
             });
         });
     });

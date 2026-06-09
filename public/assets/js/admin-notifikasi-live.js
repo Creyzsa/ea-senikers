@@ -11,9 +11,12 @@
 
     var pollUrl = document.body.getAttribute('data-admin-notif-poll');
     var panelUrl = document.body.getAttribute('data-admin-notif-panel');
+    var soundUrl = document.body.getAttribute('data-admin-notif-sound') || '/assets/sounds/admin-notif.mp3';
     if (!pollUrl) {
         return;
     }
+
+    var audioNotif = null;
 
     var alertSince = 0;
     var readUntil = 0;
@@ -67,7 +70,7 @@
         }
     }
 
-    function bunyiNotifikasi() {
+    function bunyiNotifikasiFallback() {
         try {
             var Ctx = window.AudioContext || window.webkitAudioContext;
             if (!Ctx) {
@@ -90,6 +93,36 @@
             beep(880, 0.34, 0.12);
         } catch (e) {
             // Abaikan
+        }
+    }
+
+    function ambilAudioNotif() {
+        if (!soundUrl) {
+            return null;
+        }
+        if (!audioNotif) {
+            audioNotif = new Audio(soundUrl);
+            audioNotif.preload = 'auto';
+        }
+        return audioNotif;
+    }
+
+    function bunyiNotifikasi() {
+        var audio = ambilAudioNotif();
+        if (!audio) {
+            bunyiNotifikasiFallback();
+            return;
+        }
+        try {
+            audio.currentTime = 0;
+            var playPromise = audio.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(function () {
+                    bunyiNotifikasiFallback();
+                });
+            }
+        } catch (e) {
+            bunyiNotifikasiFallback();
         }
     }
 
