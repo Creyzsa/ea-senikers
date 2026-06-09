@@ -2487,3 +2487,339 @@ body.halaman-keranjang {
         gap: 0.75rem;
     }
 }
+
+/* --- Halaman akun --- */
+.akun-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: clamp(1rem, 3vw, 2rem) clamp(1rem, 3vw, 2.5rem) 3rem;
+}
+
+.akun-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin: 0.5rem 0 1.25rem;
+    padding: clamp(1.35rem, 4vw, 2rem);
+    background: var(--brand-black);
+    border-radius: 16px;
+    color: #fff;
+    box-shadow: 0 20px 50px rgba(15, 15, 16, 0.16);
+}
+
+.akun-hero__profil {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.akun-avatar {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 4.25rem;
+    height: 4.25rem;
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 1.65rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--brand-red), #9a1a1a);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(214, 40, 40, 0.35);
+}
+
+.akun-hero__eyebrow {
+    margin: 0 0 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brand-red);
+}
+
+.akun-hero__judul {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: clamp(1.35rem, 3.5vw, 1.9rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: 0.02em;
+    word-break: break-word;
+}
+
+.akun-hero__meta {
+    margin: 0.45rem 0 0;
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.72);
+    word-break: break-word;
+}
+
+.akun-hero__aksi {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.55rem;
+    flex-shrink: 0;
+}
+
+.akun-hero__chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.akun-hero__chip--hijau {
+    color: #bbf7d0;
+    background: rgba(22, 163, 74, 0.2);
+    border-color: rgba(22, 163, 74, 0.35);
+}
+
+.akun-hero__chip--kuning {
+    color: #fde68a;
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+.akun-hero__keluar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.akun-hero__keluar:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+}
+
+.akun-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.akun-stat {
+    padding: 0.85rem 1rem;
+    background: #fff;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 12px;
+    box-shadow: var(--bayangan-kartu);
+}
+
+.akun-stat__label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--teks-redup);
+}
+
+.akun-stat__nilai {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.92rem;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--teks-utama);
+    word-break: break-word;
+}
+
+.akun-layout {
+    display: grid;
+    grid-template-columns: minmax(17rem, 22rem) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.akun-panel {
+    padding: clamp(1.1rem, 2.5vw, 1.35rem);
+    background: #fff;
+    border: 1px solid var(--abu-tepi);
+    border-radius: 14px;
+    box-shadow: var(--bayangan-kartu);
+}
+
+.akun-panel--menu {
+    position: sticky;
+    top: 5.5rem;
+}
+
+.akun-panel__header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.akun-panel__judul {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+}
+
+.akun-panel__sub {
+    margin: 0.3rem 0 0;
+    font-size: 0.8rem;
+    color: var(--teks-redup);
+    line-height: 1.4;
+}
+
+.akun-menu-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.akun-menu-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.85rem;
+    color: inherit;
+    text-decoration: none;
+    background: var(--brand-gray-light);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+
+.akun-menu-card:hover {
+    background: #fff;
+    border-color: rgba(214, 40, 40, 0.25);
+    transform: translateX(2px);
+}
+
+.akun-menu-card__ikon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.35rem;
+    height: 2.35rem;
+    color: var(--brand-red);
+    background: rgba(214, 40, 40, 0.1);
+    border-radius: 9px;
+}
+
+.akun-menu-card--wa .akun-menu-card__ikon {
+    color: #16a34a;
+    background: rgba(22, 163, 74, 0.12);
+}
+
+.akun-menu-card__teks {
+    flex: 1;
+    min-width: 0;
+}
+
+.akun-menu-card__teks strong {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--teks-utama);
+    line-height: 1.25;
+}
+
+.akun-menu-card__teks span {
+    display: block;
+    margin-top: 0.12rem;
+    font-size: 0.76rem;
+    color: var(--teks-redup);
+    line-height: 1.35;
+}
+
+.akun-menu-card__panah {
+    flex-shrink: 0;
+    color: #d1d5db;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.akun-menu-card:hover .akun-menu-card__panah {
+    color: var(--brand-red);
+    transform: translateX(2px);
+}
+
+.akun-tombol-simpan {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.65rem;
+    padding: 0.7rem 1.35rem;
+    font-family: var(--font-body);
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--oranye-cta);
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: 0 6px 20px rgba(214, 40, 40, 0.28);
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.akun-tombol-simpan:hover {
+    background: var(--oranye-cta-hover);
+}
+
+.akun-tombol-simpan:active {
+    transform: scale(0.98);
+}
+
+@media (max-width: 900px) {
+    .akun-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .akun-panel--menu {
+        position: static;
+    }
+
+    .akun-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .akun-hero {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .akun-hero__aksi {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .akun-hero__profil {
+        align-items: flex-start;
+    }
+
+    .akun-form-aksi {
+        justify-content: stretch;
+    }
+
+    .akun-tombol-simpan {
+        width: 100%;
+    }
+}
