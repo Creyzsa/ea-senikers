@@ -315,7 +315,7 @@ $u_checkout = aplikasi_url('checkout');
                         </select>
                     </div>
                     <textarea name="komentar" placeholder="Bagaimana kondisi & pengalaman Anda dengan produk ini?" required rows="3"><?php echo htmlspecialchars($komentar_item, ENT_QUOTES, 'UTF-8'); ?></textarea>
-                    <button type="submit" name="aksi" value="edit_ulasan" class="btn-ulasan btn-ulasan--edit">Simpan Perubahan</button>
+                    <button type="submit" name="aksi" value="edit_ulasan" class="btn-ulasan btn-ulasan--edit">Simpan Perubahan Ulasan</button>
                 </form>
                 <?php else: ?>
                 <p class="ulasan-text"><?php echo nl2br(htmlspecialchars($komentar_item, ENT_QUOTES, 'UTF-8')); ?></p>
@@ -341,7 +341,7 @@ $u_checkout = aplikasi_url('checkout');
                 </select>
             </div>
             <textarea name="komentar" placeholder="Bagaimana kondisi & pengalaman Anda dengan produk ini?" required rows="3"></textarea>
-            <button type="submit" name="aksi" value="tambah_ulasan" class="btn-ulasan">Kirim Ulasan</button>
+            <button type="submit" name="aksi" value="tambah_ulasan" class="btn-ulasan btn-ulasan--utama">Kirim Ulasan</button>
         </form>
         <?php endif; ?>
         <?php if (isset($_GET['ulasan_ok'])): ?>

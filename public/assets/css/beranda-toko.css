@@ -2857,8 +2857,8 @@ body.halaman-toko {
     padding: 0.75rem;
 }
 .ulasan-item--milik-saya {
-    border-color: #c4b5fd;
-    background: #faf5ff;
+    border-color: rgba(214, 40, 40, 0.22);
+    background: var(--brand-gray-light);
 }
 .ulasan-badge-terkirim {
     margin-left: auto;
@@ -2874,21 +2874,15 @@ body.halaman-toko {
 .ulasan-edit-hint {
     margin: 0;
     font-size: 0.8rem;
-    color: #6b7280;
+    color: var(--teks-redup);
     line-height: 1.45;
 }
 .ulasan-edit-form textarea,
 .ulasan-edit-form select {
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    padding: 0.5rem;
-    font-size: 0.9rem;
     width: 100%;
     box-sizing: border-box;
 }
-.btn-ulasan--edit {
-    background: #b45309;
-}
+
 .ulasan-head {
     display: flex;
     align-items: center;
@@ -2906,14 +2900,27 @@ body.halaman-toko {
 }
 
 .form-ulasan {
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
     display: grid;
-    gap: 0.5rem;
+    gap: 0.65rem;
+    padding: 1rem;
+    background: var(--brand-gray-light);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius);
+}
+.form-ulasan .form-row {
+    display: grid;
+    gap: 0.35rem;
+}
+.form-ulasan .form-row label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--teks-utama);
 }
 .form-ulasan-hint {
     margin: 0;
     font-size: 0.82rem;
-    color: #6b7280;
+    color: var(--teks-redup);
     line-height: 1.45;
 }
 .ulasan-locked {
@@ -2926,21 +2933,80 @@ body.halaman-toko {
     border-radius: 6px;
 }
 .form-ulasan textarea,
-.form-ulasan select {
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    padding: 0.5rem;
+.form-ulasan select,
+.ulasan-edit-form textarea,
+.ulasan-edit-form select {
+    border: 1px solid var(--brand-border-input);
+    border-radius: 8px;
+    padding: 0.55rem 0.65rem;
     font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--teks-utama);
+    background: var(--brand-white);
+    transition: border-color var(--transisi-cepat), box-shadow var(--transisi-cepat);
+}
+.form-ulasan textarea:focus,
+.form-ulasan select:focus,
+.ulasan-edit-form textarea:focus,
+.ulasan-edit-form select:focus {
+    outline: none;
+    border-color: var(--brand-red);
+    box-shadow: 0 0 0 3px var(--fokus-ring);
+}
+.form-ulasan textarea {
+    resize: vertical;
+    min-height: 5.5rem;
 }
 .btn-ulasan {
-    justify-self: start;
-    padding: 0.5rem 1rem;
-    background: var(--accent);
-    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    padding: 0.65rem 1.25rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
     border: none;
-    border-radius: 6px;
-    font-weight: 600;
+    border-radius: 10px;
     cursor: pointer;
+    transition: background var(--transisi-tombol), color var(--transisi-tombol),
+        transform 0.12s ease, box-shadow var(--transisi-tombol);
+}
+.btn-ulasan--utama {
+    justify-self: start;
+    width: 100%;
+    max-width: 16rem;
+    color: var(--beli-teks);
+    background: var(--gradasi-beli);
+    box-shadow: var(--beli-bayangan-3d);
+}
+.btn-ulasan--utama:hover {
+    background: var(--gradasi-beli-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--beli-bayangan-hover);
+}
+.btn-ulasan--utama:active {
+    background: var(--gradasi-beli-tekan);
+    transform: translateY(1px);
+    box-shadow: var(--beli-bayangan-aktif);
+}
+.btn-ulasan--edit {
+    justify-self: start;
+    color: var(--brand-white);
+    background: var(--brand-red);
+    box-shadow: 0 4px 14px rgba(214, 40, 40, 0.22);
+}
+.btn-ulasan--edit:hover {
+    background: var(--brand-red-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(214, 40, 40, 0.3);
+}
+.btn-ulasan--edit:active {
+    background: var(--brand-red-press);
+    transform: translateY(1px);
 }
 .flash-success {
     color: #166534;
