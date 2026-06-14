@@ -404,7 +404,7 @@ function katalog_ringkasan_kondisi_beranda(array $daftar_produk): array
         'Baru' => [
             'kondisi' => 'Baru',
             'nama' => 'Baru',
-            'deskripsi' => 'Sneaker original belum dipakai',
+            'deskripsi' => 'Sneaker baru belum dipakai',
             'jumlah' => 0,
             'gambar' => katalog_url_gambar_placeholder(),
             'url' => aplikasi_url('produk?kondisi=' . rawurlencode('Baru')),

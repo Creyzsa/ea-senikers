@@ -129,7 +129,7 @@ $brand_pilihan_kategori = $kategori_filter !== ''
             <div class="katalog-hero-premium__kiri">
                 <p class="katalog-hero-premium__eyebrow">EA SENIKERS</p>
                 <h1 id="judul-katalog">Koleksi Sneaker Terbaik Untuk Gaya Terbaikmu</h1>
-                <p class="katalog-hero-premium__deskripsi">Temukan sneaker original dan preloved berkualitas dengan kondisi terjamin dan harga transparan.</p>
+                <p class="katalog-hero-premium__deskripsi">Temukan sneaker baru dan preloved berkualitas dengan kondisi terjamin dan harga transparan.</p>
             </div>
             <ul class="katalog-hero-premium__trust" aria-label="Keunggulan toko">
                 <li>

@@ -2,7 +2,9 @@
 
 Website e-commerce penjualan sneakers (baru & preloved) berbasis PHP Native dan Supabase. Project tugas yang dibuat untuk membantu proses penjualan sepatu secara online, mulai dari pendaftaran pengguna, katalog produk, keranjang belanja, hingga pengelolaan pesanan oleh admin.
 
-**Status:** Tahap 1 selesai (siap input data). Tahap 2: ongkir JNE aktif; pembayaran Pakasir terintegrasi (isi kredensial di Pengaturan admin).
+**Status:** Beroperasi. Ongkir via RajaOngkir (Komerce) aktif, pembayaran Pakasir terintegrasi, plus ulasan produk, wishlist, chat toko, laporan masalah, dan notifikasi admin (Telegram + Web Push).
+
+> **Catatan setup database:** file SQL skema/migration sengaja **tidak disertakan** di repo agar tampilan root tetap bersih. Jalankan skema Supabase secara manual lewat SQL Editor (lihat [Setup Database](#setup-database)).
 
 ---
 
@@ -13,7 +15,7 @@ Website e-commerce penjualan sneakers (baru & preloved) berbasis PHP Native dan 
 - [Anggota Tim](#anggota-tim)
 - [Cara Menjalankan](#cara-menjalankan)
 - [Struktur Folder](#struktur-folder)
-- [Daftar SQL Migration](#daftar-sql-migration)
+- [Setup Database](#setup-database)
 - [Dependensi Eksternal](#dependensi-eksternal)
 - [Roadmap](#roadmap)
 
@@ -23,30 +25,37 @@ Website e-commerce penjualan sneakers (baru & preloved) berbasis PHP Native dan 
 
 ### Area Pembeli
 
-- Pendaftaran & login (terhubung Supabase Auth)
-- Beranda dengan produk rekomendasi
-- Katalog produk dengan filter (merek, kondisi, harga) & pencarian
+- Pendaftaran & login (terhubung Supabase Auth, konfirmasi email + reset sandi)
+- Beranda dengan produk rekomendasi & terlaris
+- Katalog produk dengan filter (merek, kondisi, harga) & pencarian (saran cari)
 - Halaman Kategori (jelajah per merek atau kondisi)
 - Detail produk:
   - Lightbox zoom untuk foto produk
   - Indikator stok rendah per ukuran (≤3 tersisa)
   - Label "Preloved" konsisten di seluruh situs
+  - Ulasan & rating produk (hanya pembeli yang sudah membeli)
 - Keranjang belanja dengan ringkasan subtotal
-- Halaman Pesanan: daftar + filter status + detail pesanan dengan tombol "Hubungi toko via WhatsApp"
+- Wishlist produk
+- Checkout dengan ongkir RajaOngkir (multi-kurir) + pembayaran Pakasir (QRIS, VA, PayPal)
+- Halaman Pesanan: daftar + filter status + detail pesanan, tombol bayar & "Hubungi toko via WhatsApp"
+- Chat ke toko & lapor masalah pesanan
 - Profil pengiriman lengkap di halaman Akun:
   - Cascading dropdown alamat (provinsi → kota → kecamatan) dari API BPS
   - Peta interaktif untuk menentukan titik lokasi (Leaflet + OpenStreetMap)
   - Tombol "Lokasi saya" via Geolocation browser
-- Halaman Tentang berisi cerita brand & tips merawat sneakers
+- Halaman Tentang, Bantuan, dan tips merawat sneakers
 
 ### Area Admin
 
-- Dashboard dengan statistik (pendapatan 30 hari, pesanan, produk aktif, pengguna), grafik mingguan, dan aktivitas terbaru
-- Manajemen Produk: CRUD lengkap, upload multi-foto, stok per ukuran (EU 36–45), input berat untuk perhitungan ongkir
-- Manajemen Pesanan: filter status, pencarian, transisi status berjenjang (pending → paid → processed → shipped → completed), pembatalan dengan CSRF
+- Dashboard dengan statistik (pendapatan, pesanan, produk aktif, pengguna), grafik, dan aktivitas terbaru
+- Manajemen Produk: CRUD lengkap, upload multi-foto (Supabase Storage), stok per ukuran (EU 36–45), input berat untuk perhitungan ongkir
+- Manajemen Brand: upload logo/ikon brand
+- Manajemen Pesanan: filter status, pencarian, transisi status berjenjang (pending → paid → processed → shipped → completed), input nomor resi, pembatalan dengan CSRF
 - Detail pesanan dengan informasi kontak pembeli (nama, email, no HP, tombol WhatsApp)
-- Daftar Pengguna
-- Pengaturan toko: identitas, kontak WhatsApp, metode pembayaran sementara
+- Laporan penjualan & daftar pengguna
+- Notifikasi pesanan/pembayaran masuk via Telegram bot dan Web Push browser
+- Pengaturan toko: identitas, kontak WhatsApp, API key RajaOngkir & lokasi asal, kredensial Pakasir
+- Cek Ongkir RajaOngkir: tes koneksi, cari ID lokasi, simulasi tarif multi-kurir
 
 ---
 
@@ -55,6 +64,10 @@ Website e-commerce penjualan sneakers (baru & preloved) berbasis PHP Native dan 
 - **Backend:** PHP 8.x (native, tanpa framework)
 - **Database:** PostgreSQL via [Supabase](https://supabase.com/)
 - **Auth:** Supabase Auth (email + password, konfirmasi email)
+- **Storage:** Supabase Storage (gambar produk & logo brand)
+- **Ongkir:** RajaOngkir (platform Komerce) — multi-kurir
+- **Pembayaran:** Pakasir (QRIS, Virtual Account, PayPal)
+- **Notifikasi admin:** Telegram Bot API + Web Push (VAPID)
 - **Frontend:** HTML, CSS, JavaScript vanilla (tanpa build tool)
 - **Peta:** [Leaflet 1.9.4](https://leafletjs.com/) + [OpenStreetMap](https://www.openstreetmap.org/) tiles
 - **Server lokal:** Laragon (Windows) / XAMPP
@@ -114,15 +127,11 @@ define('URL_APLIKASI', 'http://localhost/EASENIKERS/public/');
 
 > **Catatan:** `config.php` sudah di-`.gitignore` agar kredensial tidak ikut ter-push ke GitHub.
 
-### 5. Jalankan SQL Migration
+### 5. Siapkan Skema Database
 
-Buka **Supabase Dashboard → SQL Editor → New query**, lalu jalankan file-file di [database/migrations/](database/migrations/) **berurutan**:
+Buka **Supabase Dashboard → SQL Editor → New query**, lalu buat skema tabel inti (`users`, `produk`, `produk_ukuran`, `produk_gambar`, `orders`, `order_items`, `ulasan`, `wishlist`, dll) sesuai kebutuhan aplikasi.
 
-1. `tahap1_berat_dan_profil.sql` — kolom berat produk + profil pengiriman pembeli
-2. `tahap1_2_peta_alamat.sql` — kolom lat/lng untuk peta pembeli
-3. `tahap1_3_perbaiki_rls_produk.sql` — matikan RLS pada tabel produk agar admin bisa CRUD
-
-Lihat [Daftar SQL Migration](#daftar-sql-migration) untuk penjelasan masing-masing.
+> File SQL skema/migration tidak disertakan di repo agar root tetap bersih (lihat [Setup Database](#setup-database)). Beberapa kolom pelengkap (mis. `orders.stok_dipotong`, pelebaran `orders.destination_id`) di-migrasi otomatis oleh aplikasi saat runtime.
 
 ### 6. Buat Akun Admin
 
@@ -136,84 +145,109 @@ Akses `http://localhost/EASENIKERS/public/` dan masuk dengan akun yang sudah dib
 
 ## Struktur Folder
 
-Project disusun dengan pemisahan tegas antara **backend logic** (`includes/`),
-**database** (`database/`), dan **document root web** (`public/`). Folder
-`includes/` lalu dipecah menjadi subfolder bertema agar mudah dilacak.
+Project disusun dengan pemisahan tegas antara **backend logic** (`includes/`)
+dan **document root web** (`public/`). Folder `includes/` dipecah menjadi
+subfolder bertema agar mudah dilacak.
 
 ```
 EASENIKERS/
-├── config.php                       # kredensial Supabase (gitignored)
+├── config.php                       # kredensial Supabase & API key (gitignored)
+├── config.example.php               # contoh konfigurasi
+├── vercel.json                      # konfigurasi deploy Vercel (routing + env)
+├── serve.bat                        # launcher dev lokal (php -S localhost:8080)
 ├── README.md                        # dokumentasi ini
 │
-├── database/
-│   └── migrations/                  # file SQL urutan migrasi Supabase
+├── api/
+│   └── index.php                    # front controller untuk Vercel (serverless)
+│
+├── scripts/                         # utilitas maintenance CLI (sekali jalan)
+│   ├── cek_gambar_produk.php
+│   └── migrasi_gambar_lokal_ke_supabase.php
 │
 ├── includes/                        # backend PHP (di-require oleh public/)
 │   │
-│   ├── auth_db/                     # AUTENTIKASI & KONEKSI DATABASE
+│   ├── auth_db/                     # AUTENTIKASI, KONEKSI DB & STORAGE
 │   │   ├── sesi.php                 # sesi login, cookie ingat-saya
 │   │   ├── database.php             # koneksi PDO ke Supabase Postgres
 │   │   ├── supabase_auth.php        # wrapper Supabase Auth (signup/login)
-│   │   └── supabase_rest.php        # wrapper PostgREST untuk CRUD katalog
+│   │   ├── supabase_rest.php        # wrapper PostgREST untuk CRUD
+│   │   └── supabase_storage.php     # wrapper Supabase Storage (upload)
 │   │
 │   ├── repositori/                  # AKSES DATA (query & CRUD per fitur)
-│   │   ├── katalog_produk.php       # fetch produk, format harga, label
-│   │   ├── pesanan_repositori.php   # CRUD pesanan + status transisi
-│   │   ├── profil_pembeli_repositori.php  # profil pengiriman pembeli
-│   │   ├── admin_dashboard_repositori.php
-│   │   ├── admin_pengaturan_repositori.php
-│   │   ├── admin_pengguna_repositori.php
-│   │   └── admin_produk_repositori.php
+│   │   ├── katalog_produk.php
+│   │   ├── pesanan_repositori.php
+│   │   ├── profil_pembeli_repositori.php
+│   │   ├── laporan_repositori.php
+│   │   ├── brand_logo_repositori.php
+│   │   └── admin_*_repositori.php   # dashboard, produk, pengguna, brand, notifikasi, pengaturan
 │   │
 │   ├── integrasi/                   # API EKSTERNAL
-│   │   └── rajaongkir.php           # wrapper RajaOngkir Komerce API
+│   │   ├── rajaongkir.php           # ongkir RajaOngkir (Komerce)
+│   │   ├── jne_destinasi_populer.php# fallback destinasi populer
+│   │   ├── pakasir.php              # payment gateway Pakasir
+│   │   ├── produk_gambar_storage.php / brand_logo_storage.php
+│   │   └── notifikasi_*.php         # Telegram, Web Push, email SMTP
 │   │
-│   ├── konfigurasi/                 # KONFIGURASI STATIS (file PHP & JSON)
-│   │   ├── kontak_toko.php          # alamat toko, WA, sosial media
-│   │   ├── merek_ringkas.php        # copy hero, tagline merek
+│   ├── konfigurasi/                 # KONFIGURASI STATIS (dibaca halaman)
+│   │   ├── kontak_toko.php
+│   │   ├── merek_ringkas.php
 │   │   └── deskripsi_merek_login.php
 │   │
-│   ├── bilah_pembeli.php            # komponen header pembeli (sticky nav)
-│   ├── keranjang_sesi.php           # state keranjang di $_SESSION
-│   ├── url_bantu.php                # helper aplikasi_url() & path
+│   ├── komponen/                    # potongan UI reusable (nav, bilah, favicon)
+│   ├── config_loader.php            # muat config.php / env Vercel
+│   ├── bilah_pembeli.php            # header pembeli (sticky nav)
+│   ├── keranjang_sesi.php / checkout_sesi.php / paginasi.php / url_bantu.php
 │   └── pengaturan_toko_admin.json   # config disimpan admin (gitignored)
 │
 └── public/                          # DOCUMENT ROOT WEB SERVER
     ├── index.php                    # entry point
+    ├── router.php                   # router untuk php -S (dev lokal)
+    ├── .htaccess                    # rewrite Apache (Laragon/XAMPP)
+    ├── sw-admin-notifikasi.js       # service worker Web Push admin
     │
-    ├── login/                       # daftar, masuk, reset sandi, OTP
-    ├── pembeli/                     # halaman pembeli (beranda, katalog, dll)
-    ├── admin/                       # panel admin
+    ├── login/                       # daftar, masuk, reset sandi, konfirmasi token
+    ├── pembeli/                     # halaman pembeli (beranda, katalog, checkout, dll)
+    ├── admin/                       # panel admin (produk, pesanan, cek ongkir, dll)
     │
-    ├── api/
-    │   └── payment_callback.php     # webhook Pakasir
+    ├── api/                         # endpoint JSON & webhook
+    │   ├── payment_callback.php     # webhook Pakasir
+    │   ├── telegram_webhook.php     # webhook Telegram bot
+    │   ├── wishlist-toggle.php / cari-saran.php
+    │   └── admin_notifikasi_*.php / admin_push_*.php
     │
-    └── assets/
-        ├── css/                     # stylesheet
-        ├── js/                      # JavaScript (peta, dropdown alamat)
-        └── images/                  # logo, ikon, gambar produk
+    └── assets/                      # css, js, images, sounds
 ```
 
 **Aturan penamaan subfolder includes/:**
-- `auth_db/` — semua hal yang berurusan dengan kredensial & koneksi DB
-- `repositori/` — kelas/fungsi yang **membaca/menulis data**
-- `integrasi/` — wrapper API eksternal (JNE ongkir, Pakasir, dll)
+- `auth_db/` — kredensial, koneksi DB, dan Storage
+- `repositori/` — fungsi yang **membaca/menulis data**
+- `integrasi/` — wrapper API eksternal (RajaOngkir, Pakasir, notifikasi)
 - `konfigurasi/` — file statis yang **dibaca** oleh halaman (alamat, copy)
-- Root `includes/` — utilitas yang dipakai lintas-modul (helper, sesi
-  state, komponen UI)
+- `komponen/` — potongan UI yang dipakai berulang
+- Root `includes/` — utilitas lintas-modul (helper, sesi/state, loader config)
 
 ---
 
-## Daftar SQL Migration
+## Setup Database
 
-| File | Fungsi |
+File SQL skema/migration **tidak disertakan di repo** agar tampilan root tetap bersih. Skema dibuat manual di Supabase. Tabel inti yang dipakai aplikasi:
+
+| Tabel | Fungsi |
 |---|---|
-| `tahap1_berat_dan_profil.sql` | Tambah kolom `berat_gram` (int) di tabel `produk`. Tambah kolom profil pengiriman (`no_hp`, `nama_penerima`, `provinsi`, `kota`, `kecamatan`, `kode_pos`, `alamat_detail`) di tabel `users`. |
-| `tahap1_2_peta_alamat.sql` | Tambah kolom `lat`, `lng` (double precision, nullable) di tabel `users` dengan CHECK constraint rentang valid lat/lng. |
-| `tahap1_3_perbaiki_rls_produk.sql` | Matikan Row Level Security pada tabel `produk`, `produk_gambar`, `produk_ukuran` agar admin CRUD lewat REST API (anon key) tidak diblok. |
-| `tahap2_orders_shipping.sql` | Tambah kolom `kurir`, `layanan`, `ongkir`, `destination_id`, `nomor_resi` di tabel `orders` untuk informasi pengiriman dari RajaOngkir. |
+| `users` | Akun + profil pengiriman (`no_hp`, `nama_penerima`, `provinsi`, `kota`, `kecamatan`, `kode_pos`, `alamat_detail`, `lat`, `lng`) |
+| `produk` | Data produk + `berat_gram` untuk perhitungan ongkir |
+| `produk_ukuran` | Stok per ukuran (EU 36–45) |
+| `produk_gambar` | Multi-foto produk (path di Supabase Storage) |
+| `orders` | Pesanan + pengiriman (`kurir`, `layanan`, `ongkir`, `destination_id`, `nomor_resi`, `stok_dipotong`) |
+| `order_items` | Item per pesanan |
+| `ulasan` | Rating & komentar produk (per pesanan) |
+| `wishlist` | Produk favorit pembeli |
+| Tabel pendukung | laporan masalah, chat, notifikasi admin, brand logo |
 
-Semua migration aman dijalankan ulang (pakai `IF NOT EXISTS` / cek constraint).
+Catatan:
+- Untuk CRUD produk lewat REST (anon key), Row Level Security pada `produk`, `produk_gambar`, `produk_ukuran` perlu dimatikan/diatur sesuai kebijakan.
+- Sebagian kolom pelengkap di-migrasi otomatis oleh aplikasi saat runtime (mis. `orders.stok_dipotong`, pelebaran tipe `orders.destination_id` ke `VARCHAR`).
+- Untuk Storage gambar produk, set `SUPABASE_SERVICE_ROLE_KEY`, lalu (opsional) jalankan `php scripts/migrasi_gambar_lokal_ke_supabase.php` untuk mengunggah gambar lokal ke bucket.
 
 ---
 
@@ -235,28 +269,38 @@ Semua dependensi dimuat dari CDN — **tidak ada `npm install`** atau build step
 
 ### ✅ Tahap 1 — Selesai
 
-Pondasi data & UX siap untuk input produk:
+Pondasi data & UX:
 
 - Skema database lengkap (produk, ukuran, gambar, orders, users, profil pengiriman)
-- Admin CRUD produk berfungsi (termasuk perbaikan bug `supabase_rest_request` dan RLS)
+- Admin CRUD produk + upload multi-foto ke Supabase Storage
 - Profil pengiriman pembeli dengan cascading dropdown alamat & peta titik lokasi
 - Polish UX lengkap pada area pembeli & admin
 
-### ⏳ Tahap 2 — Sebagian Selesai
+### ✅ Tahap 2 — Selesai
 
 Integrasi pengiriman & pembayaran:
 
-- ✅ **RajaOngkir** (Komerce API) — wrapper, admin tool cek koneksi, search destinasi, hitung ongkir, integrasi penuh di checkout pembeli (auto-pick destinasi via kode pos profil, fallback manual)
-- ✅ Form checkout asli dengan create order ke database (kurir, layanan, ongkir, destination_id)
-- ✅ Form admin input nomor resi saat status pesanan berubah ke "Dikirim"
-- ✅ **Pakasir** payment gateway — konfigurasi di Pengaturan admin, bayar dari detail pesanan, webhook `api/payment_callback.php`
+- **RajaOngkir** (Komerce API) — wrapper, admin tool cek koneksi, search destinasi, hitung ongkir multi-kurir, integrasi penuh di checkout (auto-pick destinasi dari profil, fallback manual)
+- Checkout dengan create order ke database (kurir, layanan, ongkir, destination_id)
+- Form admin input nomor resi saat status pesanan berubah ke "Dikirim"
+- **Pakasir** payment gateway — konfigurasi di Pengaturan admin, bayar dari detail pesanan, webhook `api/payment_callback.php`
 
-### 🔜 Tahap 3 — Pasca-launch
+### ✅ Tahap 3 — Selesai
 
-- Notifikasi WhatsApp/email otomatis (pesanan masuk, pembayaran berhasil, pengiriman)
+Fitur interaksi & operasional:
+
+- Ulasan & rating produk per pesanan
+- Wishlist produk
+- Chat ke toko & lapor masalah pesanan
+- Notifikasi admin otomatis: Telegram bot + Web Push browser (pesanan/pembayaran masuk)
+- Laporan penjualan admin
+
+### 🔜 Tahap 4 — Lanjutan
+
+- Notifikasi WhatsApp/email otomatis ke pembeli (pembayaran berhasil, pengiriman)
 - Export pesanan ke Excel/PDF
 - Halaman tracking resi otomatis
-- Auto-resolve `destination_id` RajaOngkir dari koordinat peta profil pembeli (saat profil disimpan, sistem cari ID otomatis sehingga checkout langsung hitung tanpa pilih kelurahan)
+- Auto-resolve `destination_id` RajaOngkir dari koordinat peta profil pembeli (checkout langsung hitung tanpa pilih kelurahan)
 
 ---
 
@@ -299,7 +343,10 @@ Kami sudah menambahkan:
      - SUPABASE_URL
      - SUPABASE_ANON_KEY
      - URL_APLIKASI=https://www.easenikers.shop   (use your full custom domain with https)
-     - (optional) PAYMENT_CALLBACK_SECRET, EMAIL_DRIVER, EMAIL_PENGIRIM
+     - SUPABASE_SERVICE_ROLE_KEY   (untuk upload gambar ke Supabase Storage)
+     - RAJAONGKIR_API_KEY, RAJAONGKIR_ORIGIN_ID   (ongkir RajaOngkir Komerce; origin contoh 48850)
+     - PAKASIR_PROJECT_SLUG, PAKASIR_API_KEY, PAKASIR_MODE, PAKASIR_METODE_DEFAULT   (pembayaran)
+     - (optional) PAYMENT_CALLBACK_SECRET, EMAIL_DRIVER, EMAIL_PENGIRIM, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
    - Redeploy after adding env vars.
 7. Klik **Deploy**.
 
