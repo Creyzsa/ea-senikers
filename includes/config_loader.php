@@ -18,6 +18,7 @@
  *   PAKASIR_PROJECT_SLUG, PAKASIR_API_KEY, PAKASIR_MODE (sandbox|production),
  *   PAKASIR_METODE_DEFAULT (optional, default qris),
  *   JNE_ORIGIN_CODE (optional, kode asal toko — contoh PDG21100),
+ *   RAJAONGKIR_API_KEY (RajaOngkir Komerce API key), RAJAONGKIR_ORIGIN_ID (optional, ID asal toko — contoh 48850),
  *   EMAIL_DRIVER, EMAIL_PENGIRIM (optional),
  *   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_TO (optional)
  */
@@ -58,6 +59,13 @@ if (!defined('DB_HOST')) {
 
         if (!defined('JNE_ORIGIN_CODE')) {
             define('JNE_ORIGIN_CODE', getenv('JNE_ORIGIN_CODE') ?: 'PDG21100');
+        }
+
+        if (!defined('RAJAONGKIR_API_KEY')) {
+            define('RAJAONGKIR_API_KEY', getenv('RAJAONGKIR_API_KEY') ?: '');
+        }
+        if (!defined('RAJAONGKIR_ORIGIN_ID')) {
+            define('RAJAONGKIR_ORIGIN_ID', getenv('RAJAONGKIR_ORIGIN_ID') ?: '48850');
         }
 
         if (!defined('PAKASIR_PROJECT_SLUG')) {
@@ -105,6 +113,29 @@ if (!function_exists('easenikers_definisikan_pakasir_dari_env')) {
     }
 }
 easenikers_definisikan_pakasir_dari_env();
+
+/**
+ * RajaOngkir: env / vercel.json boleh mengisi konstanta meski config.php sudah dimuat.
+ * Prioritas: env/konstanta RAJAONGKIR_API_KEY → pengaturan_toko_admin.json (rajaongkir_api_key).
+ */
+if (!function_exists('easenikers_definisikan_rajaongkir_dari_env')) {
+    function easenikers_definisikan_rajaongkir_dari_env(): void
+    {
+        if (!defined('RAJAONGKIR_API_KEY')) {
+            $key = getenv('RAJAONGKIR_API_KEY') ?: '';
+            if (is_string($key) && trim($key) !== '') {
+                define('RAJAONGKIR_API_KEY', trim($key));
+            }
+        }
+        if (!defined('RAJAONGKIR_ORIGIN_ID')) {
+            $origin = getenv('RAJAONGKIR_ORIGIN_ID') ?: '';
+            if (is_string($origin) && trim($origin) !== '') {
+                define('RAJAONGKIR_ORIGIN_ID', trim($origin));
+            }
+        }
+    }
+}
+easenikers_definisikan_rajaongkir_dari_env();
 
 if (!function_exists('easenikers_definisikan_supabase_storage_dari_env')) {
     function easenikers_definisikan_supabase_storage_dari_env(): void

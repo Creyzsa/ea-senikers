@@ -3,14 +3,16 @@
 declare(strict_types=1);
 
 /**
- * Integrasi ongkir JNE — endpoint publik situs jne.co.id (sama dengan halaman Cek Ongkir).
+ * Integrasi ongkir RajaOngkir (platform Komerce) — API resmi berbayar/gratis tier.
  *
- * - Cari asal:     GET https://jne.co.id/api-origin?search=...
- * - Cari tujuan:   GET https://jne.co.id/api-destination?search=...
- * - Tarif:         GET https://jne.co.id/api-price?origin=PDG21100&destination=CGK10400&weight=1
+ * Base URL: https://rajaongkir.komerce.id/api/v1
+ *   - Cari lokasi: GET /destination/domestic-destination?search=...&limit=...&offset=...
+ *   - Tarif:       POST /calculate/domestic-cost  (origin, destination, weight, courier)
  *
- * Kode lokasi format JNE: 3 huruf + 5 angka (contoh PDG21100 = Padang Panjang, BOO10000 = Bogor).
- * Berat di api-price dalam kilogram (integer minimal 1).
+ * Autentikasi: header  key: <RAJAONGKIR_API_KEY>
+ *
+ * ID lokasi RajaOngkir Komerce = ID kelurahan/subdistrict (angka, mis. 48850), BUKAN
+ * kode cabang JNE lama (PDG21100). Berat dikirim dalam gram.
  *
  * Nama fungsi rajaongkir_* dipertahankan agar checkout/admin tetap kompatibel.
  */
@@ -19,83 +21,26 @@ require_once __DIR__ . '/../config_loader.php';
 require_once __DIR__ . '/../repositori/admin_pengaturan_repositori.php';
 require_once __DIR__ . '/jne_destinasi_populer.php';
 
-const JNE_WEB_BASE_URL = 'https://jne.co.id';
+const RAJAONGKIR_BASE_URL = 'https://rajaongkir.komerce.id/api/v1';
 
-/** @return string path file cookie sementara untuk sesi JNE */
-function jne_web_cookie_file(): string
+/** Daftar kurir yang diminta ke RajaOngkir (dipisah titik dua). */
+const RAJAONGKIR_KURIR_DEFAULT = 'jne:jnt:sicepat:pos:tiki:anteraja:ninja:wahana:lion';
+
+/**
+ * Ambil API key RajaOngkir dengan prioritas:
+ * env/konstanta RAJAONGKIR_API_KEY  →  pengaturan admin (rajaongkir_api_key).
+ */
+function rajaongkir_api_key(): string
 {
-    static $path = null;
-    if ($path === null) {
-        $tmp = tempnam(sys_get_temp_dir(), 'jne_ck_');
-        $path = is_string($tmp) ? $tmp : '';
+    if (defined('RAJAONGKIR_API_KEY')) {
+        $k = trim((string) RAJAONGKIR_API_KEY);
+        if ($k !== '') {
+            return $k;
+        }
     }
+    $cfg = admin_pengaturan_muat_terapan();
 
-    return $path;
-}
-
-/** Ambil cookie sesi dari halaman ongkir JNE agar API tidak menolak (403). */
-function jne_web_warmup_session(bool $paksa = false): void
-{
-    static $sudah = false;
-    if ($sudah && !$paksa) {
-        return;
-    }
-    $sudah = true;
-
-    $cookie = jne_web_cookie_file();
-    if ($cookie === '') {
-        return;
-    }
-
-    $ch = curl_init(JNE_WEB_BASE_URL . '/ongkir');
-    if ($ch === false) {
-        return;
-    }
-
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_CONNECTTIMEOUT => 12,
-        CURLOPT_TIMEOUT => 20,
-        CURLOPT_COOKIEJAR => $cookie,
-        CURLOPT_COOKIEFILE => $cookie,
-        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-        CURLOPT_HTTPHEADER => [
-            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language: id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        ],
-    ]);
-
-    $ca = ini_get('curl.cainfo') ?: ini_get('openssl.cafile');
-    if ($ca && is_readable($ca)) {
-        curl_setopt($ch, CURLOPT_CAINFO, $ca);
-    } else {
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-    }
-
-    curl_exec($ch);
-    // curl_close() removed: deprecated in PHP 8.5, no-op since PHP 8.0 (handle auto-closed)
-}
-
-/** Pesan error JNE yang lebih mudah dipahami pembeli. */
-function jne_error_pesan_ramah(int $http, string $teknis = ''): string
-{
-    if ($http === 403) {
-        return 'Server pengiriman menolak koneksi sementara. Gunakan daftar cadangan di bawah atau coba lagi.';
-    }
-    if ($http === 429) {
-        return 'Terlalu banyak pencarian. Tunggu sebentar lalu coba lagi.';
-    }
-    if ($http >= 500) {
-        return 'Layanan ongkir sedang gangguan. Coba lagi beberapa menit.';
-    }
-    if ($teknis !== '') {
-        return $teknis;
-    }
-
-    return 'Gagal menghubungi layanan ongkir. Coba lagi.';
+    return trim((string) ($cfg['rajaongkir_api_key'] ?? ''));
 }
 
 /**
@@ -105,35 +50,47 @@ function rajaongkir_kurir_didukung(): array
 {
     return [
         'jne' => 'JNE',
-        'reg' => 'REG (Regular)',
-        'yes' => 'YES (Yakin Esok Sampai)',
-        'oke' => 'OKE',
-        'jtr' => 'JTR (Trucking)',
-        'sps' => 'SPS',
+        'jnt' => 'J&T Express',
+        'sicepat' => 'SiCepat',
+        'pos' => 'POS Indonesia',
+        'tiki' => 'TIKI',
+        'anteraja' => 'AnterAja',
+        'ninja' => 'Ninja Xpress',
+        'wahana' => 'Wahana',
+        'lion' => 'Lion Parcel',
     ];
 }
 
-/** Tidak dipakai untuk API web JNE; tetap ada agar pengaturan lama tidak error. */
-function rajaongkir_api_key(): string
+/** Pesan error RajaOngkir yang lebih mudah dipahami pembeli. */
+function rajaongkir_error_pesan_ramah(int $http, string $teknis = ''): string
 {
-    if (defined('JNE_API_USERNAME') && defined('JNE_API_KEY')) {
-        return trim((string) JNE_API_USERNAME) !== '' && trim((string) JNE_API_KEY) !== '' ? 'configured' : '';
+    if ($http === 401 || $http === 403) {
+        return 'API key RajaOngkir belum benar atau tidak punya akses. Hubungi admin.';
     }
-    $cfg = admin_pengaturan_muat_terapan();
-    $legacy = trim((string) ($cfg['rajaongkir_api_key'] ?? ''));
-    return $legacy !== '' ? $legacy : 'jne-web';
+    if ($http === 429) {
+        return 'Terlalu banyak permintaan ongkir. Tunggu sebentar lalu coba lagi.';
+    }
+    if ($http >= 500) {
+        return 'Layanan ongkir RajaOngkir sedang gangguan. Coba lagi beberapa menit.';
+    }
+    if ($teknis !== '') {
+        return $teknis;
+    }
+
+    return 'Gagal menghubungi layanan ongkir RajaOngkir. Coba lagi.';
 }
 
 /**
- * Normalisasi kode cabang JNE (mis. pdg21100 → PDG21100).
+ * Normalisasi ID lokasi RajaOngkir (hanya digit, mis. "48850").
  */
 function rajaongkir_normalisasi_kode_desa(string|int $nilai): string
 {
-    $s = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) $nilai) ?? '');
-    return preg_match('/^[A-Z]{3}\d{5}$/', $s) === 1 ? $s : '';
+    $s = preg_replace('/\D+/', '', (string) $nilai) ?? '';
+
+    return $s !== '' ? $s : '';
 }
 
-/** Kode asal pengiriman toko (format JNE). */
+/** ID lokasi asal pengiriman toko (numerik RajaOngkir). */
 function rajaongkir_asal_kode(): string
 {
     $cfg = admin_pengaturan_muat_terapan();
@@ -141,8 +98,8 @@ function rajaongkir_asal_kode(): string
     if ($kode !== '') {
         return $kode;
     }
-    if (defined('JNE_ORIGIN_CODE')) {
-        return rajaongkir_normalisasi_kode_desa((string) JNE_ORIGIN_CODE);
+    if (defined('RAJAONGKIR_ORIGIN_ID')) {
+        return rajaongkir_normalisasi_kode_desa((string) RAJAONGKIR_ORIGIN_ID);
     }
 
     return '';
@@ -150,47 +107,57 @@ function rajaongkir_asal_kode(): string
 
 function rajaongkir_kota_asal_id(): int
 {
-    return rajaongkir_asal_kode() !== '' ? 1 : 0;
+    return (int) rajaongkir_asal_kode();
 }
-
 /**
- * @param array<string, scalar> $query
+ * Eksekusi request ke RajaOngkir Komerce.
+ *
+ * @param array<string, scalar> $query   Query string (GET) atau field body (POST).
  * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
  */
-function jne_web_request(string $path, array $query = [], bool $ulang_setelah_warmup = true): array
+function rajaongkir_request(string $path, string $method = 'GET', array $query = []): array
 {
-    jne_web_warmup_session();
-
-    $url = JNE_WEB_BASE_URL . $path;
-    if ($query !== []) {
-        $url .= (strpos($url, '?') !== false ? '&' : '?') . http_build_query($query);
+    $key = rajaongkir_api_key();
+    if ($key === '') {
+        return [
+            'ok' => false,
+            'http' => 0,
+            'error' => 'API key RajaOngkir belum diatur. Isi di Pengaturan toko atau env RAJAONGKIR_API_KEY.',
+            'data' => null,
+            'raw' => '',
+        ];
     }
 
-    $cookie = jne_web_cookie_file();
+    $method = strtoupper($method) === 'POST' ? 'POST' : 'GET';
+    $url = RAJAONGKIR_BASE_URL . $path;
+
     $headers = [
-        'Accept: application/json, text/plain, */*',
-        'Accept-Language: id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Referer: ' . JNE_WEB_BASE_URL . '/ongkir',
-        'Origin: ' . JNE_WEB_BASE_URL,
-        'X-Requested-With: XMLHttpRequest',
-        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'key: ' . $key,
+        'Accept: application/json',
     ];
 
     $ch = curl_init();
     $opts = [
-        CURLOPT_URL => $url,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_CONNECTTIMEOUT => 15,
         CURLOPT_TIMEOUT => 45,
         CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
         CURLOPT_ENCODING => '',
-        CURLOPT_HTTPHEADER => $headers,
     ];
-    if ($cookie !== '') {
-        $opts[CURLOPT_COOKIEJAR] = $cookie;
-        $opts[CURLOPT_COOKIEFILE] = $cookie;
+
+    if ($method === 'POST') {
+        $opts[CURLOPT_POST] = true;
+        $opts[CURLOPT_POSTFIELDS] = http_build_query($query);
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+    } else {
+        if ($query !== []) {
+            $url .= (strpos($url, '?') !== false ? '&' : '?') . http_build_query($query);
+        }
     }
+
+    $opts[CURLOPT_URL] = $url;
+    $opts[CURLOPT_HTTPHEADER] = $headers;
     curl_setopt_array($ch, $opts);
 
     $ca = ini_get('curl.cainfo') ?: ini_get('openssl.cafile');
@@ -204,14 +171,13 @@ function jne_web_request(string $path, array $query = [], bool $ulang_setelah_wa
     $raw = curl_exec($ch);
     $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $err_curl = (string) curl_error($ch);
-    // curl_close() removed: deprecated in PHP 8.5, no-op since PHP 8.0 (handle auto-closed)
     $raw_str = is_string($raw) ? $raw : '';
 
     if ($raw === false) {
         return [
             'ok' => false,
             'http' => $http,
-            'error' => $err_curl !== '' ? $err_curl : 'Tidak ada respons dari jne.co.id.',
+            'error' => $err_curl !== '' ? $err_curl : 'Tidak ada respons dari RajaOngkir.',
             'data' => null,
             'raw' => $raw_str,
         ];
@@ -219,45 +185,29 @@ function jne_web_request(string $path, array $query = [], bool $ulang_setelah_wa
 
     $json = json_decode($raw_str, true);
     if (!is_array($json)) {
-        if ($ulang_setelah_warmup && ($http === 403 || $http === 401)) {
-            $ck = jne_web_cookie_file();
-            if ($ck !== '' && is_file($ck)) {
-                @unlink($ck);
-            }
-            jne_web_warmup_session(true);
-
-            return jne_web_request($path, $query, false);
-        }
-
         return [
             'ok' => false,
             'http' => $http,
-            'error' => jne_error_pesan_ramah($http, 'Respons bukan JSON valid (HTTP ' . $http . ').'),
+            'error' => rajaongkir_error_pesan_ramah($http, 'Respons RajaOngkir bukan JSON valid (HTTP ' . $http . ').'),
             'data' => null,
             'raw' => $raw_str,
         ];
     }
 
-    if ($http >= 400) {
-        if ($ulang_setelah_warmup && ($http === 403 || $http === 401)) {
-            return jne_web_request($path, $query, false);
-        }
+    $meta = is_array($json['meta'] ?? null) ? $json['meta'] : [];
+    $kode_meta = (int) ($meta['code'] ?? $http);
+    $status_meta = strtolower((string) ($meta['status'] ?? ''));
+    $pesan_meta = trim((string) ($meta['message'] ?? ''));
+
+    if ($http >= 400 || $kode_meta >= 400 || ($status_meta !== '' && $status_meta !== 'success')) {
+        // 404 "data not found" pada pencarian bukan error fatal — kembalikan data kosong.
+        $http_efektif = $http >= 400 ? $http : $kode_meta;
 
         return [
             'ok' => false,
-            'http' => $http,
-            'error' => jne_error_pesan_ramah($http, trim((string) ($json['message'] ?? 'Permintaan ditolak jne.co.id.'))),
-            'data' => null,
-            'raw' => $raw_str,
-        ];
-    }
-
-    if (isset($json['status']) && $json['status'] === false) {
-        return [
-            'ok' => false,
-            'http' => $http,
-            'error' => trim((string) ($json['message'] ?? 'Data ongkir tidak ditemukan.')),
-            'data' => null,
+            'http' => $http_efektif,
+            'error' => rajaongkir_error_pesan_ramah($http_efektif, $pesan_meta !== '' ? $pesan_meta : 'Permintaan RajaOngkir ditolak.'),
+            'data' => $json['data'] ?? null,
             'raw' => $raw_str,
         ];
     }
@@ -266,40 +216,17 @@ function jne_web_request(string $path, array $query = [], bool $ulang_setelah_wa
         'ok' => true,
         'http' => $http,
         'error' => '',
-        'data' => $json['data'] ?? $json,
+        'data' => $json['data'] ?? [],
         'raw' => $raw_str,
     ];
 }
 
 /**
- * Cari destinasi: API JNE dulu, lalu daftar populer jika gagal.
+ * Normalisasi satu baris lokasi dari RajaOngkir ke bentuk internal aplikasi.
  *
- * @return array{ok:bool, http:int, error:string, data:mixed, raw:string, fallback?:bool}
- */
-function jne_cari_destinasi_dengan_fallback(string $kata, int $limit = 20): array
-{
-    $live = rajaongkir_cari_destinasi_tujuan($kata, $limit);
-    if ($live['ok']) {
-        return $live;
-    }
-
-    $fb = jne_destinasi_cari_fallback($kata, $limit);
-    if ($fb['ok']) {
-        $fb['error'] = '';
-        $fb['http'] = $live['http'] > 0 ? $live['http'] : 200;
-
-        return $fb;
-    }
-
-    $live['error'] = jne_error_pesan_ramah((int) ($live['http'] ?? 0), (string) ($live['error'] ?? ''));
-
-    return $live;
-}
-
-/**
  * @return list<array<string, mixed>>
  */
-function jne_normalisasi_baris_lokasi(mixed $data): array
+function rajaongkir_normalisasi_baris_lokasi(mixed $data): array
 {
     $rows = [];
     if (!is_array($data)) {
@@ -309,21 +236,31 @@ function jne_normalisasi_baris_lokasi(mixed $data): array
         if (!is_array($row)) {
             continue;
         }
-        $code = rajaongkir_normalisasi_kode_desa((string) ($row['code'] ?? ''));
-        if ($code === '') {
+        $id = rajaongkir_normalisasi_kode_desa((string) ($row['id'] ?? ''));
+        if ($id === '') {
             continue;
         }
         $label = trim((string) ($row['label'] ?? ''));
+        $subdistrict = trim((string) ($row['subdistrict_name'] ?? ''));
+        $district = trim((string) ($row['district_name'] ?? ''));
+        $city = trim((string) ($row['city_name'] ?? ''));
+        $province = trim((string) ($row['province_name'] ?? ''));
+        $zip = trim((string) ($row['zip_code'] ?? ''));
+
+        if ($label === '') {
+            $label = implode(', ', array_filter([$subdistrict, $district, $city, $province, $zip]));
+        }
+
         $rows[] = [
-            'id' => $code,
+            'id' => $id,
             'label' => $label,
             'label_tampilan' => rajaongkir_label_tampilan($label),
-            'zip_code' => '',
-            'postal_code' => '',
-            'subdistrict_name' => $label,
-            'district_name' => '',
-            'city_name' => '',
-            'province_name' => '',
+            'zip_code' => $zip,
+            'postal_code' => $zip,
+            'subdistrict_name' => $subdistrict,
+            'district_name' => $district,
+            'city_name' => $city,
+            'province_name' => $province,
             'is_courier_support' => true,
         ];
     }
@@ -332,17 +269,41 @@ function jne_normalisasi_baris_lokasi(mixed $data): array
 }
 
 /**
- * Tes koneksi: pencarian asal sample.
+ * Cari lokasi (kelurahan/kecamatan/kota) di RajaOngkir.
  *
  * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
  */
-function rajaongkir_daftar_provinsi(): array
+function rajaongkir_cari_lokasi(string $kata, int $limit = 20, int $offset = 0): array
 {
-    $res = jne_web_request('/api-origin', ['search' => 'padang']);
+    $kata = trim($kata);
+    if ($kata === '') {
+        return [
+            'ok' => false,
+            'http' => 0,
+            'error' => 'Kata kunci pencarian kosong.',
+            'data' => null,
+            'raw' => '',
+        ];
+    }
+    if ($limit < 1 || $limit > 100) {
+        $limit = 20;
+    }
+    if ($offset < 0) {
+        $offset = 0;
+    }
+
+    $res = rajaongkir_request('/destination/domestic-destination', 'GET', [
+        'search' => $kata,
+        'limit' => $limit,
+        'offset' => $offset,
+    ]);
+
     if (!$res['ok']) {
         return $res;
     }
-    $rows = jne_normalisasi_baris_lokasi($res['data']);
+
+    $rows = rajaongkir_normalisasi_baris_lokasi($res['data']);
+
     return [
         'ok' => true,
         'http' => $res['http'],
@@ -353,30 +314,52 @@ function rajaongkir_daftar_provinsi(): array
 }
 
 /**
- * Label API JNE (CAPS) → tampilan ramah pembeli.
+ * Cari destinasi: API RajaOngkir dulu, lalu daftar populer jika gagal.
+ *
+ * @return array{ok:bool, http:int, error:string, data:mixed, raw:string, fallback?:bool}
+ */
+function jne_cari_destinasi_dengan_fallback(string $kata, int $limit = 20): array
+{
+    $live = rajaongkir_cari_destinasi_tujuan($kata, $limit);
+    if ($live['ok'] && is_array($live['data']) && $live['data'] !== []) {
+        return $live;
+    }
+
+    $fb = jne_destinasi_cari_fallback($kata, $limit);
+    if ($fb['ok']) {
+        $fb['error'] = '';
+        $fb['http'] = ($live['http'] ?? 0) > 0 ? $live['http'] : 200;
+
+        return $fb;
+    }
+
+    if ($live['ok']) {
+        return $live;
+    }
+
+    $live['error'] = rajaongkir_error_pesan_ramah((int) ($live['http'] ?? 0), (string) ($live['error'] ?? ''));
+
+    return $live;
+}
+
+/**
+ * Tes koneksi: pencarian lokasi contoh.
+ *
+ * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
+ */
+function rajaongkir_daftar_provinsi(): array
+{
+    return rajaongkir_cari_lokasi('padang', 10);
+}
+
+/**
+ * Label RajaOngkir (CAPS) → tampilan ramah pembeli (Title Case, tetap ada konteks kota).
  */
 function rajaongkir_label_tampilan(string $label): string
 {
-    $label = trim(preg_replace('/^\[Asal\]\s*/i', '', $label));
+    $label = trim(preg_replace('/^\[Asal\]\s*/i', '', $label) ?? $label);
     if ($label === '') {
         return '';
-    }
-
-    $tanpa_spasi = strtoupper(preg_replace('/\s+/', '', $label) ?? '');
-    $khusus = [
-        'PADANGPANJANG' => 'Padang Panjang',
-        'JAKARTAPUSAT' => 'Jakarta Pusat',
-        'JAKARTAUTARA' => 'Jakarta Utara',
-        'JAKARTASELATAN' => 'Jakarta Selatan',
-        'JAKARTATIMUR' => 'Jakarta Timur',
-        'JAKARTABARAT' => 'Jakarta Barat',
-    ];
-    if (isset($khusus[$tanpa_spasi])) {
-        return $khusus[$tanpa_spasi];
-    }
-
-    if (str_contains($label, ' ')) {
-        return mb_convert_case(mb_strtolower($label, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
     }
 
     return mb_convert_case(mb_strtolower($label, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
@@ -394,36 +377,54 @@ function rajaongkir_normalisasi_teks_cocok(string $teks): string
 }
 
 /**
- * Skor kecocokan baris JNE dengan alamat profil (semakin tinggi = semakin cocok).
+ * Skor kecocokan baris RajaOngkir dengan alamat profil (semakin tinggi = semakin cocok).
+ * Memanfaatkan field terstruktur (subdistrict/district/city/province) bila ada,
+ * jatuh ke label gabungan bila kosong.
  */
 function rajaongkir_skor_cocok_lokasi(array $row, array $profil): int
 {
-    $label = rajaongkir_normalisasi_teks_cocok((string) ($row['label'] ?? ''));
-    if ($label === '') {
-        return 0;
-    }
-
     $kec = rajaongkir_normalisasi_teks_cocok((string) ($profil['kecamatan'] ?? ''));
     $kota = rajaongkir_normalisasi_teks_cocok((string) ($profil['kota'] ?? ''));
     $prov = rajaongkir_normalisasi_teks_cocok((string) ($profil['provinsi'] ?? ''));
+
+    $row_kec = rajaongkir_normalisasi_teks_cocok((string) ($row['district_name'] ?? ''));
+    $row_sub = rajaongkir_normalisasi_teks_cocok((string) ($row['subdistrict_name'] ?? ''));
+    $row_kota = rajaongkir_normalisasi_teks_cocok((string) ($row['city_name'] ?? ''));
+    $row_prov = rajaongkir_normalisasi_teks_cocok((string) ($row['province_name'] ?? ''));
+    $label = rajaongkir_normalisasi_teks_cocok((string) ($row['label'] ?? ''));
+
+    if ($row_kec === '' && $row_kota === '' && $label === '') {
+        return 0;
+    }
+
     $skor = 0;
 
     if ($kec !== '') {
-        if ($label === $kec) {
+        if ($row_kec === $kec || $row_sub === $kec) {
             $skor += 80;
-        } elseif (str_contains($label, $kec) || str_contains($kec, $label)) {
+        } elseif ($label !== '' && (str_contains($label, $kec) || str_contains($kec, $label))) {
             $skor += 50;
-        }
-    }
-    if ($kota !== '') {
-        if ($label === $kota) {
-            $skor += 70;
-        } elseif (str_contains($label, $kota) || str_contains($kota, $label)) {
+        } elseif ($row_kec !== '' && (str_contains($row_kec, $kec) || str_contains($kec, $row_kec))) {
             $skor += 45;
         }
     }
-    if ($prov !== '' && str_contains($label, $prov)) {
-        $skor += 10;
+    if ($kota !== '') {
+        if ($row_kota === $kota) {
+            $skor += 70;
+        } elseif ($row_kota !== '' && (str_contains($row_kota, $kota) || str_contains($kota, $row_kota))) {
+            $skor += 45;
+        } elseif ($label !== '' && str_contains($label, $kota)) {
+            $skor += 30;
+        }
+    }
+    if ($prov !== '') {
+        if ($row_prov === $prov) {
+            $skor += 12;
+        } elseif ($row_prov !== '' && (str_contains($row_prov, $prov) || str_contains($prov, $row_prov))) {
+            $skor += 8;
+        } elseif ($label !== '' && str_contains($label, $prov)) {
+            $skor += 6;
+        }
     }
 
     return $skor;
@@ -454,7 +455,7 @@ function rajaongkir_pilih_destinasi_terbaik(array $rows, array $profil): ?array
         }
     }
 
-    if ($skor_terbaik >= 45 && $terbaik !== null) {
+    if ($skor_terbaik >= 120 && $terbaik !== null) {
         return $terbaik;
     }
     if (count($rows) === 1) {
@@ -480,42 +481,13 @@ function rajaongkir_urutkan_hasil_profil(array $rows, array $profil): array
 }
 
 /**
- * Cari tujuan pengiriman saja (tanpa lokasi asal) — untuk checkout pembeli.
+ * Cari tujuan pengiriman saja — untuk checkout pembeli.
  *
  * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
  */
 function rajaongkir_cari_destinasi_tujuan(string $kata, int $limit = 20): array
 {
-    $kata = trim($kata);
-    if ($kata === '') {
-        return [
-            'ok' => false,
-            'http' => 0,
-            'error' => 'Kata kunci pencarian kosong.',
-            'data' => null,
-            'raw' => '',
-        ];
-    }
-    if ($limit < 1 || $limit > 50) {
-        $limit = 20;
-    }
-
-    $dest = jne_web_request('/api-destination', ['search' => $kata]);
-    if (!$dest['ok']) {
-        return $dest;
-    }
-    $rows = jne_normalisasi_baris_lokasi($dest['data']);
-    if ($limit < count($rows)) {
-        $rows = array_slice($rows, 0, $limit);
-    }
-
-    return [
-        'ok' => true,
-        'http' => $dest['http'],
-        'error' => '',
-        'data' => $rows,
-        'raw' => $dest['raw'],
-    ];
+    return rajaongkir_cari_lokasi($kata, $limit);
 }
 
 /**
@@ -568,7 +540,7 @@ function rajaongkir_cari_untuk_profil(array $profil, int $limit = 30): array
 
     foreach ($kata_cari as $term) {
         $res = jne_cari_destinasi_dengan_fallback($term, $limit);
-        $raw = $res['raw'] !== '' ? $res['raw'] : $raw;
+        $raw = ($res['raw'] ?? '') !== '' ? $res['raw'] : $raw;
         $http = $res['http'] ?? $http;
         if (!$res['ok']) {
             $err = (string) ($res['error'] ?? $err);
@@ -622,70 +594,19 @@ function rajaongkir_baris_label_tampilan(array $row): string
 }
 
 /**
- * Cari lokasi tujuan (dan gabung asal bila kata kunci cocok) — untuk admin.
+ * Cari lokasi tujuan — untuk admin (tester). Alias pencarian biasa.
  *
  * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
  */
 function rajaongkir_cari_destinasi(string $kata, int $limit = 20, int $offset = 0): array
 {
-    $kata = trim($kata);
-    if ($kata === '') {
-        return [
-            'ok' => false,
-            'http' => 0,
-            'error' => 'Kata kunci pencarian kosong.',
-            'data' => null,
-            'raw' => '',
-        ];
-    }
-    if ($limit < 1 || $limit > 50) {
-        $limit = 20;
-    }
-
-    $dest = jne_web_request('/api-destination', ['search' => $kata]);
-    $rows = [];
-    if ($dest['ok']) {
-        $rows = jne_normalisasi_baris_lokasi($dest['data']);
-    }
-
-    if (count($rows) < $limit) {
-        $orig = jne_web_request('/api-origin', ['search' => $kata]);
-        if ($orig['ok']) {
-            $seen = [];
-            foreach ($rows as $r) {
-                $seen[$r['id']] = true;
-            }
-            foreach (jne_normalisasi_baris_lokasi($orig['data']) as $r) {
-                if (isset($seen[$r['id']])) {
-                    continue;
-                }
-                $r['label'] = '[Asal] ' . $r['label'];
-                $rows[] = $r;
-                if (count($rows) >= $limit) {
-                    break;
-                }
-            }
-        }
-    }
-
-    if ($rows === [] && !$dest['ok']) {
-        return $dest;
-    }
-
-    if ($limit < count($rows)) {
-        $rows = array_slice($rows, 0, $limit);
-    }
-
-    return [
-        'ok' => true,
-        'http' => $dest['http'] ?? 200,
-        'error' => '',
-        'data' => $rows,
-        'raw' => $dest['raw'] ?? '',
-    ];
+    return rajaongkir_cari_lokasi($kata, $limit, $offset);
 }
 
 /**
+ * Normalisasi data tarif dari RajaOngkir Komerce ke opsi internal.
+ * Format respons: data[] = { name, code, service, description, cost, etd }.
+ *
  * @return list<array{code:string, service:string, description:string, cost:int, etd:string}>
  */
 function jne_normalisasi_opsi_tarif(mixed $data): array
@@ -693,33 +614,32 @@ function jne_normalisasi_opsi_tarif(mixed $data): array
     if (!is_array($data)) {
         return [];
     }
-    $price = $data['price'] ?? $data;
-    if (!is_array($price)) {
-        return [];
-    }
 
     $opsi = [];
-    foreach ($price as $row) {
+    foreach ($data as $row) {
         if (!is_array($row)) {
             continue;
         }
-        $biaya = (int) preg_replace('/\D+/', '', (string) ($row['price'] ?? '0'));
+        $biaya = (int) preg_replace('/\D+/', '', (string) ($row['cost'] ?? '0'));
         if ($biaya <= 0) {
             continue;
         }
-        $svc = trim((string) ($row['service_display'] ?? $row['service_code'] ?? 'REG'));
-        $svc_code = trim((string) ($row['service_code'] ?? $svc));
-        $etd_from = trim((string) ($row['etd_from'] ?? ''));
-        $etd_thru = trim((string) ($row['etd_thru'] ?? ''));
-        $times = trim((string) ($row['times'] ?? 'D'));
-        $etd = '';
-        if ($etd_from !== '' && $etd_thru !== '') {
-            $etd = $etd_from . '-' . $etd_thru . ' ' . $times;
+        $kode = strtolower(trim((string) ($row['code'] ?? '')));
+        if ($kode === '') {
+            $kode = 'kurir';
         }
+        $svc = trim((string) ($row['service'] ?? 'REG'));
+        $deskripsi = trim((string) ($row['description'] ?? ''));
+        $nama = trim((string) ($row['name'] ?? ''));
+        $etd = trim((string) ($row['etd'] ?? ''));
+        if ($etd === '-' ) {
+            $etd = '';
+        }
+
         $opsi[] = [
-            'code' => 'jne',
+            'code' => $kode,
             'service' => $svc,
-            'description' => trim((string) ($row['goods_type'] ?? 'Paket')) . ' · ' . $svc_code,
+            'description' => $deskripsi !== '' ? $deskripsi : $nama,
             'cost' => $biaya,
             'etd' => $etd,
         ];
@@ -729,20 +649,21 @@ function jne_normalisasi_opsi_tarif(mixed $data): array
 }
 
 /**
- * Hitung ongkos kirim JNE (berat gram → dikonversi ke kg untuk API).
+ * Hitung ongkos kirim via RajaOngkir Komerce (berat dalam gram).
  *
+ * @param string $courier  Kosong = pakai daftar kurir default. Bisa "jne", "jne:tiki", dll.
  * @return array{ok:bool, http:int, error:string, data:mixed, raw:string}
  */
 function rajaongkir_cek_ongkir(string|int $origin, string|int $destination, int $weight_gram, string $courier = ''): array
 {
-    $origin_kode = rajaongkir_normalisasi_kode_desa($origin);
-    $dest_kode = rajaongkir_normalisasi_kode_desa($destination);
+    $origin_id = rajaongkir_normalisasi_kode_desa($origin);
+    $dest_id = rajaongkir_normalisasi_kode_desa($destination);
 
-    if ($origin_kode === '' || $dest_kode === '') {
+    if ($origin_id === '' || $dest_id === '') {
         return [
             'ok' => false,
             'http' => 0,
-            'error' => 'Kode asal/tujuan JNE wajib format 3 huruf + 5 angka (contoh PDG21100).',
+            'error' => 'ID lokasi asal/tujuan RajaOngkir wajib berupa angka (mis. 48850).',
             'data' => null,
             'raw' => '',
         ];
@@ -757,47 +678,47 @@ function rajaongkir_cek_ongkir(string|int $origin, string|int $destination, int 
         ];
     }
 
-    $berat_kg = max(1, (int) ceil($weight_gram / 1000));
+    // RajaOngkir minta berat gram, minimal 1.
+    $berat = max(1, $weight_gram);
 
-    $res = jne_web_request('/api-price', [
-        'origin' => $origin_kode,
-        'destination' => $dest_kode,
-        'weight' => $berat_kg,
+    // Tentukan daftar kurir yang diminta.
+    $courier = strtolower(trim($courier));
+    $courier_list = [];
+    if ($courier !== '') {
+        foreach (explode(':', $courier) as $c) {
+            $c = trim($c);
+            if ($c !== '' && isset(rajaongkir_kurir_didukung()[$c]) && !in_array($c, $courier_list, true)) {
+                $courier_list[] = $c;
+            }
+        }
+    }
+    if ($courier_list === []) {
+        $courier_param = RAJAONGKIR_KURIR_DEFAULT;
+    } else {
+        $courier_param = implode(':', $courier_list);
+    }
+
+    $res = rajaongkir_request('/calculate/domestic-cost', 'POST', [
+        'origin' => $origin_id,
+        'destination' => $dest_id,
+        'weight' => $berat,
+        'courier' => $courier_param,
     ]);
+
     if (!$res['ok']) {
         return $res;
     }
 
     $opsi = jne_normalisasi_opsi_tarif($res['data']);
 
-    $filter = [];
-    if ($courier !== '') {
-        foreach (explode(':', strtolower($courier)) as $k) {
-            $k = trim($k);
-            if ($k !== '') {
-                $filter[] = $k;
-            }
-        }
-    }
-    if ($filter !== []) {
-        $filtered = [];
-        foreach ($opsi as $o) {
-            $svc = strtolower((string) $o['service']);
-            foreach ($filter as $f) {
-                if ($f === 'jne' || str_contains($svc, $f)) {
-                    $filtered[] = $o;
-                    break;
-                }
-            }
-        }
-        $opsi = $filtered;
-    }
+    // Urutkan termurah dulu agar pembeli lebih mudah.
+    usort($opsi, static fn (array $a, array $b): int => $a['cost'] <=> $b['cost']);
 
     if ($opsi === []) {
         return [
             'ok' => false,
             'http' => $res['http'],
-            'error' => 'Tidak ada layanan JNE untuk rute ini.',
+            'error' => 'Tidak ada layanan kurir untuk rute ini.',
             'data' => null,
             'raw' => $res['raw'],
         ];

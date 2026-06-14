@@ -95,7 +95,7 @@ function pesanan_url_gambar_item(array $item): string
 }
 
 /**
- * Pastikan orders.destination_id bisa menyimpan kode JNE (VARCHAR), bukan INTEGER lama.
+ * Pastikan orders.destination_id bisa menyimpan ID RajaOngkir (VARCHAR), bukan INTEGER lama.
  */
 function pesanan_pastikan_skema_destination_jne(PDO $pdo): void
 {
@@ -144,10 +144,7 @@ function pesanan_buat(
     $kurir = trim((string) ($shipping['kurir'] ?? ''));
     $layanan = trim((string) ($shipping['layanan'] ?? ''));
     $ongkir = max(0, (int) ($shipping['ongkir'] ?? 0));
-    $destination_id = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) ($shipping['destination_id'] ?? '')) ?? '');
-    if (!preg_match('/^[A-Z]{3}\d{5}$/', $destination_id)) {
-        $destination_id = '';
-    }
+    $destination_id = preg_replace('/\D+/', '', (string) ($shipping['destination_id'] ?? '')) ?? '';
     $total = max(0, $subtotal_produk) + $ongkir;
 
     try {

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Checkout pembeli — ongkir via API publik jne.co.id (sama dengan Cek Ongkir JNE).
+ * Checkout pembeli — ongkir via API resmi RajaOngkir (Komerce), multi-kurir.
  *
  * Step:
  *   1. Pembeli klik "Beli" di detail produk (POST: id_produk, ukuran).
@@ -478,7 +478,7 @@ $total_final = $harga_produk + $ongkir_pilih;
                     </p>
 
                     <?php if ($hasil_ongkir === null || !$hasil_ongkir['ok']): ?>
-                        <p class="checkout-error-baris">Gagal hitung ongkir JNE: <?php echo htmlspecialchars((string) ($hasil_ongkir['error'] ?? 'koneksi jne.co.id gagal'), ENT_QUOTES, 'UTF-8'); ?>. Coba ulang.</p>
+                        <p class="checkout-error-baris">Gagal hitung ongkir: <?php echo htmlspecialchars((string) ($hasil_ongkir['error'] ?? 'koneksi RajaOngkir gagal'), ENT_QUOTES, 'UTF-8'); ?>. Coba ulang.</p>
                     <?php else: ?>
                         <?php
                         $opsi_ongkir = [];

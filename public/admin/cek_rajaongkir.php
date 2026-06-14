@@ -16,7 +16,7 @@ $nama = htmlspecialchars($_SESSION['nama_pengguna'] ?? '', ENT_QUOTES, 'UTF-8');
 $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF-8');
 $urlPengaturan = aplikasi_url('admin/pengaturan_admin.php');
 
-$api_key_ada = true;
+$api_key_ada = rajaongkir_api_key() !== '';
 $kota_asal_kode_tersimpan = rajaongkir_asal_kode();
 $cfg = admin_pengaturan_muat_terapan();
 $kota_asal_nama_tersimpan = (string) ($cfg['rajaongkir_kota_asal_nama'] ?? '');
@@ -51,7 +51,7 @@ if ($aksi === 'cek_ongkir') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Cek Ongkir JNE — EA SENIKERS Admin</title>
+    <title>Cek Ongkir RajaOngkir — EA SENIKERS Admin</title>
     <?php include __DIR__ . '/../../includes/komponen/favicon_merek.php'; ?>
 
     <link rel="stylesheet" href="../assets/css/beranda-admin.css">
@@ -86,7 +86,7 @@ if ($aksi === 'cek_ongkir') {
             <main class="admin-isi">
                 <div class="admin-kop-halaman">
                     <div>
-                        <h1 class="admin-judul-besar">Cek Ongkir JNE</h1>
+                        <h1 class="admin-judul-besar">Cek Ongkir RajaOngkir</h1>
                         <p class="admin-salam"><a class="tautan-kembali" href="<?php echo htmlspecialchars($urlPengaturan, ENT_QUOTES, 'UTF-8'); ?>">← Pengaturan</a></p>
                     </div>
                     <?php if ($api_key_ada): ?>
@@ -94,16 +94,20 @@ if ($aksi === 'cek_ongkir') {
                     <?php endif; ?>
                 </div>
 
-                <?php if ($kota_asal_kode_tersimpan === ''): ?>
+                <?php if (!$api_key_ada): ?>
                     <div class="admin-alert admin-alert--error">
-                        Kode asal JNE belum diatur. <a href="<?php echo htmlspecialchars($urlPengaturan, ENT_QUOTES, 'UTF-8'); ?>">Buka Pengaturan toko</a> (contoh <code>PDG21100</code> untuk Padang Panjang).
+                        API key RajaOngkir belum diatur. <a href="<?php echo htmlspecialchars($urlPengaturan, ENT_QUOTES, 'UTF-8'); ?>">Buka Pengaturan toko</a> dan isi API key, atau set env <code>RAJAONGKIR_API_KEY</code>.
+                    </div>
+                <?php elseif ($kota_asal_kode_tersimpan === ''): ?>
+                    <div class="admin-alert admin-alert--error">
+                        ID asal RajaOngkir belum diatur. <a href="<?php echo htmlspecialchars($urlPengaturan, ENT_QUOTES, 'UTF-8'); ?>">Buka Pengaturan toko</a> (contoh <code>48850</code> untuk Padang Panjang).
                     </div>
                 <?php else: ?>
 
                 <?php if ($res_test !== null): ?>
                     <div class="admin-alert admin-alert--<?php echo $res_test['ok'] ? 'sukses' : 'error'; ?>">
                         <?php if ($res_test['ok'] && is_array($res_test['data'])): ?>
-                            Koneksi JNE berhasil · <?php echo (int) count($res_test['data']); ?> lokasi contoh
+                            Koneksi RajaOngkir berhasil · <?php echo (int) count($res_test['data']); ?> lokasi contoh
                         <?php else: ?>
                             Gagal: <?php echo htmlspecialchars((string) ($res_test['error'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
                         <?php endif; ?>
@@ -113,14 +117,14 @@ if ($aksi === 'cek_ongkir') {
                 <section class="admin-kartu admin-status-rajaongkir">
                     <div class="admin-status-kartu">
                         <span>Sumber tarif</span>
-                        <strong>jne.co.id <span class="admin-lencana admin-lencana--sukses">publik</span></strong>
+                        <strong>RajaOngkir <span class="admin-lencana admin-lencana--sukses">Komerce</span></strong>
                     </div>
                     <div class="admin-status-kartu">
                         <span>Lokasi asal</span>
                         <strong><?php echo $kota_asal_nama_tersimpan !== '' ? htmlspecialchars($kota_asal_nama_tersimpan, ENT_QUOTES, 'UTF-8') : '<em class="admin-kosong">belum diatur</em>'; ?></strong>
                     </div>
                     <div class="admin-status-kartu">
-                        <span>Kode asal JNE</span>
+                        <span>ID asal RajaOngkir</span>
                         <strong><?php echo $kota_asal_kode_tersimpan !== '' ? htmlspecialchars($kota_asal_kode_tersimpan, ENT_QUOTES, 'UTF-8') : '<em class="admin-kosong">—</em>'; ?></strong>
                     </div>
                 </section>
@@ -135,7 +139,7 @@ if ($aksi === 'cek_ongkir') {
                             <div class="admin-form-grid">
                                 <div class="admin-field admin-field--full">
                                     <label for="cari" class="visually-hidden">Cari</label>
-                                    <input type="search" id="cari" name="cari" value="<?php echo htmlspecialchars($cari_kata, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari kota/kecamatan JNE — mis. padang panjang, jakarta" required autofocus>
+                                    <input type="search" id="cari" name="cari" value="<?php echo htmlspecialchars($cari_kata, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Cari kota/kecamatan — mis. padang panjang, batusangkar, jakarta" required autofocus>
                                 </div>
                             </div>
                             <div class="admin-form-aksi">
@@ -155,7 +159,7 @@ if ($aksi === 'cek_ongkir') {
                                         <table class="admin-tabel">
                                             <thead>
                                                 <tr>
-                                                    <th>Kode JNE</th>
+                                                    <th>ID RajaOngkir</th>
                                                     <th>Lokasi</th>
                                                     <th>Kode Pos</th>
                                                 </tr>
@@ -202,12 +206,12 @@ if ($aksi === 'cek_ongkir') {
                             <input type="hidden" name="aksi" value="cek_ongkir">
                             <div class="admin-form-grid">
                                 <div class="admin-field">
-                                    <label for="origin">Kode asal JNE</label>
-                                    <input type="text" id="origin" name="origin" pattern="[A-Za-z]{3}[0-9]{5}" maxlength="8" value="<?php echo htmlspecialchars(isset($_GET['origin']) ? (string) $_GET['origin'] : $kota_asal_kode_tersimpan, ENT_QUOTES, 'UTF-8'); ?>" required placeholder="PDG21100" style="text-transform:uppercase">
+                                    <label for="origin">ID asal RajaOngkir</label>
+                                    <input type="text" id="origin" name="origin" inputmode="numeric" pattern="[0-9]+" maxlength="12" value="<?php echo htmlspecialchars(isset($_GET['origin']) ? (string) $_GET['origin'] : $kota_asal_kode_tersimpan, ENT_QUOTES, 'UTF-8'); ?>" required placeholder="48850">
                                 </div>
                                 <div class="admin-field">
-                                    <label for="destination">Kode tujuan JNE</label>
-                                    <input type="text" id="destination" name="destination" pattern="[A-Za-z]{3}[0-9]{5}" maxlength="8" value="<?php echo htmlspecialchars((string) ($_GET['destination'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" required placeholder="CGK10400" style="text-transform:uppercase">
+                                    <label for="destination">ID tujuan RajaOngkir</label>
+                                    <input type="text" id="destination" name="destination" inputmode="numeric" pattern="[0-9]+" maxlength="12" value="<?php echo htmlspecialchars((string) ($_GET['destination'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" required placeholder="48322">
                                 </div>
                                 <div class="admin-field">
                                     <label for="weight">Berat (gram)</label>
@@ -217,8 +221,8 @@ if ($aksi === 'cek_ongkir') {
                                     <label for="courier">Kurir</label>
                                     <select id="courier" name="courier">
                                         <?php $courier_pilih = (string) ($_GET['courier'] ?? ''); ?>
-                                        <option value=""<?php echo $courier_pilih === '' ? ' selected' : ''; ?>>Semua kurir</option>
-                                        <option value="jne:pos:tiki"<?php echo $courier_pilih === 'jne:pos:tiki' ? ' selected' : ''; ?>>JNE + POS + TIKI (filter)</option>
+                                        <option value=""<?php echo $courier_pilih === '' ? ' selected' : ''; ?>>Semua kurir (default)</option>
+                                        <option value="jne:jnt:sicepat:pos:tiki"<?php echo $courier_pilih === 'jne:jnt:sicepat:pos:tiki' ? ' selected' : ''; ?>>JNE + J&amp;T + SiCepat + POS + TIKI</option>
                                         <?php foreach (rajaongkir_kurir_didukung() as $kode => $label): ?>
                                             <option value="<?php echo htmlspecialchars($kode, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $courier_pilih === $kode ? ' selected' : ''; ?>><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
                                         <?php endforeach; ?>

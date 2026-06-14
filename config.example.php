@@ -78,6 +78,15 @@ define('PAYMENT_CALLBACK_SECRET', '');
 /** Kode asal JNE toko (3 huruf + 5 angka). EA Senikers Padang Panjang = PDG21100 */
 define('JNE_ORIGIN_CODE', 'PDG21100');
 
+/**
+ * RajaOngkir (platform Komerce) — ongkir resmi.
+ * Daftar di https://collaborator.komerce.id (RajaOngkir) untuk dapat API key.
+ * RAJAONGKIR_ORIGIN_ID = ID kelurahan/subdistrict RajaOngkir untuk lokasi asal toko.
+ * 48850 = Balai-Balai, Padang Panjang Barat (EA Senikers). Cari ID via Admin → Cek Ongkir.
+ */
+define('RAJAONGKIR_API_KEY', 'isi-api-key-rajaongkir-komerce-anda');
+define('RAJAONGKIR_ORIGIN_ID', '48850');
+
 /** Pakasir (opsional di config.php — alternatif: Admin Pengaturan atau env Vercel) */
 // define('PAKASIR_PROJECT_SLUG', 'easenikers');
 // define('PAKASIR_API_KEY', 'your-pakasir-api-key');

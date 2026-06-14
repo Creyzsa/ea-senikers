@@ -156,7 +156,7 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
                             <h2 id="judul-bayar">Pembayaran &amp; pengiriman</h2>
                         </div>
                         <div class="admin-form-konten">
-                            <p class="admin-form-keterangan">Ongkir dihitung lewat <strong>JNE</strong> (jne.co.id). Pembayaran digital lewat <strong>Pakasir</strong> (QRIS, VA, PayPal).</p>
+                            <p class="admin-form-keterangan">Ongkir dihitung lewat <strong>RajaOngkir</strong> (Komerce). Pembayaran digital lewat <strong>Pakasir</strong> (QRIS, VA, PayPal).</p>
                             <div class="admin-form-grid">
                                 <div class="admin-field">
                                     <label for="metode-pembayaran">Metode pembayaran utama</label>
@@ -176,30 +176,35 @@ $urlKeluar = htmlspecialchars(aplikasi_url('login/keluar.php'), ENT_QUOTES, 'UTF
 
                     <section class="admin-kartu" aria-labelledby="judul-rajaongkir">
                         <div class="admin-kartu__header">
-                            <h2 id="judul-rajaongkir">Integrasi JNE (Cek Ongkir)</h2>
+                            <h2 id="judul-rajaongkir">Integrasi RajaOngkir (Cek Ongkir)</h2>
                             <span class="admin-lencana admin-lencana--tunda">Tahap 2</span>
                         </div>
                         <div class="admin-form-konten">
                             <p class="admin-form-keterangan">
-                                Tarif diambil dari API publik situs
-                                <a href="https://jne.co.id/shipping-fee" target="_blank" rel="noopener noreferrer">jne.co.id/shipping-fee</a>
-                                (<code>api-origin</code>, <code>api-destination</code>, <code>api-price</code>).
-                                Kode lokasi format JNE: <strong>3 huruf + 5 angka</strong> (contoh <code>PDG21100</code> = Padang Panjang, toko EA Senikers).
+                                Tarif diambil dari API resmi
+                                <a href="https://collaborator.komerce.id" target="_blank" rel="noopener noreferrer">RajaOngkir (Komerce)</a>.
+                                Butuh <strong>API key</strong> dan <strong>ID lokasi asal</strong> (ID kelurahan/subdistrict RajaOngkir, berupa <strong>angka</strong> — mis. <code>48850</code> = Padang Panjang).
+                                Mendukung banyak kurir (JNE, J&amp;T, SiCepat, POS, TIKI, AnterAja, dll).
                             </p>
                             <div class="admin-form-grid">
+                                <div class="admin-field admin-field--full">
+                                    <label for="rajaongkir-api-key">API Key RajaOngkir</label>
+                                    <input type="password" id="rajaongkir-api-key" name="rajaongkir_api_key" value="<?php echo htmlspecialchars((string) ($cfg['rajaongkir_api_key'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" placeholder="Kosongkan jika sudah diisi via env RAJAONGKIR_API_KEY">
+                                    <p class="admin-form-keterangan" style="margin-top:0.35rem;">Di production (Vercel) sebaiknya isi lewat env <code>RAJAONGKIR_API_KEY</code>. Nilai di sini jadi cadangan.</p>
+                                </div>
                                 <div class="admin-field">
                                     <label for="rajaongkir-kota-asal-nama">Lokasi asal (label)</label>
                                     <input type="text" id="rajaongkir-kota-asal-nama" name="rajaongkir_kota_asal_nama" value="<?php echo htmlspecialchars((string) $cfg['rajaongkir_kota_asal_nama'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="Padang Panjang, Sumatera Barat">
                                 </div>
                                 <div class="admin-field">
-                                    <label for="rajaongkir-kota-asal-kode">Kode asal JNE</label>
-                                    <input type="text" id="rajaongkir-kota-asal-kode" name="rajaongkir_kota_asal_kode" value="<?php echo htmlspecialchars((string) ($cfg['rajaongkir_kota_asal_kode'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" pattern="[A-Za-z]{3}[0-9]{5}" maxlength="8" placeholder="PDG21100" style="text-transform:uppercase">
+                                    <label for="rajaongkir-kota-asal-kode">ID asal RajaOngkir</label>
+                                    <input type="text" id="rajaongkir-kota-asal-kode" name="rajaongkir_kota_asal_kode" value="<?php echo htmlspecialchars((string) ($cfg['rajaongkir_kota_asal_kode'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" inputmode="numeric" pattern="[0-9]+" maxlength="12" placeholder="48850">
                                 </div>
                             </div>
                             <p class="admin-form-keterangan" style="margin-top:0.6rem;">
-                                <strong>Cara dapat kode:</strong> buka
-                                <a href="<?php echo htmlspecialchars(aplikasi_url('admin/cek_rajaongkir.php'), ENT_QUOTES, 'UTF-8'); ?>"><strong>Cek Ongkir JNE</strong></a>,
-                                cari kota/kecamatan (mis. <em>padang panjang</em> untuk asal, <em>batusangkar</em> untuk Tanah Datar), salin kode 8 karakter.
+                                <strong>Cara dapat ID:</strong> buka
+                                <a href="<?php echo htmlspecialchars(aplikasi_url('admin/cek_rajaongkir.php'), ENT_QUOTES, 'UTF-8'); ?>"><strong>Cek Ongkir</strong></a>,
+                                cari kota/kecamatan (mis. <em>padang panjang</em> untuk asal, <em>batusangkar</em> untuk Tanah Datar), salin ID angkanya.
                             </p>
                         </div>
                     </section>

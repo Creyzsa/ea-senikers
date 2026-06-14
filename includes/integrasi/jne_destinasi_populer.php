@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 /**
- * Daftar destinasi JNE populer — fallback bila API jne.co.id menolak (HTTP 403 dari server cloud).
+ * Daftar destinasi populer (ID RajaOngkir Komerce) — fallback bila API pencarian
+ * RajaOngkir gagal/limit. ID = ID kelurahan/subdistrict RajaOngkir.
  *
- * @return list<array{id:string,label:string,label_tampilan:string}>
+ * @return list<array<string,mixed>>
  */
 function jne_destinasi_populer_daftar(): array
 {
@@ -14,68 +15,52 @@ function jne_destinasi_populer_daftar(): array
         return $cache;
     }
 
+    // [id, subdistrict, district, city, province, zip]
     $baris = [
-        ['PDG10000', 'PADANG'],
-        ['PDG21100', 'PADANGPANJANG'],
-        ['PDG10014', 'PADANG BARAT, PADANG'],
-        ['PDG10015', 'PADANG SELATAN, PADANG'],
-        ['PDG10016', 'PADANG TIMUR, PADANG'],
-        ['PDG10017', 'PADANG UTARA, PADANG'],
-        ['PDG20117', 'PADANG GANTING, BATU SANGKAR'],
-        ['PDG20619', 'PADANG SAGO, PARIAMAN'],
-        ['PDG21800', 'PADANG ARO'],
-        ['CGK10000', 'JAKARTA'],
-        ['CGK10100', 'JAKARTA PUSAT'],
-        ['CGK10200', 'JAKARTA UTARA'],
-        ['CGK10300', 'JAKARTA BARAT'],
-        ['CGK10400', 'JAKARTA SELATAN'],
-        ['CGK10500', 'JAKARTA TIMUR'],
-        ['SUB10000', 'SURABAYA'],
-        ['BDO10000', 'BANDUNG'],
-        ['YIA10000', 'YOGYAKARTA'],
-        ['SRG10000', 'SEMARANG'],
-        ['MLG10000', 'MALANG'],
-        ['DPS10000', 'DENPASAR'],
-        ['UPG10000', 'MAKASSAR'],
-        ['MDN10000', 'MEDAN'],
-        ['PLM10000', 'PALEMBANG'],
-        ['BTH10000', 'BATAM'],
-        ['PKU10000', 'PEKANBARU'],
-        ['BPN10000', 'BALIKPAPAN'],
-        ['PNK10000', 'PONTIANAK'],
-        ['DJJ10000', 'JAYAPURA'],
-        ['AMQ10000', 'AMBON'],
-        ['KOE10000', 'KUPANG'],
-        ['SOC10000', 'SOLO'],
-        ['BTG10000', 'BATANG'],
-        ['TGR10000', 'TANGERANG'],
-        ['BOO10000', 'BOGOR'],
-        ['BKI10000', 'BEKASI'],
-        ['DEP10000', 'DEPOK'],
-        ['CBN10000', 'CIREBON'],
-        ['PWK10000', 'PURWOKERTO'],
-        ['MES10000', 'PEMATANG SIANTAR'],
-        ['DTB20500', 'PADANGSIDEMPUAN'],
-        ['BKS10000', 'BENGKULU'],
-        ['TKG10000', 'BANDAR LAMPUNG'],
+        ['48850', 'BALAI-BALAI', 'PADANG PANJANG BARAT', 'PADANG PANJANG', 'SUMATERA BARAT', '27114'],
+        ['48322', 'LIMA KAUM', 'LIMA KAUM', 'TANAH DATAR', 'SUMATERA BARAT', '27211'],
+        ['48360', 'AUR TAJUNGKANG TENGAH SAWAH', 'GUGUK PANJANG', 'BUKITTINGGI', 'SUMATERA BARAT', '26111'],
+        ['48721', 'BALAI NAN DUO', 'PAYAKUMBUH BARAT', 'PAYAKUMBUH', 'SUMATERA BARAT', '26224'],
+        ['48626', 'BALAI KURAI TAJI', 'PARIAMAN SELATAN', 'PARIAMAN', 'SUMATERA BARAT', '25531'],
+        ['49239', 'LUBUK BASUNG', 'LUBUK BASUNG', 'AGAM', 'SUMATERA BARAT', '26451'],
+        ['49233', 'SIJUNJUNG', 'SIJUNJUNG', 'SIJUNJUNG', 'SUMATERA BARAT', '27553'],
+        ['17596', 'CEMPAKA PUTIH BARAT', 'CEMPAKA PUTIH', 'JAKARTA PUSAT', 'DKI JAKARTA', '10520'],
+        ['17547', 'GROGOL SELATAN', 'KEBAYORAN LAMA', 'JAKARTA SELATAN', 'DKI JAKARTA', '12220'],
+        ['17644', 'KOJA', 'KOJA', 'JAKARTA UTARA', 'DKI JAKARTA', '14210'],
+        ['17523', 'CENGKARENG BARAT', 'CENGKARENG', 'JAKARTA BARAT', 'DKI JAKARTA', '11730'],
+        ['17674', 'CAKUNG TIMUR', 'CAKUNG', 'JAKARTA TIMUR', 'DKI JAKARTA', '13910'],
+        ['6532', 'BEKASI JAYA', 'BEKASI TIMUR', 'BEKASI', 'JAWA BARAT', '17112'],
+        ['8118', 'BALUNGBANG JAYA', 'BOGOR BARAT - KOTA', 'BOGOR', 'JAWA BARAT', '16116'],
+        ['73239', 'BABAKAN', 'TANGERANG', 'TANGERANG', 'BANTEN', '15118'],
+        ['4816', '-', 'BANDUNG', 'BANDUNG', 'JAWA BARAT', '40614'],
+        ['69212', 'ASEM ROWO', 'ASEMROWO', 'SURABAYA', 'JAWA TIMUR', '60182'],
+        ['65025', 'LAMPER TENGAH', 'SEMARANG SELATAN', 'SEMARANG', 'JAWA TENGAH', '50248'],
+        ['31397', 'BENER', 'TEGALREJO', 'YOGYAKARTA', 'DI YOGYAKARTA', '55243'],
+        ['41068', 'MEDAN TENGGARA', 'MEDAN DENAI', 'MEDAN', 'SUMATERA UTARA', '20228'],
+        ['79234', 'BARA-BARAYA', 'MAKASSAR', 'MAKASSAR', 'SULAWESI SELATAN', '90143'],
+        ['26027', 'DAUH PURI', 'DENPASAR BARAT', 'DENPASAR', 'BALI', '80113'],
+        ['49618', 'KOTA BARU', 'PEKANBARU KOTA', 'PEKANBARU', 'RIAU', '28114'],
+        ['52643', '26 ILIR D. I', 'ILIR BARAT I', 'PALEMBANG', 'SUMATERA SELATAN', '30136'],
+        ['9147', 'BALOI PERMAI', 'BATAM KOTA', 'BATAM', 'KEPULAUAN RIAU', '29431'],
     ];
 
     $out = [];
-    foreach ($baris as [$kode, $label]) {
-        $id = rajaongkir_normalisasi_kode_desa($kode);
-        if ($id === '') {
+    foreach ($baris as [$id, $sub, $dist, $city, $prov, $zip]) {
+        $id_norm = rajaongkir_normalisasi_kode_desa($id);
+        if ($id_norm === '') {
             continue;
         }
+        $label = implode(', ', array_filter([$sub, $dist, $city, $prov, $zip]));
         $out[] = [
-            'id' => $id,
+            'id' => $id_norm,
             'label' => $label,
             'label_tampilan' => rajaongkir_label_tampilan($label),
-            'zip_code' => '',
-            'postal_code' => '',
-            'subdistrict_name' => $label,
-            'district_name' => '',
-            'city_name' => '',
-            'province_name' => '',
+            'zip_code' => $zip,
+            'postal_code' => $zip,
+            'subdistrict_name' => $sub,
+            'district_name' => $dist,
+            'city_name' => $city,
+            'province_name' => $prov,
             'is_courier_support' => true,
         ];
     }
@@ -104,15 +89,20 @@ function jne_destinasi_cari_fallback(string $kata, int $limit = 20): array
 
     $hasil = [];
     foreach (jne_destinasi_populer_daftar() as $row) {
-        $label_norm = rajaongkir_normalisasi_teks_cocok((string) ($row['label'] ?? ''));
-        $tampil_norm = rajaongkir_normalisasi_teks_cocok((string) ($row['label_tampilan'] ?? ''));
-        if (
-            str_contains($label_norm, $kata_norm)
-            || str_contains($kata_norm, $label_norm)
-            || str_contains($tampil_norm, $kata_norm)
-            || str_contains($kata_norm, $tampil_norm)
-        ) {
-            $hasil[] = $row;
+        $kandidat = [
+            rajaongkir_normalisasi_teks_cocok((string) ($row['city_name'] ?? '')),
+            rajaongkir_normalisasi_teks_cocok((string) ($row['district_name'] ?? '')),
+            rajaongkir_normalisasi_teks_cocok((string) ($row['subdistrict_name'] ?? '')),
+            rajaongkir_normalisasi_teks_cocok((string) ($row['label'] ?? '')),
+        ];
+        foreach ($kandidat as $teks) {
+            if ($teks === '') {
+                continue;
+            }
+            if (str_contains($teks, $kata_norm) || str_contains($kata_norm, $teks)) {
+                $hasil[] = $row;
+                break;
+            }
         }
     }
 

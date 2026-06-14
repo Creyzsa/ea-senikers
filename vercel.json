@@ -71,6 +71,8 @@
     "PAKASIR_PROJECT_SLUG": "easenikers",
     "PAKASIR_API_KEY": "4eXA7A6IcbrTSrMjqPktZuJlhi64NwP1",
     "PAKASIR_MODE": "sandbox",
-    "PAKASIR_METODE_DEFAULT": "qris"
+    "PAKASIR_METODE_DEFAULT": "qris",
+    "RAJAONGKIR_API_KEY": "NfrathbDc4826eb8aa74420ayf1m4krR",
+    "RAJAONGKIR_ORIGIN_ID": "48850"
   }
 }
